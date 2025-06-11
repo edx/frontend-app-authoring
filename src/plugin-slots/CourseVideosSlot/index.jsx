@@ -17,7 +17,7 @@ import {
   addVideoThumbnail, cancelAllUploads,
   deleteVideoFile,
   fetchVideoDownload, fetchVideos,
-  getUsagePaths, markVideoUploadsInProgressAsFailed, resetErrors,
+  getUsagePaths, markVideoUploadsInProgressAsFailed, newUploadData, resetErrors,
   updateVideoOrder,
 } from 'CourseAuthoring/files-and-videos/videos-page/data/thunks';
 import { getFormattedDuration, resampleFile } from 'CourseAuthoring/files-and-videos/videos-page/data/utils';
@@ -26,7 +26,7 @@ import messages from 'CourseAuthoring/files-and-videos/videos-page/messages';
 import TranscriptSettings from 'CourseAuthoring/files-and-videos/videos-page/transcript-settings';
 import UploadModal from 'CourseAuthoring/files-and-videos/videos-page/upload-modal';
 import VideoThumbnail from 'CourseAuthoring/files-and-videos/videos-page/VideoThumbnail';
-import { useModels } from 'CourseAuthoring/generic/model-store';
+import { useModel, useModels } from 'CourseAuthoring/generic/model-store';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,6 +39,15 @@ const CourseVideosSlot = ({ courseId }) => {
     openTranscriptSettings,
     closeTranscriptSettings,
   ] = useToggle(false);
+  const [
+    isUploadTrackerOpen,
+    openUploadTracker,
+    closeUploadTracker,
+  ] = useToggle(false);
+
+  useEffect(() => {
+    dispatch(fetchVideos(courseId));
+  }, [courseId]);
   const {
     videoIds,
     loadingStatus,
@@ -50,47 +59,6 @@ const CourseVideosSlot = ({ courseId }) => {
   } = useSelector((state) => state.videos);
 
   const uploadingIdsRef = useRef({ uploadData: {}, uploadCount: 0 });
-
-  const {
-    isVideoTranscriptEnabled,
-    encodingsDownloadUrl,
-    videoUploadMaxFileSize,
-    videoSupportedFileFormats,
-    videoImageSettings,
-  } = pageSettings;
-  const supportedFileFormats = {
-    'video/*': videoSupportedFileFormats || FILES_AND_UPLOAD_TYPE_FILTERS.video,
-  };
-  const handleUploadCancel = () => dispatch(cancelAllUploads(courseId, uploadingIdsRef.current.uploadData));
-  const handleErrorReset = (error) => dispatch(resetErrors(error));
-  const handleAddFile = (files) => {
-    handleErrorReset({ errorType: 'add' });
-    uploadingIdsRef.current.uploadCount = files.length;
-    dispatch(addVideoFile(courseId, files, videoIds, uploadingIdsRef));
-  };
-  const handleDeleteFile = (id) => dispatch(deleteVideoFile(courseId, id));
-  const handleDownloadFile = (selectedRows) => dispatch(fetchVideoDownload({ selectedRows, courseId }));
-  const handleUsagePaths = (video) => dispatch(getUsagePaths({ video, courseId }));
-  const handleFileOrder = ({ newFileIdOrder, sortType }) => {
-    dispatch(updateVideoOrder(courseId, newFileIdOrder, sortType));
-  };
-  const handleAddThumbnail = (file, videoId) => resampleFile({
-    file,
-    dispatch,
-    courseId,
-    videoId,
-    addVideoThumbnail,
-  });
-  const videos = useModels('videos', videoIds);
-  const [
-    isUploadTrackerOpen,
-    openUploadTracker,
-    closeUploadTracker,
-  ] = useToggle(false);
-
-  useEffect(() => {
-    dispatch(fetchVideos(courseId));
-  }, [courseId]);
 
   useEffect(() => {
     window.onbeforeunload = () => {
@@ -115,6 +83,51 @@ const CourseVideosSlot = ({ courseId }) => {
         break;
     }
   }, [addVideoStatus]);
+
+  const {
+    isVideoTranscriptEnabled,
+    encodingsDownloadUrl,
+    videoUploadMaxFileSize,
+    videoSupportedFileFormats,
+    videoImageSettings,
+  } = pageSettings;
+  const supportedFileFormats = {
+    'video/*': videoSupportedFileFormats || FILES_AND_UPLOAD_TYPE_FILTERS.video,
+  };
+  const handleUploadCancel = () => dispatch(cancelAllUploads(courseId, uploadingIdsRef.current.uploadData));
+  const handleErrorReset = (error) => dispatch(resetErrors(error));
+  const handleAddFile = (files) => {
+    handleErrorReset({ errorType: 'add' });
+    uploadingIdsRef.current.uploadCount = files.length;
+
+    files.forEach((file, idx) => {
+      const name = file?.name || `Video ${idx + 1}`;
+      const progress = 0;
+
+      newUploadData({
+        status: RequestStatus.PENDING,
+        currentData: uploadingIdsRef.current.uploadData,
+        originalValue: { name, progress },
+        key: `video_${idx}`,
+      });
+    });
+    dispatch(addVideoFile(courseId, files, videoIds, uploadingIdsRef));
+  };
+  const handleDeleteFile = (id) => dispatch(deleteVideoFile(courseId, id));
+  const handleDownloadFile = (selectedRows) => dispatch(fetchVideoDownload({ selectedRows, courseId }));
+  const handleUsagePaths = (video) => dispatch(getUsagePaths({ video, courseId }));
+  const handleFileOrder = ({ newFileIdOrder, sortType }) => {
+    dispatch(updateVideoOrder(courseId, newFileIdOrder, sortType));
+  };
+  const handleAddThumbnail = (file, videoId) => resampleFile({
+    file,
+    dispatch,
+    courseId,
+    videoId,
+    addVideoThumbnail,
+  });
+
+  const videos = useModels('videos', videoIds);
 
   const data = {
     supportedFileFormats,
@@ -202,14 +215,18 @@ const CourseVideosSlot = ({ courseId }) => {
     { ...activeColumn },
     { ...processingStatusColumn },
   ];
+
   return (
     <PluginSlot
-      id="videos_upload_page_table_slot"
+      id="org.openedx.frontend.authoring.videos_upload_page_table.v1"
       pluginProps={{
         courseId,
       }}
     >
       <ActionRow>
+        <div className="h2">
+          {intl.formatMessage(messages.heading)}
+        </div>
         <ActionRow.Spacer />
         {isVideoTranscriptEnabled ? (
           <Button

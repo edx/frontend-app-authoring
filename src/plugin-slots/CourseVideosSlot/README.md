@@ -1,6 +1,6 @@
 # Course Video Upload Page Slot
 
-### Slot ID: `videos_upload_page_table_slot`
+### Slot ID: `org.openedx.frontend.authoring.videos_upload_page_table.v1`
 
 ## Description
 
@@ -18,7 +18,7 @@ import { PLUGIN_OPERATIONS } from '@openedx/frontend-plugin-framework';
 
 const config = {
   pluginSlots: {
-    videos_upload_page_table_slot: {
+    'org.openedx.frontend.authoring.videos_upload_page_table.v1': {
       keepDefault: true,
       plugins: [
         {

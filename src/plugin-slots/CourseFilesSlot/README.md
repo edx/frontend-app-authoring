@@ -1,6 +1,6 @@
 # Course Files Slot
 
-### Slot ID: `files_upload_page_table_slot`
+### Slot ID: `org.openedx.frontend.authoring.files_upload_page_table.v1`
 
 ## Description
 
@@ -11,14 +11,15 @@ This slot is used to replace/modify/hide the course file table UI.
 ### Wrapped with a div with dashed border
 ![Red Border around Files UI](./screenshot_files_border_wrap.png)
 
-The following `env.config.jsx` will wrap the files component with a div that has a large red dashed redborder.
+The following `env.config.jsx` will wrap the files component with a div that has a large red dashed 
+red border.
 
 ```js
 import { PLUGIN_OPERATIONS } from '@openedx/frontend-plugin-framework';
 
 const config = {
   pluginSlots: {
-    files_upload_page_table_slot: {
+    'org.openedx.frontend.authoring.files_upload_page_table.v1': {
       keepDefault: true,
       plugins: [
         {

@@ -33,19 +33,17 @@ const CourseFilesSlot = ({ courseId }) => {
     usageStatus: usagePathStatus,
     errors: errorMessages,
   } = useSelector(state => state.assets);
-  const data = {
-    fileIds: assetIds,
-    loadingStatus,
-    usagePathStatus,
-    usageErrorMessages: errorMessages.usageMetrics,
-    fileType: 'file',
-  };
+
   const handleErrorReset = (error) => dispatch(resetErrors(error));
   const handleDeleteFile = (id) => dispatch(deleteAssetFile(courseId, id));
   const handleDownloadFile = (selectedRows) => dispatch(fetchAssetDownload({ selectedRows, courseId }));
   const handleAddFile = (files) => {
     handleErrorReset({ errorType: 'add' });
     dispatch(validateAssetFiles(courseId, files));
+  };
+  const handleFileOverwrite = (close, files) => {
+    Object.values(files).forEach(file => dispatch(addAssetFile(courseId, file, true)));
+    close();
   };
   const handleLockFile = (fileId, locked) => {
     handleErrorReset({ errorType: 'lock' });
@@ -56,22 +54,25 @@ const CourseFilesSlot = ({ courseId }) => {
     dispatch(updateAssetOrder(courseId, newFileIdOrder, sortType));
   };
 
-  const handleFileOverwrite = (close, files) => {
-    Object.values(files).forEach(file => dispatch(addAssetFile(courseId, file, true)));
-    close();
-  };
-
   const thumbnailPreview = (props) => FileThumbnail(props);
   const infoModalSidebar = (asset) => FileInfoModalSidebar({
     asset,
     handleLockedAsset: handleLockFile,
   });
+
   const assets = useModels('assets', assetIds);
+  const data = {
+    fileIds: assetIds,
+    loadingStatus,
+    usagePathStatus,
+    usageErrorMessages: errorMessages.usageMetrics,
+    fileType: 'file',
+  };
   const maxFileSize = 20 * 1048576;
 
   const activeColumn = {
     id: 'activeStatus',
-    Header: 'Active',
+    Header: intl.formatMessage(messages.fileActiveColumn),
     accessor: 'activeStatus',
     Cell: ({ row }) => ActiveColumn({ row, pageLoadStatus: loadingStatus }),
     Filter: CheckboxFilter,
@@ -83,7 +84,7 @@ const CourseFilesSlot = ({ courseId }) => {
   };
   const accessColumn = {
     id: 'lockStatus',
-    Header: 'Access',
+    Header: intl.formatMessage(messages.fileAccessColumn),
     accessor: 'lockStatus',
     Cell: ({ row }) => AccessColumn({ row }),
     Filter: CheckboxFilter,
@@ -99,7 +100,7 @@ const CourseFilesSlot = ({ courseId }) => {
   };
   const fileSizeColumn = {
     id: 'fileSize',
-    Header: 'File size',
+    Header: intl.formatMessage(messages.fileSizeColumn),
     accessor: 'fileSize',
     Cell: ({ row }) => {
       const { fileSize } = row.original;
@@ -110,12 +111,12 @@ const CourseFilesSlot = ({ courseId }) => {
   const tableColumns = [
     { ...thumbnailColumn },
     {
-      Header: 'File name',
+      Header: intl.formatMessage(messages.fileNameColumn),
       accessor: 'displayName',
     },
     { ...fileSizeColumn },
     {
-      Header: 'Type',
+      Header: intl.formatMessage(messages.fileTypeColumn),
       accessor: 'wrapperType',
       Filter: CheckboxFilter,
       filter: 'includesValue',
@@ -146,7 +147,7 @@ const CourseFilesSlot = ({ courseId }) => {
     { ...accessColumn },
   ];
   return (
-    <PluginSlot id="files_upload_page_table_slot">
+    <PluginSlot id="org.openedx.frontend.authoring.files_upload_page_table.v1">
       <FileTable
         {...{
           courseId,
