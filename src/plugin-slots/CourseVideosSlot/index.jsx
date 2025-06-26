@@ -26,7 +26,7 @@ import messages from 'CourseAuthoring/files-and-videos/videos-page/messages';
 import TranscriptSettings from 'CourseAuthoring/files-and-videos/videos-page/transcript-settings';
 import UploadModal from 'CourseAuthoring/files-and-videos/videos-page/upload-modal';
 import VideoThumbnail from 'CourseAuthoring/files-and-videos/videos-page/VideoThumbnail';
-import { useModel, useModels } from 'CourseAuthoring/generic/model-store';
+import { useModels } from 'CourseAuthoring/generic/model-store';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
