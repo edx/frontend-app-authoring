@@ -34,3 +34,82 @@
 .release-notes-page-content {
     min-height: 780px;
 }
+
+.release-notes-sidebar {
+    .font-weight-bold {
+        font-weight: 700;
+    }
+
+    ul {
+        li {
+            line-height: 1.4;
+        }
+    }
+}
+
+.release-notes-page {
+    color: #000000 ;
+
+    h1, h2, h3, h4, h5, h6,
+    p, span, small, li, a,
+    .text-muted, .text-gray-800,
+    .pgn__sub-header,
+    .release-notes-list,
+    .release-note-item {
+        color: #000000 ;
+    }
+
+    .pgn__icon { color: inherit ; }
+}
+
+.release-note-item {
+    & > .d-flex {
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
+
+    & > .d-flex > div:first-child {
+        flex: 1 1 auto;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    & > .d-flex > .d-flex {
+        flex: 0 0 auto;
+        align-self: flex-start;
+    }
+
+    img,
+    video,
+    iframe {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    table {
+        max-width: 100%;
+        width: 100%;
+        display: block;
+        overflow-x: auto;
+    }
+
+    pre,
+    code {
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+}
+
+.post-description {
+    font-size: 14px;
+}
+
+.scheduled-icon:hover,
+.scheduled-icon:focus,
+.scheduled-icon:focus-visible,
+.scheduled-icon:active {
+    background: none;
+    border: none;
+}
