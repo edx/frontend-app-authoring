@@ -16,7 +16,7 @@ const messages = defineMessages({
   },
   headingTitle: {
     id: 'release-notes.page.heading.title',
-    defaultMessage: 'Release notes for edx',
+    defaultMessage: 'Release notes for edX',
   },
   formTitle: {
     id: 'release-notes.form.title',

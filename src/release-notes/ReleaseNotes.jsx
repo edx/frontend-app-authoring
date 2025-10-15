@@ -15,6 +15,7 @@ import {
 } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import moment from 'moment';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import Header from '../header';
 import SubHeader from '../generic/sub-header/SubHeader';
 import messages from './messages';
@@ -26,6 +27,7 @@ import { REQUEST_TYPES } from '../course-updates/constants';
 
 const ReleaseNotes = () => {
   const intl = useIntl();
+  const { administrator } = getAuthenticatedUser() || {};
   const {
     requestType,
     notes,
@@ -67,7 +69,7 @@ const ReleaseNotes = () => {
           title={intl.formatMessage(messages.headingTitle)}
           subtitle=""
           instruction=""
-          headerActions={(
+          headerActions={administrator ? (
             <Button
               variant="primary"
               iconBefore={AddIcon}
@@ -76,7 +78,7 @@ const ReleaseNotes = () => {
             >
               {intl.formatMessage(messages.newPostButton)}
             </Button>
-          )}
+          ) : null}
         />
 
         <Layout
@@ -120,24 +122,26 @@ const ReleaseNotes = () => {
                               )}
                               <div className="d-flex align-items-center mb-1 justify-content-between">
                                 <h6 className="m-0">{post.title}</h6>
-                                <div className="ml-3 d-flex">
-                                  <IconButtonWithTooltip
-                                    tooltipContent={intl.formatMessage(messages.editButton)}
-                                    src={EditOutline}
-                                    iconAs={Icon}
-                                    onClick={() => handleOpenUpdateForm(REQUEST_TYPES.edit_update, post)}
-                                    data-testid="release-note-edit-button"
-                                    disabled={isFormOpen}
-                                  />
-                                  <IconButtonWithTooltip
-                                    tooltipContent={intl.formatMessage(messages.deleteButton)}
-                                    src={DeleteOutline}
-                                    iconAs={Icon}
-                                    onClick={() => handleOpenDeleteForm(post)}
-                                    data-testid="release-note-delete-button"
-                                    disabled={isFormOpen}
-                                  />
-                                </div>
+                                {administrator && (
+                                  <div className="ml-3 d-flex">
+                                    <IconButtonWithTooltip
+                                      tooltipContent={intl.formatMessage(messages.editButton)}
+                                      src={EditOutline}
+                                      iconAs={Icon}
+                                      onClick={() => handleOpenUpdateForm(REQUEST_TYPES.edit_update, post)}
+                                      data-testid="release-note-edit-button"
+                                      disabled={isFormOpen}
+                                    />
+                                    <IconButtonWithTooltip
+                                      tooltipContent={intl.formatMessage(messages.deleteButton)}
+                                      src={DeleteOutline}
+                                      iconAs={Icon}
+                                      onClick={() => handleOpenDeleteForm(post)}
+                                      data-testid="release-note-delete-button"
+                                      disabled={isFormOpen}
+                                    />
+                                  </div>
+                                )}
                               </div>
                               {/* eslint-disable-next-line react/no-danger */}
                               <div className="post-description" dangerouslySetInnerHTML={{ __html: post.description }} />
