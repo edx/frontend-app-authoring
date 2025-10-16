@@ -44,6 +44,24 @@ const ReleaseNotes = () => {
     errors,
   } = useReleaseNotes();
 
+  const getTzName = (date) => {
+    try {
+      const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
+      const parts = new Intl.DateTimeFormat(undefined, { timeZone, timeZoneName: 'short' }).formatToParts(date);
+      const shortName = (parts.find(p => p.type === 'timeZoneName') || {}).value;
+      if (shortName && !/^GMT[+-]/i.test(shortName)) {
+        return shortName;
+      }
+      if (timeZone) {
+        const human = timeZone.split('/').pop().replace(/_/g, ' ');
+        return `${human} Time`;
+      }
+      return '';
+    } catch (e) {
+      return '';
+    }
+  };
+
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (isFormOpen) {
@@ -98,6 +116,7 @@ const ReleaseNotes = () => {
               variant="primary"
               iconBefore={AddIcon}
               size="sm"
+              className="new-post-button"
               onClick={() => handleOpenUpdateForm(REQUEST_TYPES.add_new_update)}
             >
               {intl.formatMessage(messages.newPostButton)}
@@ -114,21 +133,21 @@ const ReleaseNotes = () => {
             >
               <Layout.Element>
                 <article>
-                  <section className="release-notes-list p-4.5">
+                  <section className="release-notes-list pt-5">
                     {groups.map((g) => (
                       <div key={g.key} className="mb-4">
                         {g.items.map((post) => (
                           <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
                             <div className="d-flex justify-content-between align-items-start">
                               <div>
-                                <h3 className="mb-4 pb-4">{moment(post.published_at).format('MMMM D, YYYY')}</h3>
+                                <h2 className="mb-4 pb-4">{moment(post.published_at).format('MMMM D, YYYY')}</h2>
                                 {post.published_at && moment(post.published_at).isAfter(moment()) && (
                                   <OverlayTrigger
-                                    placement="top"
+                                    placement="right"
                                     overlay={(
-                                      <Tooltip id={`scheduled-tooltip-${post.id}`}>
+                                      <Tooltip className="scheduled-tooltip" id={`scheduled-tooltip-${post.id}`}>
                                         {intl.formatMessage(messages.scheduledTooltip, {
-                                          date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
+                                          date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
                                         })}
                                       </Tooltip>
                                 )}
@@ -138,21 +157,22 @@ const ReleaseNotes = () => {
                                         className="mr-1 p-0 justify-content-start scheduled-icon"
                                         src={ClockIcon}
                                         alt={intl.formatMessage(messages.scheduledTooltip, {
-                                          date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
+                                          date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
                                         })}
                                       />
-                                      <span>{intl.formatMessage(messages.scheduledLabel)}</span>
+                                      <span className="post-scheduled">{intl.formatMessage(messages.scheduledLabel)}</span>
                                     </div>
                                   </OverlayTrigger>
                                 )}
                                 <div className="d-flex align-items-center mb-1 justify-content-between">
-                                  <h6 className="m-0">{post.title}</h6>
+                                  <h3 className="m-0">{post.title}</h3>
                                   {administrator && (
                                     <div className="ml-3 d-flex">
                                       <IconButtonWithTooltip
                                         tooltipContent={intl.formatMessage(messages.editButton)}
                                         src={EditOutline}
                                         iconAs={Icon}
+                                        className="edit-notes-hover"
                                         onClick={() => handleOpenUpdateForm(REQUEST_TYPES.edit_update, post)}
                                         data-testid="release-note-edit-button"
                                         disabled={isFormOpen}
@@ -161,6 +181,7 @@ const ReleaseNotes = () => {
                                         tooltipContent={intl.formatMessage(messages.deleteButton)}
                                         src={DeleteOutline}
                                         iconAs={Icon}
+                                        className="delete-notes-hover"
                                         onClick={() => handleOpenDeleteForm(post)}
                                         data-testid="release-note-delete-button"
                                         disabled={isFormOpen}

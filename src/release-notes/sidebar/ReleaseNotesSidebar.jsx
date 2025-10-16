@@ -24,7 +24,7 @@ const ReleaseNotesSidebar = ({ notes }) => {
 
   return (
     <aside className="release-notes-sidebar">
-      <div className="m-0 p-0">
+      <div className="pt-5">
         {groups.map((g) => (
           <div key={g.key} className="mb-3">
             <p className="mb-1">{g.label}</p>
