@@ -62,7 +62,7 @@ const useReleaseNotes = () => {
     openDeleteModal();
   };
 
-  const handleUpdatesSubmit = (data) => {
+  const handleUpdatesSubmit = async (data) => {
     const payload = {
       ...data,
       published_at:
@@ -71,26 +71,34 @@ const useReleaseNotes = () => {
           : data.published_at,
     };
 
+    let result;
     switch (requestType) {
       case REQUEST_TYPES.add_new_update:
-        dispatch(createReleaseNoteQuery(payload));
+        result = await dispatch(createReleaseNoteQuery(payload));
         break;
       case REQUEST_TYPES.edit_update:
-        dispatch(editReleaseNoteQuery(payload));
+        result = await dispatch(editReleaseNoteQuery(payload));
         break;
       default:
         break;
     }
 
-    closeForm();
-    setCurrentNote(initialNote);
+    // Only close form if the operation was successful
+    if (result?.success) {
+      closeForm();
+      setCurrentNote(initialNote);
+    }
   };
 
-  const handleDeleteUpdateSubmit = () => {
+  const handleDeleteUpdateSubmit = async () => {
     const { id } = currentNote;
-    dispatch(deleteReleaseNoteQuery(id));
-    setCurrentNote(initialNote);
-    closeDeleteModal();
+    const result = await dispatch(deleteReleaseNoteQuery(id));
+
+    // Only close modal if delete was successful
+    if (result?.success) {
+      setCurrentNote(initialNote);
+      closeDeleteModal();
+    }
   };
 
   return {

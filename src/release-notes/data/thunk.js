@@ -71,12 +71,14 @@ export function createReleaseNoteQuery(data) {
         status: { createReleaseNoteQuery: RequestStatus.SUCCESSFUL },
         error: { creatingNote: false },
       }));
+      return { success: true };
     } catch (error) {
       dispatch(hideProcessingNotification());
       dispatch(updateSavingStatuses({
         status: { createReleaseNoteQuery: RequestStatus.FAILED },
         error: { creatingNote: true },
       }));
+      return { success: false };
     }
   };
 }
@@ -105,12 +107,14 @@ export function editReleaseNoteQuery(data) {
         status: { editReleaseNoteQuery: RequestStatus.SUCCESSFUL },
         error: { savingNotes: false },
       }));
+      return { success: true };
     } catch (error) {
       dispatch(hideProcessingNotification());
       dispatch(updateSavingStatuses({
         status: { editReleaseNoteQuery: RequestStatus.FAILED },
         error: { savingNotes: true },
       }));
+      return { success: false };
     }
   };
 }
@@ -127,12 +131,14 @@ export function deleteReleaseNoteQuery(noteId) {
         status: { deleteReleaseNoteQuery: RequestStatus.SUCCESSFUL },
         error: { deletingNotes: false },
       }));
+      return { success: true };
     } catch (error) {
       dispatch(hideProcessingNotification());
       dispatch(updateSavingStatuses({
         status: { deleteReleaseNoteQuery: RequestStatus.FAILED },
         error: { deletingNotes: true },
       }));
+      return { success: false };
     }
   };
 }

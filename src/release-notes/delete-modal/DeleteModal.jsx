@@ -4,12 +4,17 @@ import {
   ActionRow,
   Button,
   AlertModal,
+  Alert,
 } from '@openedx/paragon';
+import { Info } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import messages from './messages';
+import releaseNotesMessages from '../messages';
 
-const DeleteModal = ({ isOpen, close, onDeleteSubmit }) => {
+const DeleteModal = ({
+  isOpen, close, onDeleteSubmit, errorDeleting,
+}) => {
   const intl = useIntl();
 
   return (
@@ -33,6 +38,11 @@ const DeleteModal = ({ isOpen, close, onDeleteSubmit }) => {
         </ActionRow>
       )}
     >
+      {errorDeleting && (
+        <Alert variant="danger" icon={Info} className="mb-3">
+          {intl.formatMessage(releaseNotesMessages.errorDeletingPost)}
+        </Alert>
+      )}
       <p>{intl.formatMessage(messages.deleteModalDescription)}</p>
     </AlertModal>
   );
@@ -42,6 +52,11 @@ DeleteModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   close: PropTypes.func.isRequired,
   onDeleteSubmit: PropTypes.func.isRequired,
+  errorDeleting: PropTypes.bool,
+};
+
+DeleteModal.defaultProps = {
+  errorDeleting: false,
 };
 
 export default DeleteModal;
