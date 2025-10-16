@@ -78,6 +78,22 @@ const messages = defineMessages({
     id: 'release-notes.error.deleting',
     defaultMessage: 'Something went wrong while deleting this post. Please try again.',
   },
+  errorPublishDateRequired: {
+    id: 'release-notes.form.error.publish_date.required',
+    defaultMessage: 'Enter a publish date',
+  },
+  errorPublishTimeRequired: {
+    id: 'release-notes.form.error.publish_time.required',
+    defaultMessage: 'Enter a publish time',
+  },
+  errorTitleRequired: {
+    id: 'release-notes.form.error.title.required',
+    defaultMessage: 'Enter a title',
+  },
+  errorDescriptionRequired: {
+    id: 'release-notes.form.error.description.required',
+    defaultMessage: 'Enter post content',
+  },
 });
 
 export default messages;

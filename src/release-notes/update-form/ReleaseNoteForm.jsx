@@ -28,7 +28,7 @@ const ReleaseNoteForm = ({
   const tzName = React.useMemo(() => {
     try {
       const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
-      const parts = new Intl.DateTimeFormat(undefined, { timeZone, timeZoneName: 'long' }).formatToParts(new Date());
+      const parts = new Intl.DateTimeFormat(undefined, { timeZone, timeZoneName: 'short' }).formatToParts(new Date());
       const longName = (parts.find(p => p.type === 'timeZoneName') || {}).value;
       if (longName && !/^GMT[+-]/i.test(longName)) {
         return longName;
@@ -49,12 +49,12 @@ const ReleaseNoteForm = ({
 
   const validationSchema = Yup.object().shape({
     id: Yup.number(),
-    title: Yup.string().required(),
-    description: Yup.string().required(),
-    publishDate: Yup.date().required(),
+    title: Yup.string().required(intl.formatMessage(messages.errorTitleRequired)),
+    description: Yup.string().required(intl.formatMessage(messages.errorDescriptionRequired)),
+    publishDate: Yup.date().required(intl.formatMessage(messages.errorPublishDateRequired)),
     publishTime: Yup.string()
-      .required()
-      .matches(/^([01]\d|2[0-3]):[0-5]\d$/, 'Invalid value'),
+      .required(intl.formatMessage(messages.errorPublishTimeRequired))
+      .matches(/^([01]\d|2[0-3]):[0-5]\d$/, intl.formatMessage(messages.errorPublishTimeRequired)),
   });
 
   const handleCancel = (e) => {
@@ -96,13 +96,13 @@ const ReleaseNoteForm = ({
         }}
       >
         {({
-          values, handleSubmit, isValid, setFieldValue,
+          values, handleSubmit, setFieldValue, errors, touched,
         }) => (
           <>
             <div className="row">
               <div className="col-md-6">
                 <Form.Group className="mb-4 datepicker-field datepicker-custom">
-                  <Form.Control.Feedback className="datepicker-float-labels">
+                  <Form.Control.Feedback className="datepicker-float-labels mb-2">
                     {intl.formatMessage(messages.publishDateLabel)}
                   </Form.Control.Feedback>
                   <div className="position-relative">
@@ -110,16 +110,22 @@ const ReleaseNoteForm = ({
                       type="date"
                       name="publishDate"
                       value={values.publishDate || ''}
-                      className="datepicker-custom-control p-0"
+                      className="datepicker-custom-control notes-label p-0"
                       aria-label={intl.formatMessage(messages.publishDateLabel)}
                       onChange={(e) => setFieldValue('publishDate', e.target.value)}
+                      isInvalid={touched.publishDate && !!errors.publishDate}
                     />
+                    {touched.publishDate && errors.publishDate && (
+                      <p className="invalid-feedback d-block">
+                        {errors.publishDate}
+                      </p>
+                    )}
                   </div>
                 </Form.Group>
               </div>
               <div className="col-md-6">
                 <Form.Group className="mb-4 datepicker-field datepicker-custom">
-                  <Form.Control.Feedback className="datepicker-float-labels">
+                  <Form.Control.Feedback className="datepicker-float-labels mb-2">
                     {publishTimeText}
                   </Form.Control.Feedback>
                   <div className="position-relative">
@@ -127,26 +133,39 @@ const ReleaseNoteForm = ({
                       type="time"
                       name="publishTime"
                       value={values.publishTime || ''}
-                      className="datepicker-custom-control p-0"
+                      className="datepicker-custom-control notes-label p-0"
                       aria-label={intl.formatMessage(messages.publishTimeLabel)}
                       step="60"
                       onChange={(e) => setFieldValue('publishTime', e.target.value)}
+                      isInvalid={touched.publishTime && !!errors.publishTime}
                     />
+                    {touched.publishTime && errors.publishTime && (
+                      <p className="invalid-feedback d-block">
+                        {errors.publishTime}
+                      </p>
+                    )}
                   </div>
                 </Form.Group>
               </div>
             </div>
 
             <Form.Group className="mb-3">
-              <Form.Control.Feedback>
+              <Form.Control.Feedback className="mb-2">
                 {intl.formatMessage(messages.titleLabel)}
               </Form.Control.Feedback>
               <Form.Control
                 name="title"
+                className="notes-label"
                 value={values.title}
                 aria-label={intl.formatMessage(messages.titleLabel)}
                 onChange={(e) => setFieldValue('title', e.target.value)}
+                isInvalid={touched.title && !!errors.title}
               />
+              {touched.title && errors.title && (
+                <p className="invalid-feedback d-block">
+                  {errors.title}
+                </p>
+              )}
             </Form.Group>
 
             <Form.Group className="m-0 mb-3">
@@ -157,13 +176,18 @@ const ReleaseNoteForm = ({
                 minHeight={200}
                 onChange={(value) => setFieldValue('description', value)}
               />
+              {touched.description && errors.description && (
+                <p className="invalid-feedback d-block">
+                  {errors.description}
+                </p>
+              )}
             </Form.Group>
 
             <ActionRow>
               <Button variant="tertiary" type="button" onClick={handleCancel}>
                 {intl.formatMessage(messages.cancelButton)}
               </Button>
-              <Button variant="primary" onClick={handleSubmit} type="submit" disabled={!isValid}>
+              <Button variant="primary" onClick={handleSubmit} type="submit">
                 {intl.formatMessage(messages.saveButton)}
               </Button>
             </ActionRow>
