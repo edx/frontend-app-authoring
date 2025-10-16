@@ -66,6 +66,18 @@ const messages = defineMessages({
     id: 'release-notes.scheduled.label',
     defaultMessage: 'Scheduled',
   },
+  errorLoadingPage: {
+    id: 'release-notes.error.loading',
+    defaultMessage: 'Something went wrong while loading this page. Please refresh and try again.',
+  },
+  errorSavingPost: {
+    id: 'release-notes.error.saving',
+    defaultMessage: 'Something went wrong while saving your post. Please try again.',
+  },
+  errorDeletingPost: {
+    id: 'release-notes.error.deleting',
+    defaultMessage: 'Something went wrong while deleting this post. Please try again.',
+  },
 });
 
 export default messages;

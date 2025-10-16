@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { StudioFooterSlot } from '@edx/frontend-component-footer';
 import {
-  Add as AddIcon, EditOutline, DeleteOutline, AccessTime as ClockIcon,
+  Add as AddIcon, EditOutline, DeleteOutline, AccessTime as ClockIcon, Info,
 } from '@openedx/paragon/icons';
 import {
   Button,
@@ -12,6 +12,7 @@ import {
   OverlayTrigger,
   Tooltip,
   ModalDialog,
+  Alert,
 } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import moment from 'moment';
@@ -40,7 +41,23 @@ const ReleaseNotes = () => {
     handleOpenUpdateForm,
     handleDeleteUpdateSubmit,
     handleOpenDeleteForm,
+    errors,
   } = useReleaseNotes();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isFormOpen) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isFormOpen]);
 
   const groups = useMemo(() => {
     const map = new Map();
@@ -64,6 +81,13 @@ const ReleaseNotes = () => {
   return (
     <>
       <Header isHiddenMainMenu />
+      {errors.loadingNotes && (
+        <Container size="xl" className="px-4 pt-4">
+          <Alert variant="danger" icon={Info}>
+            {intl.formatMessage(messages.errorLoadingPage)}
+          </Alert>
+        </Container>
+      )}
       <Container size="xl" className="release-notes-page px-4 pt-4">
         <SubHeader
           title={intl.formatMessage(messages.headingTitle)}
@@ -81,98 +105,100 @@ const ReleaseNotes = () => {
           ) : null}
         />
 
-        <Layout
-          lg={[{ span: 9 }, { span: 3 }]}
-          md={[{ span: 9 }, { span: 3 }]}
-          xs={[{ span: 12 }, { span: 12 }]}
-        >
-          <Layout.Element>
-            <article>
-              <section className="release-notes-list p-4.5">
-                {groups.length > 0 ? (
-                  groups.map((g) => (
-                    <div key={g.key} className="mb-4">
-                      {g.items.map((post) => (
-                        <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
-                          <div className="d-flex justify-content-between align-items-start">
-                            <div>
-                              <h3 className="mb-4 pb-4">{moment(post.published_at).format('MMMM D, YYYY')}</h3>
-                              {post.published_at && moment(post.published_at).isAfter(moment()) && (
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={(
-                                  <Tooltip id={`scheduled-tooltip-${post.id}`}>
-                                    {intl.formatMessage(messages.scheduledTooltip, {
-                                      date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
-                                    })}
-                                  </Tooltip>
+        {!errors.loadingNotes && (
+          groups.length > 0 ? (
+            <Layout
+              lg={[{ span: 9 }, { span: 3 }]}
+              md={[{ span: 9 }, { span: 3 }]}
+              xs={[{ span: 12 }, { span: 12 }]}
+            >
+              <Layout.Element>
+                <article>
+                  <section className="release-notes-list p-4.5">
+                    {groups.map((g) => (
+                      <div key={g.key} className="mb-4">
+                        {g.items.map((post) => (
+                          <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
+                            <div className="d-flex justify-content-between align-items-start">
+                              <div>
+                                <h3 className="mb-4 pb-4">{moment(post.published_at).format('MMMM D, YYYY')}</h3>
+                                {post.published_at && moment(post.published_at).isAfter(moment()) && (
+                                  <OverlayTrigger
+                                    placement="top"
+                                    overlay={(
+                                      <Tooltip id={`scheduled-tooltip-${post.id}`}>
+                                        {intl.formatMessage(messages.scheduledTooltip, {
+                                          date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
+                                        })}
+                                      </Tooltip>
                                 )}
-                              >
-                                <div className="d-inline-flex align-items-center text-muted small mr-2" role="button" tabIndex={0}>
-                                  <Icon
-                                    className="mr-1 p-0 justify-content-start scheduled-icon"
-                                    src={ClockIcon}
-                                    alt={intl.formatMessage(messages.scheduledTooltip, {
-                                      date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
-                                    })}
-                                  />
-                                  <span>{intl.formatMessage(messages.scheduledLabel)}</span>
+                                  >
+                                    <div className="d-inline-flex align-items-center text-muted small mr-2" role="button" tabIndex={0}>
+                                      <Icon
+                                        className="mr-1 p-0 justify-content-start scheduled-icon"
+                                        src={ClockIcon}
+                                        alt={intl.formatMessage(messages.scheduledTooltip, {
+                                          date: moment(post.published_at).format('MMMM D, YYYY h:mm A z'),
+                                        })}
+                                      />
+                                      <span>{intl.formatMessage(messages.scheduledLabel)}</span>
+                                    </div>
+                                  </OverlayTrigger>
+                                )}
+                                <div className="d-flex align-items-center mb-1 justify-content-between">
+                                  <h6 className="m-0">{post.title}</h6>
+                                  {administrator && (
+                                    <div className="ml-3 d-flex">
+                                      <IconButtonWithTooltip
+                                        tooltipContent={intl.formatMessage(messages.editButton)}
+                                        src={EditOutline}
+                                        iconAs={Icon}
+                                        onClick={() => handleOpenUpdateForm(REQUEST_TYPES.edit_update, post)}
+                                        data-testid="release-note-edit-button"
+                                        disabled={isFormOpen}
+                                      />
+                                      <IconButtonWithTooltip
+                                        tooltipContent={intl.formatMessage(messages.deleteButton)}
+                                        src={DeleteOutline}
+                                        iconAs={Icon}
+                                        onClick={() => handleOpenDeleteForm(post)}
+                                        data-testid="release-note-delete-button"
+                                        disabled={isFormOpen}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
-                              </OverlayTrigger>
-                              )}
-                              <div className="d-flex align-items-center mb-1 justify-content-between">
-                                <h6 className="m-0">{post.title}</h6>
-                                {administrator && (
-                                  <div className="ml-3 d-flex">
-                                    <IconButtonWithTooltip
-                                      tooltipContent={intl.formatMessage(messages.editButton)}
-                                      src={EditOutline}
-                                      iconAs={Icon}
-                                      onClick={() => handleOpenUpdateForm(REQUEST_TYPES.edit_update, post)}
-                                      data-testid="release-note-edit-button"
-                                      disabled={isFormOpen}
-                                    />
-                                    <IconButtonWithTooltip
-                                      tooltipContent={intl.formatMessage(messages.deleteButton)}
-                                      src={DeleteOutline}
-                                      iconAs={Icon}
-                                      onClick={() => handleOpenDeleteForm(post)}
-                                      data-testid="release-note-delete-button"
-                                      disabled={isFormOpen}
-                                    />
+                                {/* eslint-disable-next-line react/no-danger */}
+                                <div className="post-description" dangerouslySetInnerHTML={{ __html: post.description }} />
+                                {post.created_by && (
+                                  <div className="mt-3">
+                                    <small>
+                                      {intl.formatMessage({ id: 'release-notes.questions.contact', defaultMessage: 'Questions? Contact {email}' }, {
+                                        email: post.created_by,
+                                      })}
+                                    </small>
                                   </div>
                                 )}
                               </div>
-                              {/* eslint-disable-next-line react/no-danger */}
-                              <div className="post-description" dangerouslySetInnerHTML={{ __html: post.description }} />
-                              {post.created_by && (
-                              <div className="mt-3">
-                                <small>
-                                  {intl.formatMessage({ id: 'release-notes.questions.contact', defaultMessage: 'Questions? Contact {email}' }, {
-                                    email: post.created_by,
-                                  })}
-                                </small>
-                              </div>
-                              )}
-                            </div>
 
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center">
-                    <span className="small mr-2">{intl.formatMessage(messages.noReleaseNotes)}</span>
-                  </div>
-                )}
-              </section>
-            </article>
-          </Layout.Element>
-          <Layout.Element>
-            <ReleaseNotesSidebar notes={notes} />
-          </Layout.Element>
-        </Layout>
+                        ))}
+                      </div>
+                    ))}
+                  </section>
+                </article>
+              </Layout.Element>
+              <Layout.Element>
+                <ReleaseNotesSidebar notes={notes} />
+              </Layout.Element>
+            </Layout>
+          ) : (
+            <div className="text-center py-5">
+              <span className="small">{intl.formatMessage(messages.noReleaseNotes)}</span>
+            </div>
+          )
+        )}
       </Container>
       {isFormOpen && (
       <ModalDialog
@@ -189,6 +215,11 @@ const ReleaseNotes = () => {
           </ModalDialog.Title>
         </ModalDialog.Header>
         <ModalDialog.Body>
+          {(errors.savingNotes || errors.creatingNote) && (
+            <Alert variant="danger" icon={Info} className="mb-3">
+              {intl.formatMessage(messages.errorSavingPost)}
+            </Alert>
+          )}
           <ReleaseNoteForm
             initialValues={notesInitialValues}
             close={closeForm}
@@ -197,7 +228,12 @@ const ReleaseNotes = () => {
         </ModalDialog.Body>
       </ModalDialog>
       )}
-      <DeleteModal isOpen={isDeleteModalOpen} close={closeDeleteModal} onDeleteSubmit={handleDeleteUpdateSubmit} />
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        close={closeDeleteModal}
+        onDeleteSubmit={handleDeleteUpdateSubmit}
+        errorDeleting={errors.deletingNotes}
+      />
       <StudioFooterSlot />
     </>
   );
