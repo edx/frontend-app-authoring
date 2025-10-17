@@ -1,33 +1,18 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
-
-const dayKey = (iso) => (iso ? moment(iso).format('YYYY-MM-DD') : 'unscheduled');
-const dayLabel = (key) => (key === 'unscheduled' ? 'Unscheduled' : moment(key).format('MMMM D, YYYY'));
+import { useIntl } from '@edx/frontend-platform/i18n';
+import { groupNotesByDate } from '../utils/groupNotes';
 
 const ReleaseNotesSidebar = ({ notes }) => {
-  const groups = useMemo(() => {
-    const map = new Map();
-    (notes || []).forEach((n) => {
-      const key = dayKey(n.published_at);
-      if (!map.has(key)) { map.set(key, []); }
-      map.get(key).push(n);
-    });
-    // Sort groups by date desc, unscheduled last
-    const keys = Array.from(map.keys()).sort((a, b) => {
-      if (a === 'unscheduled') { return 1; }
-      if (b === 'unscheduled') { return -1; }
-      return moment(b).valueOf() - moment(a).valueOf();
-    });
-    return keys.map((k) => ({ key: k, label: dayLabel(k), items: map.get(k) }));
-  }, [notes]);
+  const intl = useIntl();
+  const groups = useMemo(() => groupNotesByDate(notes, intl), [notes, intl]);
 
   return (
     <aside className="release-notes-sidebar">
       <div className="pt-5">
         {groups.map((g) => (
           <div key={g.key} className="mb-3">
-            <p className="mb-1">{g.label}</p>
+            <h6 className="mb-1">{g.label}</h6>
             <ul className="list-unstyled m-0 p-0 ml-3">
               {g.items.map((n) => (
                 <li key={n.id} className="mb-2">

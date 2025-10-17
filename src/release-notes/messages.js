@@ -94,6 +94,11 @@ const messages = defineMessages({
     id: 'release-notes.form.error.description.required',
     defaultMessage: 'Enter post content',
   },
+  questionsContact: {
+    id: 'release-notes.questions.contact',
+    defaultMessage: 'Questions? Contact {email}',
+    description: 'Text shown at the bottom of each release note to provide contact information',
+  },
 });
 
 export default messages;

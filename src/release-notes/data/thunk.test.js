@@ -108,7 +108,7 @@ describe('release-notes thunks', () => {
     const last = actions[actions.length - 1];
     expect(last.type).toBe(updateSavingStatuses.type);
     expect(last.payload.status.editReleaseNoteQuery).toBe(RequestStatus.FAILED);
-    expect(last.payload.error.savingNotes).toBe(true);
+    expect(last.payload.error.savingNote).toBe(true);
   });
 
   test('deleteReleaseNoteQuery toggles processing notifications', async () => {
@@ -138,7 +138,7 @@ describe('release-notes thunks', () => {
     const last = actions[actions.length - 1];
     expect(last.type).toBe(updateSavingStatuses.type);
     expect(last.payload.status.deleteReleaseNoteQuery).toBe(RequestStatus.FAILED);
-    expect(last.payload.error.deletingNotes).toBe(true);
+    expect(last.payload.error.deletingNote).toBe(true);
   });
 
   test('createReleaseNoteQuery transforms payload (raw_html_content) before API', async () => {
