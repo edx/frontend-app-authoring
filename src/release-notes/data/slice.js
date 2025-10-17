@@ -14,9 +14,9 @@ const initialState = {
   },
   errors: {
     creatingNote: false,
-    deletingNotes: false,
+    deletingNote: false,
     loadingNotes: false,
-    savingNotes: false,
+    savingNote: false,
   },
 };
 

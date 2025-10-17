@@ -25,6 +25,7 @@ import DeleteModal from './delete-modal/DeleteModal';
 import ReleaseNoteForm from './update-form/ReleaseNoteForm';
 import ReleaseNotesSidebar from './sidebar/ReleaseNotesSidebar';
 import { REQUEST_TYPES } from '../course-updates/constants';
+import { groupNotesByDate } from './utils/groupNotes';
 
 const ReleaseNotes = () => {
   const intl = useIntl();
@@ -77,24 +78,7 @@ const ReleaseNotes = () => {
     };
   }, [isFormOpen]);
 
-  const groups = useMemo(() => {
-    const map = new Map();
-    (notes || []).forEach((n) => {
-      const key = n.published_at ? moment(n.published_at).format('YYYY-MM-DD') : 'unscheduled';
-      if (!map.has(key)) { map.set(key, []); }
-      map.get(key).push(n);
-    });
-    const keys = Array.from(map.keys()).sort((a, b) => {
-      if (a === 'unscheduled') { return 1; }
-      if (b === 'unscheduled') { return -1; }
-      return moment(b).valueOf() - moment(a).valueOf();
-    });
-    return keys.map((k) => ({
-      key: k,
-      label: k === 'unscheduled' ? intl.formatMessage({ id: 'release-notes.unscheduled.label', defaultMessage: 'Unscheduled' }) : moment(k).format('MMMM D, YYYY'),
-      items: map.get(k),
-    }));
-  }, [notes, intl]);
+  const groups = useMemo(() => groupNotesByDate(notes, intl), [notes, intl]);
 
   return (
     <>
@@ -111,7 +95,7 @@ const ReleaseNotes = () => {
           title={intl.formatMessage(messages.headingTitle)}
           subtitle=""
           instruction=""
-          headerActions={administrator ? (
+          headerActions={administrator && !errors.loadingNotes ? (
             <Button
               variant="primary"
               iconBefore={AddIcon}
@@ -140,7 +124,11 @@ const ReleaseNotes = () => {
                           <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
                             <div className="d-flex justify-content-between align-items-start">
                               <div>
-                                <h2 className="mb-4 pb-4">{moment(post.published_at).format('MMMM D, YYYY')}</h2>
+                                <h2 className="mb-4 pb-4">
+                                  {post.published_at
+                                    ? moment(post.published_at).format('MMMM D, YYYY')
+                                    : intl.formatMessage({ id: 'release-notes.unscheduled.label', defaultMessage: 'Unscheduled' })}
+                                </h2>
                                 {post.published_at && moment(post.published_at).isAfter(moment()) && (
                                   <OverlayTrigger
                                     placement="right"
@@ -152,7 +140,13 @@ const ReleaseNotes = () => {
                                       </Tooltip>
                                 )}
                                   >
-                                    <div className="d-inline-flex align-items-center text-muted small mr-2" role="button" tabIndex={0}>
+                                    <button
+                                      type="button"
+                                      className="btn-link d-inline-flex align-items-center text-muted small mr-2 p-0 border-0 text-decoration-none"
+                                      aria-label={intl.formatMessage(messages.scheduledTooltip, {
+                                        date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
+                                      })}
+                                    >
                                       <Icon
                                         className="mr-1 p-0 justify-content-start scheduled-icon"
                                         src={ClockIcon}
@@ -161,7 +155,7 @@ const ReleaseNotes = () => {
                                         })}
                                       />
                                       <span className="post-scheduled">{intl.formatMessage(messages.scheduledLabel)}</span>
-                                    </div>
+                                    </button>
                                   </OverlayTrigger>
                                 )}
                                 <div className="d-flex align-items-center mb-1 justify-content-between">
@@ -194,7 +188,7 @@ const ReleaseNotes = () => {
                                 {post.created_by && (
                                   <div className="mt-3">
                                     <small>
-                                      {intl.formatMessage({ id: 'release-notes.questions.contact', defaultMessage: 'Questions? Contact {email}' }, {
+                                      {intl.formatMessage(messages.questionsContact, {
                                         email: post.created_by,
                                       })}
                                     </small>
@@ -236,7 +230,7 @@ const ReleaseNotes = () => {
           </ModalDialog.Title>
         </ModalDialog.Header>
         <ModalDialog.Body>
-          {(errors.savingNotes || errors.creatingNote) && (
+          {(errors.savingNote || errors.creatingNote) && (
             <Alert variant="danger" icon={Info} className="mb-3">
               {intl.formatMessage(messages.errorSavingPost)}
             </Alert>
@@ -253,7 +247,7 @@ const ReleaseNotes = () => {
         isOpen={isDeleteModalOpen}
         close={closeDeleteModal}
         onDeleteSubmit={handleDeleteUpdateSubmit}
-        errorDeleting={errors.deletingNotes}
+        errorDeleting={errors.deletingNote}
       />
       <StudioFooterSlot />
     </>

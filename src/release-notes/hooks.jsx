@@ -20,7 +20,7 @@ import {
 const useReleaseNotes = () => {
   const dispatch = useDispatch();
   const initialNote = {
-    id: 0, published_at: moment().utc().toDate(), title: '', description: '',
+    id: undefined, published_at: moment().utc().toDate(), title: '', description: '',
   };
 
   const [requestType, setRequestType] = useState('');
