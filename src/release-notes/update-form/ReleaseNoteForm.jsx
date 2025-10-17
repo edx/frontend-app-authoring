@@ -11,8 +11,8 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import classNames from 'classnames';
 import moment from 'moment';
-
-import { WysiwygEditor } from '../../generic/WysiwygEditor';
+import { useSelector } from 'react-redux';
+import TinyMceWidget, { prepareEditorRef } from '../../editors/sharedComponents/TinyMceWidget';
 import messages from '../messages';
 import unsavedMessages from './unsaved-modal-messages';
 import { TIME_FORMAT } from '../../constants';
@@ -25,6 +25,8 @@ const ReleaseNoteForm = ({
 }) => {
   const [showUnsavedModal, setShowUnsavedModal] = React.useState(false);
   const intl = useIntl();
+  const { editorRef, refReady, setEditorRef } = prepareEditorRef();
+  const { courseId } = useSelector((state) => state.courseDetail);
   const tzName = React.useMemo(() => {
     try {
       const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
@@ -169,13 +171,23 @@ const ReleaseNoteForm = ({
             </Form.Group>
 
             <Form.Group className="m-0 mb-3">
-              <WysiwygEditor
-                initialValue={values.description}
-                data-testid="release-note-wysiwyw"
-                name="description"
-                minHeight={200}
-                onChange={(value) => setFieldValue('description', value)}
-              />
+              {refReady && (
+                <TinyMceWidget
+                  editorRef={editorRef}
+                  editorType="text"
+                  textValue={values.description}
+                  initialValue={initialValues.description || ''}
+                  minHeight={200}
+                  editorContentHtml={initialValues.description || ''}
+                  setEditorRef={setEditorRef}
+                  onChange={(value) => setFieldValue('description', value)}
+                  initializeEditor={() => ({})}
+                  learningContextId={courseId}
+                  images={{}}
+                  enableImageUpload={false}
+                  showImageButton
+                />
+              )}
               {touched.description && errors.description && (
                 <p className="invalid-feedback d-block">
                   {errors.description}
