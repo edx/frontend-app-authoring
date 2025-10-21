@@ -145,4 +145,423 @@ describe('useReleaseNotes', () => {
     fireEvent.click(document.querySelector('[data-testid="open-btn"]'));
     fireEvent.click(document.querySelector('[data-testid="close-btn"]'));
   });
+
+  describe('handleOpenDeleteForm', () => {
+    it('sets request type and opens delete modal', () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        return (
+          <>
+            <button
+              type="button"
+              data-testid="open-delete-btn"
+              onClick={() => hook.handleOpenDeleteForm({ id: 1, title: 'Test' })}
+            >
+              Open Delete
+            </button>
+            <span data-testid="modal-state">{hook.isDeleteModalOpen ? 'open' : 'closed'}</span>
+          </>
+        );
+      };
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="open-delete-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleUpdatesSubmit', () => {
+    it('handles successful create operation', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-create-btn"
+            onClick={() => hook.handleUpdatesSubmit({
+              title: 'New Note',
+              description: 'Description',
+              published_at: new Date(),
+            })}
+          >
+            Submit Create
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-create-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('handles successful edit operation', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('edit_update', { id: 1, title: 'Test' });
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-edit-btn"
+            onClick={() => hook.handleUpdatesSubmit({
+              id: 1,
+              title: 'Updated Note',
+              description: 'Updated Description',
+              published_at: new Date(),
+            })}
+          >
+            Submit Edit
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-edit-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('does not close form when operation fails', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <>
+            <button
+              type="button"
+              data-testid="submit-fail-btn"
+              onClick={() => hook.handleUpdatesSubmit({
+                title: 'New Note',
+                description: 'Description',
+                published_at: new Date(),
+              })}
+            >
+              Submit
+            </button>
+            <span data-testid="form-state">{hook.isFormOpen ? 'open' : 'closed'}</span>
+          </>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: false });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-fail-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('handles published_at as ISO string', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-iso-btn"
+            onClick={() => hook.handleUpdatesSubmit({
+              title: 'New Note',
+              description: 'Description',
+              published_at: new Date().toISOString(),
+            })}
+          >
+            Submit with ISO String
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-iso-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('handles null published_at', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-null-btn"
+            onClick={() => hook.handleUpdatesSubmit({
+              title: 'New Note',
+              description: 'Description',
+              published_at: null,
+            })}
+          >
+            Submit with null date
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-null-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleDeleteUpdateSubmit', () => {
+    it('handles successful delete operation', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenDeleteForm({ id: 3, title: 'Test' });
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-delete-btn"
+            onClick={() => hook.handleDeleteUpdateSubmit()}
+          >
+            Submit Delete
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-delete-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('does not close modal when delete fails', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        React.useEffect(() => {
+          hook.handleOpenDeleteForm({ id: 3, title: 'Test' });
+        }, []);
+
+        return (
+          <>
+            <button
+              type="button"
+              data-testid="delete-fail-btn"
+              onClick={() => hook.handleDeleteUpdateSubmit()}
+            >
+              Delete
+            </button>
+            <span data-testid="delete-modal-state">{hook.isDeleteModalOpen ? 'open' : 'closed'}</span>
+          </>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: false });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="delete-fail-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+  });
+
+  describe('handleOpenDeleteForm', () => {
+    it('sets request type to delete and opens delete modal', () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        const note = { id: 5, title: 'To Delete', description: 'Will be deleted' };
+
+        return (
+          <>
+            <button
+              type="button"
+              data-testid="open-delete-btn"
+              onClick={() => hook.handleOpenDeleteForm(note)}
+            >
+              Open Delete Modal
+            </button>
+            <span data-testid="request-type">{hook.requestType}</span>
+            <span data-testid="delete-modal-state">{hook.isDeleteModalOpen ? 'open' : 'closed'}</span>
+            <span data-testid="current-note-id">{hook.notesInitialValues?.id || 'none'}</span>
+          </>
+        );
+      };
+
+      const { getByTestId } = render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      expect(getByTestId('delete-modal-state')).toHaveTextContent('closed');
+      fireEvent.click(getByTestId('open-delete-btn'));
+      expect(getByTestId('delete-modal-state')).toHaveTextContent('open');
+      expect(getByTestId('request-type')).toHaveTextContent('delete_update');
+    });
+  });
+
+  describe('handleUpdatesSubmit with different request types', () => {
+    it('handles edit_update request type', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        const note = {
+          id: 10,
+          title: 'Updated Title',
+          description: 'Updated Description',
+          published_at: new Date(),
+        };
+
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('edit_update', note);
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-edit-btn"
+            onClick={() => hook.handleUpdatesSubmit(note)}
+          >
+            Submit Edit
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-edit-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('handles add_new_update request type', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        const note = {
+          title: 'Brand New Note',
+          description: 'Fresh Description',
+          published_at: new Date(),
+        };
+
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <button
+            type="button"
+            data-testid="submit-add-btn"
+            onClick={() => hook.handleUpdatesSubmit(note)}
+          >
+            Submit Add
+          </button>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: true });
+
+      render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+
+      fireEvent.click(document.querySelector('[data-testid="submit-add-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+
+    it('does not close form when submission fails', async () => {
+      const TestComponent = () => {
+        const hook = useReleaseNotes();
+        const note = {
+          title: 'Will Fail',
+          description: 'Fail Description',
+          published_at: new Date(),
+        };
+
+        React.useEffect(() => {
+          hook.handleOpenUpdateForm('add_new_update');
+        }, []);
+
+        return (
+          <>
+            <button
+              type="button"
+              data-testid="submit-fail-btn"
+              onClick={() => hook.handleUpdatesSubmit(note)}
+            >
+              Submit (Will Fail)
+            </button>
+            <span data-testid="form-state">{hook.isFormOpen ? 'open' : 'closed'}</span>
+          </>
+        );
+      };
+
+      dispatchMock.mockResolvedValue({ success: false });
+
+      const { getByTestId } = render(
+        <Provider store={makeStore()}>
+          <TestComponent />
+        </Provider>,
+      );
+      expect(getByTestId('form-state')).toHaveTextContent('open');
+      fireEvent.click(document.querySelector('[data-testid="submit-fail-btn"]'));
+      expect(dispatchMock).toHaveBeenCalled();
+    });
+  });
 });
