@@ -36,7 +36,7 @@ const messages = defineMessages({
   },
   publishTimeLabel: {
     id: 'release-notes.form.publish_time.label',
-    defaultMessage: 'Publish time (EDT)',
+    defaultMessage: 'Publish time',
   },
   saveButton: {
     id: 'release-notes.form.save',

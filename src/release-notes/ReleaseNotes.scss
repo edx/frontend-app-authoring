@@ -1,6 +1,6 @@
 .pgn__pageBanner__accentA {
     background-color: #5DE3BF;
-    color: #000000;
+    color: var(--pgn-color-black);
     text-align: center;
     font-size: 14px;
     font-style: normal;
@@ -8,7 +8,7 @@
     line-height: 20px;
 
     a {
-        color: #000000;
+        color: var(--pgn-color-black);
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
@@ -48,7 +48,7 @@
 }
 
 .release-notes-page {
-    color: #000000 ;
+    color: var(--pgn-color-black);
 
     h1, h2, h3, h4, h5, h6,
     p, span, small, li, a,
@@ -56,7 +56,7 @@
     .pgn__sub-header,
     .release-notes-list,
     .release-note-item {
-        color: #000000 ;
+        color: var(--pgn-color-black);
     }
 
     .pgn__icon {
