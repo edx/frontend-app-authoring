@@ -50,7 +50,10 @@ export function fetchReleaseNotesQuery() {
 export function createReleaseNoteQuery(data) {
   return async (dispatch) => {
     try {
-      dispatch(updateSavingStatuses({ createReleaseNoteQuery: RequestStatus.PENDING }));
+      dispatch(updateSavingStatuses({
+        status: { createReleaseNoteQuery: RequestStatus.PENDING },
+        error: {},
+      }));
       dispatch(showProcessingNotification(NOTIFICATION_MESSAGES.saving));
       const payload = {
         ...data,
@@ -86,7 +89,10 @@ export function createReleaseNoteQuery(data) {
 export function editReleaseNoteQuery(data) {
   return async (dispatch) => {
     try {
-      dispatch(updateSavingStatuses({ editReleaseNoteQuery: RequestStatus.PENDING }));
+      dispatch(updateSavingStatuses({
+        status: { editReleaseNoteQuery: RequestStatus.PENDING },
+        error: {},
+      }));
       dispatch(showProcessingNotification(NOTIFICATION_MESSAGES.saving));
       const payload = {
         ...data,
@@ -122,7 +128,10 @@ export function editReleaseNoteQuery(data) {
 export function deleteReleaseNoteQuery(noteId) {
   return async (dispatch) => {
     try {
-      dispatch(updateSavingStatuses({ deleteReleaseNoteQuery: RequestStatus.PENDING }));
+      dispatch(updateSavingStatuses({
+        status: { deleteReleaseNoteQuery: RequestStatus.PENDING },
+        error: {},
+      }));
       dispatch(showProcessingNotification(NOTIFICATION_MESSAGES.deleting));
       await deleteReleaseNote(noteId);
       dispatch(deleteReleaseNoteAction(noteId));

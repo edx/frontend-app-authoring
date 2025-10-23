@@ -42,6 +42,14 @@ const messages = defineMessages({
     id: 'release-notes.form.save',
     defaultMessage: 'Save',
   },
+  savingButton: {
+    id: 'release-notes.form.saving',
+    defaultMessage: 'Saving',
+  },
+  savedButton: {
+    id: 'release-notes.form.saved',
+    defaultMessage: 'Saved',
+  },
   cancelButton: {
     id: 'release-notes.form.cancel',
     defaultMessage: 'Cancel',

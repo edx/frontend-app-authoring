@@ -26,10 +26,14 @@ import ReleaseNoteForm from './update-form/ReleaseNoteForm';
 import ReleaseNotesSidebar from './sidebar/ReleaseNotesSidebar';
 import { REQUEST_TYPES } from '../course-updates/constants';
 import { groupNotesByDate } from './utils/groupNotes';
+import unsavedMessages from './update-form/unsaved-modal-messages';
 
 const ReleaseNotes = () => {
   const intl = useIntl();
   const { administrator } = getAuthenticatedUser() || {};
+  const isDirtyCheckRef = React.useRef(() => false);
+  const showUnsavedModalRef = React.useRef(null);
+  const [isUnsavedModalOpen, setIsUnsavedModalOpen] = React.useState(false);
   const {
     requestType,
     notes,
@@ -43,7 +47,22 @@ const ReleaseNotes = () => {
     handleDeleteUpdateSubmit,
     handleOpenDeleteForm,
     errors,
+    savingStatuses,
   } = useReleaseNotes();
+
+  const confirmCloseIfDirty = React.useCallback(() => {
+    const isDirty = isDirtyCheckRef.current();
+    if (isDirty) {
+      setIsUnsavedModalOpen(true);
+      return;
+    }
+    closeForm();
+  }, [closeForm]);
+
+  const handleLeaveEditor = () => {
+    setIsUnsavedModalOpen(false);
+    closeForm();
+  };
 
   const getTzName = (date) => {
     try {
@@ -148,13 +167,13 @@ const ReleaseNotes = () => {
                                       })}
                                     >
                                       <Icon
-                                        className="mr-1 p-0 justify-content-start scheduled-icon"
+                                        className="mr-2 p-0 justify-content-start scheduled-icon"
                                         src={ClockIcon}
                                         alt={intl.formatMessage(messages.scheduledTooltip, {
                                           date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
                                         })}
                                       />
-                                      <span className="post-scheduled">{intl.formatMessage(messages.scheduledLabel)}</span>
+                                      <span className="post-scheduled mt-0">{intl.formatMessage(messages.scheduledLabel)}</span>
                                     </button>
                                   </OverlayTrigger>
                                 )}
@@ -218,9 +237,8 @@ const ReleaseNotes = () => {
       {isFormOpen && (
       <ModalDialog
         isOpen={isFormOpen}
-        onClose={closeForm}
+        onClose={confirmCloseIfDirty}
         size="xl"
-        isBlocking
       >
         <ModalDialog.Header>
           <ModalDialog.Title>
@@ -239,6 +257,11 @@ const ReleaseNotes = () => {
             initialValues={notesInitialValues}
             close={closeForm}
             onSubmit={handleUpdatesSubmit}
+            savingStatuses={savingStatuses}
+            isDirtyCheckRef={isDirtyCheckRef}
+            showUnsavedModalRef={showUnsavedModalRef}
+            externalUnsavedModalOpen={isUnsavedModalOpen}
+            setExternalUnsavedModalOpen={setIsUnsavedModalOpen}
           />
         </ModalDialog.Body>
       </ModalDialog>
@@ -249,6 +272,26 @@ const ReleaseNotes = () => {
         onDeleteSubmit={handleDeleteUpdateSubmit}
         errorDeleting={errors.deletingNote}
       />
+      {isUnsavedModalOpen && (
+        <ModalDialog isOpen size="md" onClose={() => setIsUnsavedModalOpen(false)}>
+          <ModalDialog.Header>
+            <ModalDialog.Title>
+              {intl.formatMessage(unsavedMessages.unsavedModalTitle)}
+            </ModalDialog.Title>
+          </ModalDialog.Header>
+          <ModalDialog.Body>
+            <p>{intl.formatMessage(unsavedMessages.unsavedModalDescription)}</p>
+          </ModalDialog.Body>
+          <ModalDialog.Footer>
+            <Button variant="tertiary" onClick={() => setIsUnsavedModalOpen(false)}>
+              {intl.formatMessage(unsavedMessages.keepEditingButton)}
+            </Button>
+            <Button variant="danger" onClick={handleLeaveEditor}>
+              {intl.formatMessage(unsavedMessages.leaveEditorButton)}
+            </Button>
+          </ModalDialog.Footer>
+        </ModalDialog>
+      )}
       <StudioFooterSlot />
     </>
   );

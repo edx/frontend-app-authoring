@@ -3,12 +3,11 @@ import moment from 'moment';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import {
-  render, screen, fireEvent, initializeMocks, waitFor, within,
+  render, screen, fireEvent, initializeMocks, waitFor,
 } from '../../testUtils';
 
 import ReleaseNoteForm from './ReleaseNoteForm';
 import messages from '../messages';
-import unsavedMessages from './unsaved-modal-messages';
 import { mockFormInitialValues, mockFormFilledValues, mockState } from '../__mocks__/mockData';
 
 // Mock TinyMceWidget and prepareEditorRef
@@ -210,47 +209,55 @@ describe('ReleaseNoteForm', () => {
   });
 
   describe('Cancel and Unsaved Changes Modal', () => {
-    test('shows unsaved modal when cancel button is clicked', async () => {
-      renderForm();
+    test('calls setExternalUnsavedModalOpen when cancel button is clicked with dirty form', async () => {
+      const setExternalUnsavedModalOpen = jest.fn();
+      renderForm({
+        externalUnsavedModalOpen: false,
+        setExternalUnsavedModalOpen,
+      });
+
+      const titleInput = screen.getByLabelText(messages.titleLabel.defaultMessage);
+      fireEvent.change(titleInput, { target: { value: 'New Title' } });
 
       fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
 
       await waitFor(() => {
-        expect(screen.getByText(unsavedMessages.unsavedModalTitle.defaultMessage)).toBeInTheDocument();
-        expect(screen.getByText(unsavedMessages.unsavedModalDescription.defaultMessage)).toBeInTheDocument();
+        expect(setExternalUnsavedModalOpen).toHaveBeenCalledWith(true);
       });
     });
 
-    test('closes unsaved modal when Keep Editing is clicked', async () => {
-      renderForm();
-
-      fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
-
-      await waitFor(() => {
-        expect(screen.getByText(unsavedMessages.unsavedModalTitle.defaultMessage)).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByRole('button', { name: unsavedMessages.keepEditingButton.defaultMessage }));
-
-      await waitFor(() => {
-        expect(screen.queryByText(unsavedMessages.unsavedModalTitle.defaultMessage)).not.toBeInTheDocument();
-      });
-    });
-
-    test('closes form when Leave Editor is clicked', async () => {
+    test('calls close directly when cancel button is clicked with clean form', async () => {
       const close = jest.fn();
-      renderForm({ close });
-
-      fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
-
-      await waitFor(() => {
-        expect(screen.getByText(unsavedMessages.unsavedModalTitle.defaultMessage)).toBeInTheDocument();
+      const setExternalUnsavedModalOpen = jest.fn();
+      renderForm({
+        close,
+        externalUnsavedModalOpen: false,
+        setExternalUnsavedModalOpen,
       });
 
-      fireEvent.click(screen.getByRole('button', { name: unsavedMessages.leaveEditorButton.defaultMessage }));
+      fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
 
       await waitFor(() => {
         expect(close).toHaveBeenCalled();
+        expect(setExternalUnsavedModalOpen).not.toHaveBeenCalled();
+      });
+    });
+
+    test('exposes dirty check function via isDirtyCheckRef', async () => {
+      const isDirtyCheckRef = { current: null };
+      renderForm({ isDirtyCheckRef });
+
+      await waitFor(() => {
+        expect(isDirtyCheckRef.current).toBeInstanceOf(Function);
+      });
+
+      expect(isDirtyCheckRef.current()).toBe(false);
+
+      const titleInput = screen.getByLabelText(messages.titleLabel.defaultMessage);
+      fireEvent.change(titleInput, { target: { value: 'New Title' } });
+
+      await waitFor(() => {
+        expect(isDirtyCheckRef.current()).toBe(true);
       });
     });
   });
@@ -388,39 +395,34 @@ describe('ReleaseNoteForm', () => {
       expect(timeLabel).toBeInTheDocument();
     });
 
-    test('closes unsaved modal when clicking modal close', async () => {
-      renderForm();
+    test('does not call setExternalUnsavedModalOpen when cancel clicked with clean form', async () => {
+      const setExternalUnsavedModalOpen = jest.fn();
+      renderForm({
+        externalUnsavedModalOpen: false,
+        setExternalUnsavedModalOpen,
+      });
 
       fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
 
       await waitFor(() => {
-        expect(screen.getByText(unsavedMessages.unsavedModalTitle.defaultMessage)).toBeInTheDocument();
+        expect(setExternalUnsavedModalOpen).not.toHaveBeenCalled();
       });
-
-      const modalDialogs = screen.getAllByRole('dialog');
-      const title = unsavedMessages.unsavedModalTitle.defaultMessage;
-      const unsavedModal = modalDialogs.find(dialog => within(dialog).queryByText(title));
-
-      expect(unsavedModal).toBeInTheDocument();
     });
 
-    test('preserves form data when keeping editing after cancel', async () => {
-      renderForm();
+    test('updates dirty state when form values change', async () => {
+      const isDirtyCheckRef = { current: null };
+      renderForm({ isDirtyCheckRef });
+
+      await waitFor(() => {
+        expect(isDirtyCheckRef.current).toBeInstanceOf(Function);
+      });
 
       fireEvent.change(screen.getByLabelText(messages.titleLabel.defaultMessage), {
         target: { value: 'My Title' },
       });
 
-      fireEvent.click(screen.getByRole('button', { name: messages.cancelButton.defaultMessage }));
-
       await waitFor(() => {
-        expect(screen.getByText(unsavedMessages.unsavedModalTitle.defaultMessage)).toBeInTheDocument();
-      });
-
-      fireEvent.click(screen.getByRole('button', { name: unsavedMessages.keepEditingButton.defaultMessage }));
-
-      await waitFor(() => {
-        expect(screen.queryByText(unsavedMessages.unsavedModalTitle.defaultMessage)).not.toBeInTheDocument();
+        expect(isDirtyCheckRef.current()).toBe(true);
       });
 
       expect(screen.getByLabelText(messages.titleLabel.defaultMessage)).toHaveValue('My Title');

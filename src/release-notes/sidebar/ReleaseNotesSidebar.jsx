@@ -12,7 +12,7 @@ const ReleaseNotesSidebar = ({ notes }) => {
       <div className="pt-5">
         {groups.map((g) => (
           <div key={g.key} className="mb-3">
-            <h6 className="mb-1">{g.label}</h6>
+            <h6 className="mb-1 font-weight-normal">{g.label}</h6>
             <ul className="list-unstyled m-0 p-0 ml-3">
               {g.items.map((n) => (
                 <li key={n.id} className="mb-2">
