@@ -22,6 +22,7 @@ const ReleaseNotesSidebar = ({ notes, activeNoteId, onNoteClick }) => {
                       href={`#note-${n.id}`}
                       className="text-decoration-none"
                       onClick={() => onNoteClick && onNoteClick(n.id)}
+                      title={n.title}
                     >
                       {n.title}
                     </a>
