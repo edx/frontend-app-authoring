@@ -121,7 +121,7 @@ const ReleaseNotes = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // initial
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [notes]);
+  }, []);
 
   return (
     <>
