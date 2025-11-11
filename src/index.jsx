@@ -94,7 +94,7 @@ const App = () => {
         <Route path="/legacy/preview-changes/:usageKey" element={<PreviewChangesEmbed />} />
         <Route path="/course/:courseId/*" element={<CourseAuthoringRoutes />} />
         <Route path="/course_rerun/:courseId" element={<CourseRerun />} />
-        {getConfig().ENABLE_RELEASE_NOTES && (
+        {getConfig().ENABLE_RELEASE_NOTES === 'true' && (
           <Route path="/release-notes" element={<ReleaseNotes />} />
         )}
         {getConfig().ENABLE_ACCESSIBILITY_PAGE === 'true' && (
@@ -183,8 +183,8 @@ initialize({
         LIBRARY_UNSUPPORTED_BLOCKS: (process.env.LIBRARY_UNSUPPORTED_BLOCKS || 'conditional,step-builder,problem-builder').split(','),
         COURSE_TEAM_SUPPORT_EMAIL: process.env.COURSE_TEAM_SUPPORT_EMAIL || null,
         ADMIN_CONSOLE_URL: process.env.ADMIN_CONSOLE_URL || null,
-        ENABLE_RELEASE_NOTES: process.env.ENABLE_RELEASE_NOTES || null,
-        ENABLE_RELEASE_NOTES_BANNER: process.env.ENABLE_RELEASE_NOTES_BANNER || null,
+        ENABLE_RELEASE_NOTES: process.env.ENABLE_RELEASE_NOTES || 'false',
+        ENABLE_RELEASE_NOTES_BANNER: process.env.ENABLE_RELEASE_NOTES_BANNER || 'false',
       }, 'CourseAuthoringConfig');
     },
   },
