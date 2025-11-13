@@ -14,7 +14,15 @@ const ReleaseNotesSidebar = ({ notes, activeNoteId, onNoteClick }) => {
           const isActiveGroup = g.items.some((n) => String(n.id) === String(activeNoteId));
           return (
             <div key={g.key} className="mb-3">
-              <h6 className={isActiveGroup ? 'mb-1 font-weight-bold' : 'mb-1 font-weight-normal'}>{g.label}</h6>
+              <h6 className="mb-1">
+                <a
+                  href={`#note-group-${g.key}`}
+                  className={`text-decoration-none ${isActiveGroup ? 'font-weight-bold' : 'font-weight-normal'}`}
+                  aria-label={`Navigate to ${g.label} section`}
+                >
+                  {g.label}
+                </a>
+              </h6>
               <ul className="list-unstyled m-0 p-0 ml-3">
                 {g.items.map((n) => {
                   const isActiveNote = String(n.id) === String(activeNoteId);
