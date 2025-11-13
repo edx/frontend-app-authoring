@@ -162,12 +162,12 @@ const ReleaseNotes = () => {
                 <article>
                   <section className="release-notes-list pt-5">
                     {groups.map((g) => (
-                      <div key={g.key} className="mb-4">
+                      <div key={g.key} className="mb-4" id={`note-group-${g.key}`}>
                         {g.items.map((post) => (
                           <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
                             <div className="d-flex justify-content-between align-items-start">
                               <div>
-                                <h2 className="mb-4 pb-4" id={`note-group-${g.key}`}>
+                                <h2 className="mb-4 pb-4">
                                   {post.published_at
                                     ? moment(post.published_at).format('MMMM D, YYYY')
                                     : intl.formatMessage({ id: 'release-notes.unscheduled.label', defaultMessage: 'Unscheduled' })}
