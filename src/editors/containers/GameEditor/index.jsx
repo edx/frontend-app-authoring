@@ -253,7 +253,7 @@ export const GameEditor = ({
           className="d-flex flex-column align-items-start align-self-stretch"
           itemList={state}
           setState={setState}
-          updateOrder={(newList) => setList(newList)}
+          updateOrder={() => (newList) => setList(newList)}
         >
           {
             state.map((card, index) => (
