@@ -162,7 +162,7 @@ const ReleaseNotes = () => {
                 <article>
                   <section className="release-notes-list pt-5">
                     {groups.map((g) => (
-                      <div key={g.key} className="mb-4">
+                      <div key={g.key} className="mb-4" id={`note-group-${g.key}`}>
                         <h2 className="mb-4.5 pb-4.5">
                           {g.label}
                         </h2>
