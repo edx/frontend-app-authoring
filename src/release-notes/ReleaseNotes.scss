@@ -49,6 +49,12 @@
     }
 }
 
+@media screen and (max-width: 769px) {
+  .release-notes-sidebar {
+    display: none;
+  }
+}
+
 .release-notes-page {
     color: var(--pgn-color-black);
     min-height: 675px;
