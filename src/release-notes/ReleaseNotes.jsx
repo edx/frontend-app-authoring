@@ -163,15 +163,13 @@ const ReleaseNotes = () => {
                   <section className="release-notes-list pt-5">
                     {groups.map((g) => (
                       <div key={g.key} className="mb-4">
+                        <h2 className="mb-4.5 pb-4.5">
+                          {g.label}
+                        </h2>
                         {g.items.map((post) => (
-                          <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4 pb-4">
+                          <div id={`note-${post.id}`} key={post.id} className="release-note-item mb-4.5 pb-4.5">
                             <div className="d-flex justify-content-between align-items-start">
                               <div>
-                                <h2 className="mb-4 pb-4">
-                                  {post.published_at
-                                    ? moment(post.published_at).format('MMMM D, YYYY')
-                                    : intl.formatMessage({ id: 'release-notes.unscheduled.label', defaultMessage: 'Unscheduled' })}
-                                </h2>
                                 {post.published_at && moment(post.published_at).isAfter(moment()) && (
                                   <OverlayTrigger
                                     placement="right"
