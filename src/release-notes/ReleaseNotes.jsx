@@ -134,22 +134,25 @@ const ReleaseNotes = () => {
         </Container>
       )}
       <Container size="xl" className="release-notes-page px-4 pt-4">
-        <SubHeader
-          title={intl.formatMessage(messages.headingTitle)}
-          subtitle=""
-          instruction=""
-          headerActions={administrator && !errors.loadingNotes ? (
-            <Button
-              variant="primary"
-              iconBefore={AddIcon}
-              size="sm"
-              className="new-post-button"
-              onClick={() => handleOpenUpdateForm(REQUEST_TYPES.add_new_update)}
-            >
-              {intl.formatMessage(messages.newPostButton)}
-            </Button>
-          ) : null}
-        />
+        <div className="py-5">
+          <SubHeader
+            title={intl.formatMessage(messages.headingTitle)}
+            subtitle=""
+            instruction=""
+            hideBorder
+            headerActions={administrator && !errors.loadingNotes ? (
+              <Button
+                variant="primary"
+                iconBefore={AddIcon}
+                size="sm"
+                className="new-post-button"
+                onClick={() => handleOpenUpdateForm(REQUEST_TYPES.add_new_update)}
+              >
+                {intl.formatMessage(messages.newPostButton)}
+              </Button>
+            ) : null}
+          />
+        </div>
 
         {!errors.loadingNotes && (
           groups.length > 0 ? (
@@ -163,7 +166,7 @@ const ReleaseNotes = () => {
                   <section className="release-notes-list pt-5">
                     {groups.map((g) => (
                       <div key={g.key} className="mb-4" id={`note-group-${g.key}`}>
-                        <h2 className="mb-4.5 pb-4.5">
+                        <h2 className="mb-4.5 pb-4.5 group-title">
                           {g.label}
                         </h2>
                         {g.items.map((post) => (
@@ -183,7 +186,7 @@ const ReleaseNotes = () => {
                                   >
                                     <button
                                       type="button"
-                                      className="btn-link d-inline-flex align-items-center text-muted small mr-2 p-0 border-0 text-decoration-none"
+                                      className="btn-link d-inline-flex align-items-center text-muted small mr-2 p-0 border-0 text-decoration-none bg-transparent"
                                       aria-label={intl.formatMessage(messages.scheduledTooltip, {
                                         date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
                                       })}
@@ -200,7 +203,7 @@ const ReleaseNotes = () => {
                                   </OverlayTrigger>
                                 )}
                                 <div className="d-flex align-items-center mb-1 justify-content-between">
-                                  <h3 className="m-0">{post.title}</h3>
+                                  <h3 className="m-0 post-title">{post.title}</h3>
                                   {administrator && (
                                     <div className="ml-3 d-flex">
                                       <IconButtonWithTooltip

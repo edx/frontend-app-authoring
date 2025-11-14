@@ -337,7 +337,7 @@ const ReleaseNoteForm = ({
                   {intl.formatMessage(messages.cancelButton)}
                 </Button>
                 <StatefulButton
-                  variant="danger"
+                  variant="primary"
                   onClick={handleSubmit}
                   type="submit"
                   state={buttonState}
