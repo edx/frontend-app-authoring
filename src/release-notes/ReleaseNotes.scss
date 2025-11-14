@@ -39,6 +39,10 @@
     max-width: 320px;
     margin-left: auto;
 
+    a {
+        font-size: 12px;
+    }
+
     .font-weight-bold {
         font-weight: 700;
     }
@@ -177,6 +181,10 @@
 
 .delete-notes-hover:hover {
     background-color: #D3D3D3;
+}
+
+.group-title {
+    font-size: 32px;
 }
 
 .post-title {

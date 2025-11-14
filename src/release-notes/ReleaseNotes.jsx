@@ -166,7 +166,7 @@ const ReleaseNotes = () => {
                   <section className="release-notes-list pt-5">
                     {groups.map((g) => (
                       <div key={g.key} className="mb-4" id={`note-group-${g.key}`}>
-                        <h2 className="mb-4.5 pb-4.5">
+                        <h2 className="mb-4.5 pb-4.5 group-title">
                           {g.label}
                         </h2>
                         {g.items.map((post) => (
@@ -203,7 +203,7 @@ const ReleaseNotes = () => {
                                   </OverlayTrigger>
                                 )}
                                 <div className="d-flex align-items-center mb-1 justify-content-between">
-                                  <h3 className="m-0">{post.title}</h3>
+                                  <h3 className="m-0 post-title">{post.title}</h3>
                                   {administrator && (
                                     <div className="ml-3 d-flex">
                                       <IconButtonWithTooltip
