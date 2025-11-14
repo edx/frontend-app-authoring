@@ -124,7 +124,7 @@ const ReleaseNotes = () => {
   }, []);
 
   return (
-    <>
+    <div className="release-notes-page-wrapper">
       <Header isHiddenMainMenu />
       {errors.loadingNotes && (
         <Container size="xl" className="px-4 pt-4">
@@ -310,7 +310,7 @@ const ReleaseNotes = () => {
         </ModalDialog>
       )}
       <StudioFooterSlot />
-    </>
+    </div>
   );
 };
 
