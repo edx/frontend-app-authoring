@@ -134,22 +134,25 @@ const ReleaseNotes = () => {
         </Container>
       )}
       <Container size="xl" className="release-notes-page px-4 pt-4">
-        <SubHeader
-          title={intl.formatMessage(messages.headingTitle)}
-          subtitle=""
-          instruction=""
-          headerActions={administrator && !errors.loadingNotes ? (
-            <Button
-              variant="primary"
-              iconBefore={AddIcon}
-              size="sm"
-              className="new-post-button"
-              onClick={() => handleOpenUpdateForm(REQUEST_TYPES.add_new_update)}
-            >
-              {intl.formatMessage(messages.newPostButton)}
-            </Button>
-          ) : null}
-        />
+        <div className="py-5">
+          <SubHeader
+            title={intl.formatMessage(messages.headingTitle)}
+            subtitle=""
+            instruction=""
+            hideBorder
+            headerActions={administrator && !errors.loadingNotes ? (
+              <Button
+                variant="primary"
+                iconBefore={AddIcon}
+                size="sm"
+                className="new-post-button"
+                onClick={() => handleOpenUpdateForm(REQUEST_TYPES.add_new_update)}
+              >
+                {intl.formatMessage(messages.newPostButton)}
+              </Button>
+            ) : null}
+          />
+        </div>
 
         {!errors.loadingNotes && (
           groups.length > 0 ? (
