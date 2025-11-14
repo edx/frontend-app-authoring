@@ -175,9 +175,9 @@ const ReleaseNotes = () => {
                                     placement="right"
                                     overlay={(
                                       <Tooltip className="scheduled-tooltip" id={`scheduled-tooltip-${post.id}`}>
-                                        {intl.formatMessage(messages.scheduledTooltip, {
-                                          date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
-                                        })}
+                                        <span>{intl.formatMessage(messages.scheduledTooltip)}</span>
+                                        <br />
+                                        <span>{`${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`}</span>
                                       </Tooltip>
                                 )}
                                   >
