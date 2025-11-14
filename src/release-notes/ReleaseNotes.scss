@@ -36,7 +36,8 @@
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    width: 320px;
+    max-width: 320px;
+    margin-left: auto;
 
     .font-weight-bold {
         font-weight: 700;
@@ -79,6 +80,19 @@
 
     .row {
         min-height: 675px;
+        & > div:first-child {
+            padding-right: 52px; // base padding 12px for left + 40px + right col left padding 12px = 64px
+        }
+    }
+}
+
+@media screen and (width <= 1200px) {
+    .release-notes-page {
+        .row {
+            & > div:first-child {
+                padding-right: 0;
+            }
+        }
     }
 }
 
