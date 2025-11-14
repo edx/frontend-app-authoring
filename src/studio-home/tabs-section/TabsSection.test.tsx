@@ -392,31 +392,6 @@ describe('<TabsSection />', () => {
       ).toBeVisible();
     });
 
-    it('should open migration library page from v1 libraries tab', async () => {
-      await axiosMock.onGet(getStudioHomeApiUrl()).reply(200, generateGetStudioHomeDataApiResponse());
-      await axiosMock.onGet(libraryApiLink).reply(200, generateGetStudioHomeLibrariesApiResponse());
-      render({ librariesV2Enabled: false });
-      const user = userEvent.setup();
-      await act(async () => executeThunk(fetchStudioHomeData(), store.dispatch));
-
-      // Libraries v2 tab should not be shown
-      expect(screen.queryByRole('tab', { name: librariesBetaTabTitle })).toBeNull();
-
-      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
-      await user.click(librariesTab);
-
-      expect(librariesTab).toHaveClass('active');
-
-      expect(await screen.findByText(studioHomeMock.libraries[0].displayName)).toBeVisible();
-
-      const migratorButton = screen.getByRole('button', { name: /review legacy libraries/i });
-      expect(migratorButton).toBeInTheDocument();
-      await user.click(migratorButton);
-
-      const locationDisplay = await screen.findByTestId('location-display');
-      expect(locationDisplay).toHaveTextContent('/migrate');
-    });
-
     it('should open migration library page from v2 libraries tab', async () => {
       const libraries = generateGetStudioHomeLibrariesApiResponse().libraries.map(
         library => ({

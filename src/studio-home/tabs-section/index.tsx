@@ -125,6 +125,7 @@ const TabsSection = ({
           <LibrariesList
             migrationFilter={migrationFilter}
             setMigrationFilter={setMigrationFilter}
+            hideMigationAlert
           />
         </Tab>,
       );
