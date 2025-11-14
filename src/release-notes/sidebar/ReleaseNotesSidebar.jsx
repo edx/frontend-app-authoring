@@ -14,20 +14,31 @@ const ReleaseNotesSidebar = ({ notes, activeNoteId, onNoteClick }) => {
           const isActiveGroup = g.items.some((n) => String(n.id) === String(activeNoteId));
           return (
             <div key={g.key}>
-              <h6 className={isActiveGroup ? 'mb-2.5 font-weight-bold' : 'mb-2.5 font-weight-normal'}>{g.label}</h6>
+              <h6 className="mb-2.5">
+                <a
+                  href={`#note-group-${g.key}`}
+                  className={`text-decoration-none ${isActiveGroup ? 'font-weight-bold' : 'font-weight-normal'}`}
+                  aria-label={`Navigate to ${g.label} section`}
+                >
+                  {g.label}
+                </a>
+              </h6>
               <ul className="list-unstyled m-0 p-0 ml-3">
-                {g.items.map((n) => (
-                  <li key={n.id} className="mb-2.5">
-                    <a
-                      href={`#note-${n.id}`}
-                      className="text-decoration-none"
-                      onClick={() => onNoteClick && onNoteClick(n.id)}
-                      title={n.title}
-                    >
-                      {n.title}
-                    </a>
-                  </li>
-                ))}
+                {g.items.map((n) => {
+                  const isActiveNote = String(n.id) === String(activeNoteId);
+                  return (
+                    <li key={n.id} className="mb-2.5">
+                      <a
+                        href={`#note-${n.id}`}
+                        className={`text-decoration-none ${isActiveNote ? 'font-weight-bold' : 'font-weight-normal'}`}
+                        onClick={() => onNoteClick && onNoteClick(n.id)}
+                        title={n.title}
+                      >
+                        {n.title}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           );
