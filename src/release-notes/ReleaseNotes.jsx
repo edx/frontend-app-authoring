@@ -186,7 +186,7 @@ const ReleaseNotes = () => {
                                   >
                                     <button
                                       type="button"
-                                      className="btn-link d-inline-flex align-items-center text-muted small mr-2 p-0 border-0 text-decoration-none"
+                                      className="btn-link d-inline-flex align-items-center text-muted small mr-2 p-0 border-0 text-decoration-none bg-transparent"
                                       aria-label={intl.formatMessage(messages.scheduledTooltip, {
                                         date: `${moment(post.published_at).format('MMMM D, YYYY h:mm A')} ${getTzName(new Date(post.published_at))}`,
                                       })}
