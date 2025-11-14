@@ -80,6 +80,7 @@
 
     .row {
         min-height: 675px;
+
         & > div:first-child {
             padding-right: 52px; // base padding 12px for left + 40px + right col left padding 12px = 64px
         }
