@@ -64,15 +64,15 @@ const messages = defineMessages({
   },
   editButton: {
     id: 'course-authoring.release-notes.button.edit',
-    defaultMessage: 'Edit Post',
+    defaultMessage: 'Edit post',
   },
   deleteButton: {
     id: 'course-authoring.release-notes.button.delete',
-    defaultMessage: 'Delete Post',
+    defaultMessage: 'Delete post',
   },
   scheduledTooltip: {
     id: 'release-notes.scheduled.tooltip',
-    defaultMessage: 'Scheduled to publish on {date}',
+    defaultMessage: 'Scheduled to publish on',
   },
   scheduledLabel: {
     id: 'release-notes.scheduled.label',

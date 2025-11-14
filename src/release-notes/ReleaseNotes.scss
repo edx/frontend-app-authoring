@@ -49,6 +49,12 @@
     }
 }
 
+@media screen and (width <= 769px) {
+  .release-notes-sidebar {
+    display: none;
+  }
+}
+
 .release-notes-page {
     color: var(--pgn-color-black);
     min-height: 675px;
@@ -93,6 +99,12 @@
         align-self: flex-start;
     }
 
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
     video,
     iframe {
         width: 100%;
@@ -128,6 +140,11 @@
     h5 strong,
     h6 strong {
         font-weight: bold;
+    }
+
+    a {
+        color: black !important;
+        text-decoration-color: black !important;
     }
 }
 
