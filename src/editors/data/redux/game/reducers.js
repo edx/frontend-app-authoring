@@ -26,76 +26,29 @@ const game = createSlice({
   name: 'game',
   initialState,
   reducers: {
-    // settings
-    shuffleTrue: (state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        shuffle: true,
-      },
-      isDirty: true,
-    }),
-    shuffleFalse: (state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        shuffle: false,
-      },
-      isDirty: true,
-    }),
-    timerTrue: (state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        timer: true,
-      },
-      isDirty: true,
-    }),
-    timerFalse: (state) => ({
-      ...state,
-      settings: {
-        ...state.settings,
-        timer: false,
-      },
-      isDirty: true,
-    }),
+    // Unified setting update
+    updateSetting: (state, { payload }) => {
+      const { key, value } = payload;
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          [key]: value,
+        },
+        isDirty: true,
+      };
+    },
     // type
     updateType: (state, { payload }) => ({
       ...state,
       type: payload,
       isDirty: true,
     }),
-    // list operations
-    updateTerm: (state, { payload }) => {
-      const { index, term } = payload;
+    // Unified card field update
+    updateCardField: (state, { payload }) => {
+      const { index, field, value } = payload;
       if (!state.list[index]) { return state; }
-      const newList = state.list.map((item, idx) => (idx === index ? { ...item, term } : item));
-      return { ...state, list: newList, isDirty: true };
-    },
-    updateTermImage: (state, { payload }) => {
-      const { index, termImage } = payload;
-      if (!state.list[index]) { return state; }
-      const newList = state.list.map((item, idx) => (idx === index ? { ...item, term_image: termImage } : item));
-      return { ...state, list: newList, isDirty: true };
-    },
-    updateDefinition: (state, { payload }) => {
-      const { index, definition } = payload;
-      if (!state.list[index]) { return state; }
-      const newList = state.list.map((item, idx) => (idx === index ? { ...item, definition } : item));
-      return { ...state, list: newList, isDirty: true };
-    },
-    updateDefinitionImage: (state, { payload }) => {
-      const { index, definitionImage } = payload;
-      if (!state.list[index]) { return state; }
-      const newList = state.list.map(
-        (item, idx) => (idx === index ? { ...item, definition_image: definitionImage } : item),
-      );
-      return { ...state, list: newList, isDirty: true };
-    },
-    toggleOpen: (state, { payload }) => {
-      const { index, isOpen } = payload;
-      if (!state.list[index]) { return state; }
-      const newList = state.list.map((item, idx) => (idx === index ? { ...item, editorOpen: !!isOpen } : item));
+      const newList = state.list.map((item, idx) => (idx === index ? { ...item, [field]: value } : item));
       return { ...state, list: newList, isDirty: true };
     },
     setList: (state, { payload }) => ({
@@ -134,7 +87,23 @@ const game = createSlice({
   },
 });
 
-const actions = StrictDict(game.actions);
+// Create backward-compatible action creators
+const baseActions = game.actions;
+
+const actions = StrictDict({
+  ...baseActions,
+  // Backward compatible wrappers for settings
+  shuffleTrue: () => baseActions.updateSetting({ key: 'shuffle', value: true }),
+  shuffleFalse: () => baseActions.updateSetting({ key: 'shuffle', value: false }),
+  timerTrue: () => baseActions.updateSetting({ key: 'timer', value: true }),
+  timerFalse: () => baseActions.updateSetting({ key: 'timer', value: false }),
+  // Backward compatible wrappers for card fields
+  updateTerm: ({ index, term }) => baseActions.updateCardField({ index, field: 'term', value: term }),
+  updateTermImage: ({ index, termImage }) => baseActions.updateCardField({ index, field: 'term_image', value: termImage }),
+  updateDefinition: ({ index, definition }) => baseActions.updateCardField({ index, field: 'definition', value: definition }),
+  updateDefinitionImage: ({ index, definitionImage }) => baseActions.updateCardField({ index, field: 'definition_image', value: definitionImage }),
+  toggleOpen: ({ index, isOpen }) => baseActions.updateCardField({ index, field: 'editorOpen', value: !!isOpen }),
+});
 
 const { reducer } = game;
 
