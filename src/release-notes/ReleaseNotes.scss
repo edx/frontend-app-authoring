@@ -197,7 +197,7 @@
     line-height: 0;
     font-size: 14px;
     margin-top: 4px;
-    font-family: monospace;
+    font-family: var(--pgn-typography-font-family-monospace);
 }
 
 .tooltip.scheduled-tooltip .tooltip-inner {
