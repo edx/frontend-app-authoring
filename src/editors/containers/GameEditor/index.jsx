@@ -31,6 +31,7 @@ import {
 import {
   actions,
   selectors,
+  thunkActions,
 } from '../../data/redux';
 import {
   RequestKeys,
@@ -41,10 +42,14 @@ import SettingsOption from '../ProblemEditor/components/EditProblemView/Settings
 import Button from '../../sharedComponents/Button';
 import DraggableList, { SortableItem } from '../../../generic/DraggableList';
 import messages from './messages';
+import { getConfig } from '@edx/frontend-platform';
 
 export const hooks = {
-  getContent: () => ({
-    some: 'content',
+  getContent: ({ type, settings, list }) => ({
+    gameType: type,
+    isShuffled: settings.shuffle,
+    hasTimer: settings.timer,
+    cards: list,
   }),
 };
 
@@ -72,6 +77,9 @@ export const GameEditor = ({
   setList,
   addCard,
   removeCard,
+
+  // thunks
+  uploadGameImage,
 
   isDirty,
 }) => {
@@ -105,41 +113,27 @@ export const GameEditor = ({
     }
   };
 
-  const saveTermImage = (index) => {
-    const id = `term_image_upload|${index}`;
+  // Unified image handling
+  const handleImageUpload = (index, imageType) => {
+    const id = `${imageType}_image_upload|${index}`;
     const file = document.getElementById(id).files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        updateTermImage({ index, termImage: event.target.result });
-      };
-      reader.readAsDataURL(file);
+      uploadGameImage({ index, imageFile: file, imageType });
     }
   };
 
-  const removeTermImage = (index) => {
-    const id = `term_image_upload|${index}`;
+  const handleImageRemove = (index, imageType) => {
+    const id = `${imageType}_image_upload|${index}`;
     document.getElementById(id).value = '';
-    updateTermImage({ index, termImage: '' });
+    const updateAction = imageType === 'term' ? updateTermImage : updateDefinitionImage;
+    updateAction({ index, [imageType === 'term' ? 'termImage' : 'definitionImage']: '' });
   };
 
-  const saveDefinitionImage = (index) => {
-    const id = `definition_image_upload|${index}`;
-    const file = document.getElementById(id).files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        updateDefinitionImage({ index, definitionImage: event.target.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeDefintionImage = (index) => {
-    const id = `definition_image_upload|${index}`;
-    document.getElementById(id).value = '';
-    updateDefinitionImage({ index, definitionImage: '' });
-  };
+  // Backward compatible wrappers
+  const saveTermImage = (index) => handleImageUpload(index, 'term');
+  const removeTermImage = (index) => handleImageRemove(index, 'term');
+  const saveDefinitionImage = (index) => handleImageUpload(index, 'definition');
+  const removeDefintionImage = (index) => handleImageRemove(index, 'definition');
 
   const moveCardUp = (index) => {
     if (index === 0) { return; }
@@ -165,51 +159,35 @@ export const GameEditor = ({
     </div>
   );
 
-  const termImageDiv = (card, index) => (
+  // Unified image components
+  const renderImageDisplay = (imageUrl, index, imageType) => (
     <div className="card-image-area d-flex align-items-center align-self-stretch">
-      <img className="card-image" src={card.term_image} alt="TERM_IMG" />
+      <img className="card-image" src={`${getConfig().STUDIO_BASE_URL}${imageUrl}`} alt={`${imageType.toUpperCase()}_IMG`} />
       <IconButton
         src={DeleteOutline}
         iconAs={Icon}
         alt="DEL_IMG"
         variant="primary"
-        onClick={() => removeTermImage(index)}
+        onClick={() => handleImageRemove(index, imageType)}
       />
     </div>
   );
 
-  const termImageUploadButton = (card, index) => (
+  const renderImageUploadButton = (index, imageType) => (
     <IconButton
       src={InsertPhoto}
       iconAs={Icon}
       alt="IMG"
       variant="primary"
-      onClick={() => document.getElementById(`term_image_upload|${index}`).click()}
+      onClick={() => document.getElementById(`${imageType}_image_upload|${index}`).click()}
     />
   );
 
-  const definitionImageDiv = (card, index) => (
-    <div className="card-image-area d-flex align-items-center align-self-stretch">
-      <img className="card-image" src={card.definition_image} alt="DEF_IMG" />
-      <IconButton
-        src={DeleteOutline}
-        iconAs={Icon}
-        alt="DEL_IMG"
-        variant="primary"
-        onClick={() => removeDefintionImage(index)}
-      />
-    </div>
-  );
-
-  const definitionImageUploadButton = (card, index) => (
-    <IconButton
-      src={InsertPhoto}
-      iconAs={Icon}
-      alt="IMG"
-      variant="primary"
-      onClick={() => document.getElementById(`definition_image_upload|${index}`).click()}
-    />
-  );
+  // Backward compatible wrappers for image components
+  const termImageDiv = (card, index) => renderImageDisplay(card.term_image, index, 'term');
+  const termImageUploadButton = (card, index) => renderImageUploadButton(index, 'term');
+  const definitionImageDiv = (card, index) => renderImageDisplay(card.definition_image, index, 'definition');
+  const definitionImageUploadButton = (card, index) => renderImageUploadButton(index, 'definition');
 
   const timerSettingsOption = (
     <SettingsOption
@@ -470,7 +448,7 @@ export const GameEditor = ({
   // Page content goes here
   return (
     <EditorContainer
-      getContent={hooks.getContent}
+      getContent={() => hooks.getContent({ type, settings, list })}
       onClose={onClose}
       isDirty={() => isDirty}
     >
@@ -506,6 +484,9 @@ GameEditor.propTypes = {
   type: PropTypes.string.isRequired,
   updateType: PropTypes.func.isRequired,
 
+  // thunks
+  uploadGameImage: PropTypes.func.isRequired,
+
   isDirty: PropTypes.bool,
 };
 
@@ -540,6 +521,9 @@ export const mapDispatchToProps = {
   setList: actions.game.setList,
   addCard: actions.game.addCard,
   removeCard: actions.game.removeCard,
+
+  // thunks
+  uploadGameImage: thunkActions.game.uploadGameImage,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GameEditor);
