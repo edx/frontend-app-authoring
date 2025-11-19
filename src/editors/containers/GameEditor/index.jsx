@@ -57,6 +57,8 @@ export const GameEditor = ({
   onClose,
   // redux
   blockFinished,
+  blockId,
+  blockValue,
 
   // settings
   settings,
@@ -80,13 +82,22 @@ export const GameEditor = ({
 
   // thunks
   uploadGameImage,
+  loadGamesSettings,
 
   isDirty,
 }) => {
   const intl = useIntl();
   // State for list
   const [state, setState] = React.useState(list);
+  const [settingsLoaded, setSettingsLoaded] = React.useState(false);
   React.useEffect(() => { setState(list); }, [list]);
+
+  React.useEffect(() => {
+    if (blockFinished && blockId && blockValue && !settingsLoaded) {
+      loadGamesSettings();
+      setSettingsLoaded(true);
+    }
+  }, [blockFinished, blockId, blockValue, settingsLoaded, loadGamesSettings]);
 
   // Non-reducer functions go here
   const getDescriptionHeader = () => {
@@ -280,7 +291,7 @@ export const GameEditor = ({
                               {type === 'flashcards' ? (
                                 <span className="d-inline-block align-middle pr-2">
                                   {card.term_image !== ''
-                                    ? <img className="img-preview" src={card.term_image} alt="TERM_IMG_PRV" />
+                                    ? <img className="img-preview" src={`${getConfig().STUDIO_BASE_URL}${card.term_image}`} alt="TERM_IMG_PRV" />
                                     : <Icon className="img-preview" src={InsertPhoto} />}
                                 </span>
                               )
@@ -291,7 +302,7 @@ export const GameEditor = ({
                               {type === 'flashcards' ? (
                                 <span className="d-inline-block align-middle pr-2">
                                   {card.definition_image !== ''
-                                    ? <img className="img-preview" src={card.definition_image} alt="DEF_IMG_PRV" />
+                                    ? <img className="img-preview" src={`${getConfig().STUDIO_BASE_URL}${card.definition_image}`} alt="DEF_IMG_PRV" />
                                     : <Icon className="img-preview" src={InsertPhoto} />}
                                 </span>
                               )
@@ -464,6 +475,8 @@ GameEditor.propTypes = {
 
   // redux
   blockFinished: PropTypes.bool.isRequired,
+  blockId: PropTypes.string.isRequired,
+  blockValue: PropTypes.shape({}),
   list: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   updateTerm: PropTypes.func.isRequired,
   updateTermImage: PropTypes.func.isRequired,
@@ -486,12 +499,15 @@ GameEditor.propTypes = {
 
   // thunks
   uploadGameImage: PropTypes.func.isRequired,
+  loadGamesSettings: PropTypes.func.isRequired,
 
   isDirty: PropTypes.bool,
 };
 
 export const mapStateToProps = (state) => ({
   blockFinished: selectors.requests.isFinished(state, { requestKey: RequestKeys.fetchBlock }),
+  blockId: selectors.app.blockId(state),
+  blockValue: selectors.app.blockValue(state),
   settings: selectors.game.settings(state),
   type: selectors.game.type(state),
   list: selectors.game.list(state),
@@ -523,6 +539,7 @@ export const mapDispatchToProps = {
   removeCard: actions.game.removeCard,
 
   // thunks
+  loadGamesSettings: thunkActions.game.loadGamesSettings,
   uploadGameImage: thunkActions.game.uploadGameImage,
 };
 

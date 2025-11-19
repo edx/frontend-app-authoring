@@ -411,6 +411,13 @@ export const apiMethods = {
       data,
     );
   },
+  getGamesSettings: ({
+    studioEndpointUrl,
+    blockId,
+  }) => post(
+    urls.xblockHandler({ studioEndpointUrl, blockId, handlerName: 'get_settings' }),
+    {},
+  ),
   saveGamesSettings: ({
     studioEndpointUrl,
     blockId,

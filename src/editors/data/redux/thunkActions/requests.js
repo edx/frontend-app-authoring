@@ -497,6 +497,17 @@ export const uploadGamesImage = ({ image, ...rest }) => (dispatch, getState) => 
   }));
 };
 
+export const getGamesSettings = ({ ...rest }) => (dispatch, getState) => {
+  dispatch(module.networkRequest({
+    requestKey: RequestKeys.fetchBlock,
+    promise: api.getGamesSettings({
+      studioEndpointUrl: selectors.app.studioEndpointUrl(getState()),
+      blockId: selectors.app.blockId(getState()),
+    }),
+    ...rest,
+  }));
+};
+
 export const saveGamesSettings = ({
   gameType,
   isShuffled,
@@ -541,5 +552,6 @@ export default StrictDict({
   uploadVideo,
   getHandlerlUrl,
   uploadGamesImage,
+  getGamesSettings,
   saveGamesSettings,
 });
