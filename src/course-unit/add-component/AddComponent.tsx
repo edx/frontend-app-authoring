@@ -188,7 +188,7 @@ const AddComponent = ({
         });
         break;
       case COMPONENT_TYPES.games:
-        handleCreateNewCourseXBlock({ type: type, category: type, parentLocator: blockId });
+        handleCreateNewCourseXBlock({ type, category: type, parentLocator: blockId });
         break;
       default:
     }

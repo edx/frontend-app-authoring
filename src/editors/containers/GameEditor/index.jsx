@@ -28,6 +28,7 @@ import {
   MoreHoriz,
   Check,
 } from '@openedx/paragon/icons';
+import { getConfig } from '@edx/frontend-platform';
 import {
   actions,
   selectors,
@@ -42,7 +43,6 @@ import SettingsOption from '../ProblemEditor/components/EditProblemView/Settings
 import Button from '../../sharedComponents/Button';
 import DraggableList, { SortableItem } from '../../../generic/DraggableList';
 import messages from './messages';
-import { getConfig } from '@edx/frontend-platform';
 
 export const hooks = {
   getContent: ({ type, settings, list }) => ({
@@ -142,9 +142,7 @@ export const GameEditor = ({
 
   // Backward compatible wrappers
   const saveTermImage = (index) => handleImageUpload(index, 'term');
-  const removeTermImage = (index) => handleImageRemove(index, 'term');
   const saveDefinitionImage = (index) => handleImageUpload(index, 'definition');
-  const removeDefintionImage = (index) => handleImageRemove(index, 'definition');
 
   const moveCardUp = (index) => {
     if (index === 0) { return; }

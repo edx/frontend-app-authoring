@@ -15,7 +15,7 @@ const actions = {
 export const loadGamesSettings = () => (dispatch) => {
   dispatch(requests.getGamesSettings({
     onSuccess: (response) => {
-      const data = response.data;
+      const { data } = response;
 
       if (data.game_type) {
         dispatch(actions.game.updateType(data.game_type));
@@ -50,7 +50,6 @@ export const loadGamesSettings = () => (dispatch) => {
       }
     },
     onFailure: (error) => {
-      console.error('Failed to load game settings:', error);
       dispatch(actions.requests.failRequest({
         requestKey: RequestKeys.fetchBlock,
         error,
@@ -72,7 +71,7 @@ export const uploadGameImage = ({ index, imageFile, imageType }) => (dispatch) =
       // Extract the URL from the response
       // Response format: { success: true, url: "/media/games/...", filename: "..." }
       const imageUrl = response.data?.url;
-      
+
       if (imageType === 'term') {
         dispatch(actions.game.updateTermImage({ index, termImage: imageUrl }));
       } else if (imageType === 'definition') {
@@ -80,7 +79,6 @@ export const uploadGameImage = ({ index, imageFile, imageType }) => (dispatch) =
       }
     },
     onFailure: (error) => {
-      console.error('Failed to upload game image:', error);
       dispatch(actions.requests.failRequest({
         requestKey: RequestKeys.uploadAsset,
         error,

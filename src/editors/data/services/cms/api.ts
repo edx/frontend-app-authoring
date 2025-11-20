@@ -427,13 +427,22 @@ export const apiMethods = {
     hasTimer,
   }) => {
     // Transform cards to include order and format properly
-    const formattedCards = cards.map((card, index) => ({
-      term: card.term || '',
-      term_image: card.term_image || '',
-      definition: card.definition || '',
-      definition_image: card.definition_image || '',
-      order: index + 1,
-    }));
+    // For matching games, exclude image fields
+    const formattedCards = cards.map((card, index) => {
+      const baseCard = {
+        term: card.term || '',
+        definition: card.definition || '',
+        order: index + 1,
+      };
+      if (gameType === 'flashcards') {
+        return {
+          ...baseCard,
+          term_image: card.term_image || '',
+          definition_image: card.definition_image || '',
+        };
+      }
+      return baseCard;
+    });
 
     const payload: any = {
       game_type: gameType,

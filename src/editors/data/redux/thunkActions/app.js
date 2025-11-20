@@ -133,7 +133,7 @@ const triggerCourseRefresh = () => {
  */
 export const saveBlock = (content, returnToUnit) => (dispatch, getState) => {
   dispatch(actions.app.setBlockContent(content));
-  
+
   // Games block uses a custom handler for saving
   const blockType = selectors.blockType(getState());
   if (blockType === 'games' && content.gameType) {
@@ -147,7 +147,6 @@ export const saveBlock = (content, returnToUnit) => (dispatch, getState) => {
         returnToUnit(response.data);
       },
       onFailure: (error) => {
-        console.error('Failed to save games settings:', error);
         dispatch(actions.requests.failRequest({
           requestKey: RequestKeys.saveBlock,
           error,
@@ -156,7 +155,7 @@ export const saveBlock = (content, returnToUnit) => (dispatch, getState) => {
     }));
     return;
   }
-  
+
   // Standard save for other block types
   dispatch(requests.saveBlock({
     content,
