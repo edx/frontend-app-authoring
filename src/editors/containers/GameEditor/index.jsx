@@ -72,9 +72,7 @@ export const GameEditor = ({
   // list
   list,
   updateTerm,
-  updateTermImage,
   updateDefinition,
-  updateDefinitionImage,
   toggleOpen,
   setList,
   addCard,
@@ -82,6 +80,7 @@ export const GameEditor = ({
 
   // thunks
   uploadGameImage,
+  deleteGameImage,
   loadGamesSettings,
 
   isDirty,
@@ -133,11 +132,11 @@ export const GameEditor = ({
     }
   };
 
-  const handleImageRemove = (index, imageType) => {
+  const handleImageRemove = (index, imageType, imageUrl) => {
     const id = `${imageType}_image_upload|${index}`;
     document.getElementById(id).value = '';
-    const updateAction = imageType === 'term' ? updateTermImage : updateDefinitionImage;
-    updateAction({ index, [imageType === 'term' ? 'termImage' : 'definitionImage']: '' });
+    const filePath = imageUrl.replace(/^\/media\//, '');
+    deleteGameImage({ index, imageType, filePath });
   };
 
   // Backward compatible wrappers
@@ -177,7 +176,7 @@ export const GameEditor = ({
         iconAs={Icon}
         alt="DEL_IMG"
         variant="primary"
-        onClick={() => handleImageRemove(index, imageType)}
+        onClick={() => handleImageRemove(index, imageType, imageUrl)}
       />
     </div>
   );
@@ -477,9 +476,7 @@ GameEditor.propTypes = {
   blockValue: PropTypes.shape({}),
   list: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   updateTerm: PropTypes.func.isRequired,
-  updateTermImage: PropTypes.func.isRequired,
   updateDefinition: PropTypes.func.isRequired,
-  updateDefinitionImage: PropTypes.func.isRequired,
   toggleOpen: PropTypes.func.isRequired,
   setList: PropTypes.func.isRequired,
   addCard: PropTypes.func.isRequired,
@@ -497,6 +494,7 @@ GameEditor.propTypes = {
 
   // thunks
   uploadGameImage: PropTypes.func.isRequired,
+  deleteGameImage: PropTypes.func.isRequired,
   loadGamesSettings: PropTypes.func.isRequired,
 
   isDirty: PropTypes.bool,
@@ -539,6 +537,7 @@ export const mapDispatchToProps = {
   // thunks
   loadGamesSettings: thunkActions.game.loadGamesSettings,
   uploadGameImage: thunkActions.game.uploadGameImage,
+  deleteGameImage: thunkActions.game.deleteGameImage,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GameEditor);
