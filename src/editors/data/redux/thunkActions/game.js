@@ -103,7 +103,14 @@ export const deleteGameImage = ({ index, imageType, filePath }) => (dispatch) =>
 
   dispatch(requests.deleteGamesImage({
     key: filePath,
-    onSuccess: () => {
+    onSuccess: (response) => {
+      if (response.data.success === false) {
+        dispatch(actions.requests.failRequest({
+          requestKey: RequestKeys.uploadAsset,
+          error: response.data?.error,
+        }));
+        return;
+      }
       if (imageType === 'term') {
         dispatch(actions.game.updateTermImage({ index, termImage: '' }));
       } else if (imageType === 'definition') {
