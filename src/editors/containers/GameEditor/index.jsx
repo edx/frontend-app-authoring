@@ -270,14 +270,14 @@ export const GameEditor = ({
                     id={`term_image_upload|${index}`}
                     hidden
                     onChange={() => saveTermImage(index)}
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/gif, image/webp"
                   />
                   <input
                     type="file"
                     id={`definition_image_upload|${index}`}
                     hidden
                     onChange={() => saveDefinitionImage(index)}
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/gif, image/webp"
                   />
                   <Collapsible.Trigger className="card-heading">
                     <div className="drag-spacer" />
