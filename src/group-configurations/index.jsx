@@ -60,7 +60,7 @@ const GroupConfigurations = ({ courseId }) => {
   }
 
   const enrollmentTrackGroup = shouldShowEnrollmentTrack
-    ? allGroupConfigurations.find((config) => config.scheme === 'enrollment_track')
+    ? allGroupConfigurations?.find((config) => config.scheme === 'enrollment_track')
     : null;
   const contentTypeGateGroup = allGroupConfigurations?.find((config) => config.scheme === 'content_type_gate');
   const contentGroup = allGroupConfigurations?.find((config) => config.scheme === 'cohort');
