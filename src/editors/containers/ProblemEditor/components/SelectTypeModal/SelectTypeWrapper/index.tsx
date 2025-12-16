@@ -50,7 +50,7 @@ const SelectTypeWrapper: React.FC<Props> = ({
           </div>
         </ModalDialog.Title>
       </ModalDialog.Header>
-      <EditorModalBody className="d-flex justify-content-center align-items-center" style={{ minHeight: '100%' }}>
+      <EditorModalBody className="d-flex justify-content-center align-items-center editor-modal-body-centered">
         {children}
       </EditorModalBody>
       <FooterWrapper>

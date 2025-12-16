@@ -38,7 +38,7 @@ export const EditorModalWrapper: React.FC<WrapperProps & { onClose: () => void; 
 };
 
 export const EditorModalBody: React.FC<WrapperProps & { className?: string; style?: React.CSSProperties }> = ({ children, className = '', style = {} }) => (
-  <ModalDialog.Body className={`pb-0 ${className}`} style={style}>
+  <ModalDialog.Body className={className ? `pb-0 ${className}` : 'pb-0'} style={style}>
     {children}
   </ModalDialog.Body>
 );
