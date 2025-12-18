@@ -44,12 +44,17 @@ import DraggableList, { SortableItem } from '../../../generic/DraggableList';
 import messages from './messages';
 
 export const hooks = {
-  getContent: ({ type, settings, list }) => ({
-    gameType: type,
-    isShuffled: settings.shuffle,
-    hasTimer: settings.timer,
-    cards: list,
-  }),
+  getContent: ({ type, settings, list }) => {
+    // Filter out completely blank cards before saving
+    const filledCards = list.filter(card => card.term.trim() !== '' || card.definition.trim() !== '');
+
+    return {
+      gameType: type,
+      isShuffled: settings.shuffle,
+      hasTimer: settings.timer,
+      cards: filledCards,
+    };
+  },
 };
 
 export const GameEditor = ({
