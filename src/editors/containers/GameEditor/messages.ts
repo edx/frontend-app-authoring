@@ -73,7 +73,7 @@ const messages = defineMessages({
   },
   imageWithoutTextError: {
     id: 'GameEditor.imageWithoutTextError',
-    defaultMessage: 'Enter text for this card. Flashcard images must have accompanying text.',
+    defaultMessage: 'Text is required for flashcard images.',
     description: 'Error message when a flashcard has an image but no text',
   },
   settingsTitle: {
