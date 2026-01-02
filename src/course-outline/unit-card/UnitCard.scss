@@ -11,4 +11,30 @@
     line-height: var(--pgn-typography-headings-line-height);
     color: var(--pgn-color-headings-base);
   }
+
+  .unit-card__components {
+    background-color: var(--pgn-color-light-100);
+    border-top: 1px solid var(--pgn-color-light-400);
+
+    .components-list {
+      .component-item {
+        background-color: var(--pgn-color-white);
+        transition: box-shadow 0.2s, transform 0.1s;
+
+        &:hover {
+          box-shadow: 0 2px 4px rgba(0 0 0 / 0.1);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        &:focus {
+          outline: 2px solid var(--pgn-color-primary-500);
+          outline-offset: 2px;
+        }
+      }
+    }
+  }
 }
