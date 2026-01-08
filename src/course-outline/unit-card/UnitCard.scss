@@ -20,6 +20,7 @@
       .component-item {
         background-color: var(--pgn-color-white);
         transition: box-shadow 0.2s, transform 0.1s;
+        min-width: 0;
 
         &:hover {
           box-shadow: 0 2px 4px rgba(0 0 0 / 0.1);
@@ -36,6 +37,8 @@
         }
 
         .component-name {
+          flex: 1;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
