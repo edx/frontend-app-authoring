@@ -1,6 +1,7 @@
 import {
   act, fireEvent, initializeMocks, render, screen, waitFor, within,
 } from '@src/testUtils';
+import { mockWaffleFlags } from '@src/data/apiHooks.mock';
 
 import { XBlock } from '@src/data/types';
 import UnitCard from './UnitCard';
@@ -109,6 +110,7 @@ const renderComponent = (props?: object) => render(
 describe('<UnitCard />', () => {
   beforeEach(() => {
     initializeMocks();
+    mockWaffleFlags({ enableUnitExpandedView: true });
     mockUseUnitHandler.mockReset();
     mockUseUnitHandler.mockReturnValue({
       data: undefined, isLoading: false, isError: false, error: null,

@@ -12,6 +12,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
+import { useWaffleFlags } from '@src/data/apiHooks';
+
 import CourseOutlineUnitCardExtraActionsSlot from '@src/plugin-slots/CourseOutlineUnitCardExtraActionsSlot';
 import { setCurrentItem, setCurrentSection, setCurrentSubsection } from '@src/course-outline/data/slice';
 import { fetchCourseSectionQuery } from '@src/course-outline/data/thunk';
@@ -19,6 +21,7 @@ import { RequestStatus, RequestStatusType } from '@src/data/constants';
 import CardHeader from '@src/course-outline/card-header/CardHeader';
 import SortableItem from '@src/course-outline/drag-helper/SortableItem';
 import TitleButton from '@src/course-outline/card-header/TitleButton';
+import TitleLink from '@src/course-outline/card-header/TitleLink';
 import XBlockStatus from '@src/course-outline/xblock-status/XBlockStatus';
 import { getItemStatus, getItemStatusBorder, scrollToElement } from '@src/course-outline/utils';
 import { useClipboard } from '@src/generic/clipboard';
@@ -76,6 +79,7 @@ const UnitCard = ({
   const currentRef = useRef(null);
   const dispatch = useDispatch();
   const intl = useIntl();
+  const waffleFlags = useWaffleFlags();
   const [searchParams] = useSearchParams();
   const locatorId = searchParams.get('show');
   const isScrolledToElement = locatorId === unit.id;
@@ -102,13 +106,13 @@ const UnitCard = ({
     upstreamInfo,
   } = unit;
 
-  // Fetch unit components when expanded
+  // Fetch unit components when expanded (only if flag is enabled)
   const {
     data: unitData,
     isLoading: isLoadingComponents,
     isError: isComponentsError,
     error: componentsError,
-  } = useUnitHandler(id, isExpanded);
+  } = useUnitHandler(id, isExpanded && waffleFlags.enableUnitExpandedView);
 
   const blockSyncData = useMemo(() => {
     if (!upstreamInfo?.readyToSync) {
@@ -190,11 +194,18 @@ const UnitCard = ({
     }
   }, [dispatch, section, queryClient, courseId]);
 
-  const titleComponent = (
+  const titleComponent = waffleFlags.enableUnitExpandedView ? (
     <TitleButton
       title={displayName}
       isExpanded={isExpanded}
       onTitleClick={handleExpandContent}
+      namePrefix={namePrefix}
+      prefixIcon={<UpstreamInfoIcon upstreamInfo={upstreamInfo} size="sm" />}
+    />
+  ) : (
+    <TitleLink
+      title={displayName}
+      titleLink={getTitleLink(id)}
       namePrefix={namePrefix}
       prefixIcon={<UpstreamInfoIcon upstreamInfo={upstreamInfo} size="sm" />}
     />
@@ -295,7 +306,7 @@ const UnitCard = ({
           </div>
 
           {/* Components section - shown when expanded like section/subsection */}
-          {isExpanded && (
+          {waffleFlags.enableUnitExpandedView && isExpanded && (
             <div className="unit-card__components p-3" data-testid="unit-card__components">
               {(() => {
                 if (isComponentsError) {
