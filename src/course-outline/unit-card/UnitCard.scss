@@ -34,6 +34,12 @@
           outline: 2px solid var(--pgn-color-primary-500);
           outline-offset: 2px;
         }
+
+        .component-name {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
     }
   }
