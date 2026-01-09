@@ -16,6 +16,11 @@ const messages = defineMessages({
     defaultMessage: 'Unable to load unit components. Please try again.',
     description: 'Message shown when the unit components request fails',
   },
+  editComponent: {
+    id: 'course-authoring.course-outline.unit.edit-component',
+    defaultMessage: 'Edit component',
+    description: 'Label for the button to edit a component',
+  },
 });
 
 export default messages;

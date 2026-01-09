@@ -43,6 +43,14 @@
           overflow: hidden;
           text-overflow: ellipsis;
         }
+
+        .component-info {
+          max-width: calc(100% - 45px);
+        }
+
+        .component-card-button-icon:hover {
+          background-color: var(--pgn-color-icon-button-bg-primary-hover);
+        }
       }
     }
   }

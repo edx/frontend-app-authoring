@@ -6,7 +6,8 @@ import {
   useState,
 } from 'react';
 import { useDispatch } from 'react-redux';
-import { useToggle, Icon } from '@openedx/paragon';
+import { useToggle, Icon, IconButtonWithTooltip } from '@openedx/paragon';
+import { EditOutline as EditIcon } from '@openedx/paragon/icons';
 import { isEmpty } from 'lodash';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -187,6 +188,12 @@ const UnitCard = ({
     window.location.href = blockId ? `${baseUrl}#${blockId}` : baseUrl;
   };
 
+  const handleComponentEdit = (e: React.MouseEvent, blockType: string, blockId: string) => {
+    e.stopPropagation();
+    const editorUrl = `/course/${courseId}/editor/${blockType}/${blockId}`;
+    window.location.href = editorUrl;
+  };
+
   const handleOnPostChangeSync = useCallback(() => {
     dispatch(fetchCourseSectionQuery([section.id]));
     if (courseId) {
@@ -331,7 +338,7 @@ const UnitCard = ({
                         return (
                           <div
                             key={component.blockId}
-                            className={`component-item d-flex align-items-center p-2 mb-2 border rounded ${colorClass}`}
+                            className={`component-item d-flex align-items-center justify-content-between p-2 mb-2 border rounded ${colorClass}`}
                             role="button"
                             tabIndex={0}
                             onClick={() => handleComponentClick(component.blockId)}
@@ -342,8 +349,18 @@ const UnitCard = ({
                               }
                             }}
                           >
-                            <Icon src={ComponentIcon} className="mr-2 text-dark" />
-                            <span className="component-name">{component.displayName}</span>
+                            <div className="d-flex align-items-center component-info">
+                              <Icon src={ComponentIcon} className="mr-2 text-dark" />
+                              <span className="component-name">{component.displayName}</span>
+                            </div>
+                            <IconButtonWithTooltip
+                              className="component-card-button-icon btn-icon btn-icon-primary btn-icon-md"
+                              data-testid="component-edit-button"
+                              alt={intl.formatMessage(messages.editComponent)}
+                              tooltipContent={<div>{intl.formatMessage(messages.editComponent)}</div>}
+                              iconAs={EditIcon}
+                              onClick={(e) => handleComponentEdit(e, component.blockType, component.blockId)}
+                            />
                           </div>
                         );
                       })}
@@ -362,7 +379,6 @@ const UnitCard = ({
                         handleComponentClick();
                       }
                     }}
-                    style={{ cursor: 'pointer' }}
                   >
                     {intl.formatMessage(messages.noComponents)}
                   </div>
