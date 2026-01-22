@@ -128,6 +128,7 @@ const UnitCard = ({
     isLoading: isLoadingComponents,
     isError: isComponentsError,
     error: componentsError,
+    refetch: refetchUnitData,
   } = useUnitHandler(id, isExpanded && waffleFlags.enableUnitExpandedView);
 
   const blockSyncData = useMemo(() => {
@@ -234,15 +235,20 @@ const UnitCard = ({
     setShowMFEEditorModal(false);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSaveEditedXBlockData = () => (_result: any) => {
+  const handleSaveEditedXBlockData = useCallback(() => (result: any) => {
     handleCloseLegacyEditModal();
     handleCloseMFEEditor();
     dispatch(fetchCourseSectionQuery([section.id]));
     if (courseId) {
       invalidateLinksQuery(queryClient, courseId);
     }
-  };
+
+    if (result?.error) {
+      showToast(intl.formatMessage(messages.componentSaveError));
+    } else {
+      refetchUnitData();
+    }
+  }, [dispatch, section.id, courseId, queryClient, showToast, intl, refetchUnitData]);
 
   const handleComponentEdit = (e: React.MouseEvent, blockType: string, blockId: string) => {
     e.stopPropagation();
@@ -338,7 +344,9 @@ const UnitCard = ({
       if (data.type === 'closeXBlockEditorModal') {
         handleCloseLegacyEditModal();
       } else if (data.type === 'saveEditedXBlockData') {
-        handleSaveEditedXBlockData();
+        handleSaveEditedXBlockData()({});
+      } else if (data.type === 'studioAjaxError' || data.type === 'error' || data.error) {
+        handleSaveEditedXBlockData()({ error: true });
       }
     };
 
@@ -346,7 +354,7 @@ const UnitCard = ({
     return () => {
       window.removeEventListener('message', handleIframeMessage);
     };
-  }, [section, courseId, queryClient, dispatch]);
+  }, [handleSaveEditedXBlockData]);
 
   if (!isHeaderVisible) {
     return null;
@@ -374,7 +382,7 @@ const UnitCard = ({
             blockId={editXBlockId}
             studioEndpointUrl={getConfig().STUDIO_BASE_URL}
             lmsEndpointUrl={getConfig().LMS_BASE_URL}
-            onClose={handleCloseMFEEditor}
+            onClose={null}
             returnFunction={handleSaveEditedXBlockData}
           />
         </div>
@@ -470,6 +478,7 @@ const UnitCard = ({
                           <GenericSortableItem
                             id={component.blockId}
                             key={component.blockId}
+                            buttonVariant="secondary"
                             componentStyle={{
                               background: 'white',
                               borderRadius: '6px',

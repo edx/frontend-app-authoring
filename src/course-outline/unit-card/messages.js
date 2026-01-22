@@ -31,6 +31,11 @@ const messages = defineMessages({
     defaultMessage: 'Failed to save component order',
     description: 'Error message shown when component reordering fails',
   },
+  componentSaveError: {
+    id: 'course-authoring.course-outline.unit.component-save-error',
+    defaultMessage: 'Failed to save component',
+    description: 'Error message shown when component save fails',
+  },
 });
 
 export default messages;
