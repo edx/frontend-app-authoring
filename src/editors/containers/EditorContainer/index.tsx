@@ -53,6 +53,7 @@ interface Props extends EditorComponent {
   getContent: Function;
   isDirty: () => boolean;
   validateEntry?: Function | null;
+  onSave?: Function | null;
 }
 
 const EditorContainer: React.FC<Props> = ({
@@ -62,6 +63,7 @@ const EditorContainer: React.FC<Props> = ({
   onClose = null,
   validateEntry = null,
   returnFunction = null,
+  onSave: customOnSave = null,
 }) => {
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -94,7 +96,11 @@ const EditorContainer: React.FC<Props> = ({
 
   const onSave = () => {
     setSaved(true);
-    handleSave();
+    if (customOnSave) {
+      customOnSave();
+    } else {
+      handleSave();
+    }
   };
   // Stops user from navigating away if they have unsaved changes.
   usePromptIfDirty(() => {

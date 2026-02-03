@@ -1,0 +1,21 @@
+.quiz-item-row {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+
+  .problem-select {
+    flex: 2;
+  }
+
+  .time-input,
+  .jump-back-input {
+    max-width: 120px;
+  }
+
+  .delete-btn {
+    margin-top: 28px;
+  }
+}
+
+.invideo-form-label {
+  color: var(--primary-500, #00262B) !important;
+}
