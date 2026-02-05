@@ -66,6 +66,8 @@ export const InVideoQuizEditor = ({
   const returnUrl = useSelector(selectors.app.returnUrl);
   const analytics = useSelector(selectors.app.analytics);
 
+  const isValidTimeFormat = useCallback((value) => /^\d+:[0-5]\d$/.test(value), []);
+
   useEffect(() => {
     if (blockFinished && blockId && blockValue && !settingsLoaded) {
       loadInVideoQuizSettings();
@@ -75,6 +77,14 @@ export const InVideoQuizEditor = ({
 
   const handleSave = useCallback(() => {
     setSaveError(null);
+    const hasInvalidTime = quizItems.some((item) => (
+      (item.time && !isValidTimeFormat(item.time))
+      || (item.jumpBack && !isValidTimeFormat(item.jumpBack))
+    ));
+    if (hasInvalidTime) {
+      setSaveError(intl.formatMessage(messages.timeFormatError));
+      return;
+    }
     const destination = returnFunction ? '' : returnUrl;
     const callback = navigateCallback({
       returnFunction,
@@ -91,7 +101,7 @@ export const InVideoQuizEditor = ({
         setSaveError(error?.response?.data?.error || error?.message || 'Failed to save settings');
       },
     });
-  }, [saveInVideoQuizSettings, returnFunction, returnUrl, analytics]);
+  }, [saveInVideoQuizSettings, returnFunction, returnUrl, analytics, quizItems, intl, isValidTimeFormat]);
 
   const handleVideoChange = useCallback((e) => {
     setSelectedVideo(e.target.value);

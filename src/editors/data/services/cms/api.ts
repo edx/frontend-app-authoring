@@ -475,12 +475,14 @@ export const apiMethods = {
     blockId,
     videoId,
     timemap,
+    jumpBack,
   }) => post(
     urls.xblockHandler({ studioEndpointUrl, blockId, handlerName: 'submit_studio_edits' }),
     {
       values: {
         video_id: videoId,
         timemap,
+        jump_back: jumpBack,
       },
       defaults: [],
     },

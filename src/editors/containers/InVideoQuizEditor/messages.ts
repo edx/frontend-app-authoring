@@ -41,6 +41,11 @@ const messages = defineMessages({
     defaultMessage: 'Enter time as MM:SS',
     description: 'Helper text for time input.',
   },
+  timeFormatError: {
+    id: 'InVideoQuizEditor.timeFormatError',
+    defaultMessage: 'Enter time as MM:SS',
+    description: 'Validation error for invalid time format.',
+  },
   jumpBackLabel: {
     id: 'InVideoQuizEditor.jumpBackLabel',
     defaultMessage: 'Jump back',

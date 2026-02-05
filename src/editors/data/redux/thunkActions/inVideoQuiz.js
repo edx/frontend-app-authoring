@@ -26,7 +26,7 @@ const extractBlockId = (fullBlockId) => {
 /**
  * Parse studio_view HTML response to extract field values
  * @param {string} html - The HTML response from studio_view API
- * @returns {object} - Object containing video_id and timemap
+ * @returns {object} - Object containing video_id, timemap, and jumpBack
  */
 const parseStudioViewHtml = (html) => {
   const parser = new DOMParser();
@@ -39,22 +39,35 @@ const parseStudioViewHtml = (html) => {
   // Extract timemap from textarea
   const timemapTextarea = doc.querySelector('#xb-field-edit-timemap');
   let timemap = {};
+  const jumpBackTextarea = doc.querySelector('#xb-field-edit-jump_back');
+  let jumpBack = {};
+
+  const decodeStudioValue = (value) => value
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
   
   if (timemapTextarea && timemapTextarea.value) {
     try {
       // The value might be HTML-encoded JSON, so we need to decode it
-      const decodedValue = timemapTextarea.value
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>');
+      const decodedValue = decodeStudioValue(timemapTextarea.value);
       timemap = JSON.parse(decodedValue);
     } catch (error) {
       console.error('Failed to parse timemap:', error);
     }
   }
+
+  if (jumpBackTextarea && jumpBackTextarea.value) {
+    try {
+      const decodedValue = decodeStudioValue(jumpBackTextarea.value);
+      jumpBack = JSON.parse(decodedValue);
+    } catch (error) {
+      console.error('Failed to parse jump_back:', error);
+    }
+  }
   
-  return { videoId, timemap };
+  return { videoId, timemap, jumpBack };
 };
 
 export const loadInVideoQuizSettings = () => (dispatch, getState) => {
@@ -63,7 +76,7 @@ export const loadInVideoQuizSettings = () => (dispatch, getState) => {
   // First, fetch the studio_view to get the current form values
   dispatch(requests.fetchStudioView({
     onSuccess: (studioViewResponse) => {
-      const { videoId, timemap } = parseStudioViewHtml(studioViewResponse.data.html);
+      const { videoId, timemap, jumpBack } = parseStudioViewHtml(studioViewResponse.data.html);
       
       // Then fetch the unit data to populate videos and problems dropdowns
       dispatch(requests.fetchUnit({
@@ -114,7 +127,7 @@ export const loadInVideoQuizSettings = () => (dispatch, getState) => {
                 id: `problem-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
                 problemId,
                 time,
-                jumpBack: '', // Default value, not stored in timemap
+                jumpBack: (jumpBack && jumpBack[time]) || '00:00',
               }));
               
               if (quizItems.length > 0) {
@@ -171,9 +184,17 @@ export const saveInVideoQuizSettings = ({ onSuccess, onFailure } = {}) => (dispa
     }
     return acc;
   }, {});
+
+  const jumpBackObject = quizItems.reduce((acc, item) => {
+    if (item.problemId && item.time && item.jumpBack) {
+      acc[item.time] = item.jumpBack;
+    }
+    return acc;
+  }, {});
   
   // Convert timemap object to JSON string
   const timemapString = JSON.stringify(timemapObject);
+  const jumpBackString = JSON.stringify(jumpBackObject);
   
   dispatch(actions.requests.startRequest(RequestKeys.saveBlock));
   
@@ -182,6 +203,7 @@ export const saveInVideoQuizSettings = ({ onSuccess, onFailure } = {}) => (dispa
     blockId,
     videoId: selectedVideo || '',
     timemap: timemapString,
+    jumpBack: jumpBackString,
   })
     .then((response) => {
       dispatch(actions.inVideoQuiz.setDirty(false));
