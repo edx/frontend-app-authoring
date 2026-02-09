@@ -1,4 +1,5 @@
 import { createSelector } from 'reselect';
+// eslint-disable-next-line import/no-self-import
 import * as module from './selectors';
 
 export const inVideoQuizState = (state) => state.inVideoQuiz;

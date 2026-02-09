@@ -54,6 +54,8 @@ interface Props extends EditorComponent {
   isDirty: () => boolean;
   validateEntry?: Function | null;
   onSave?: Function | null;
+  saveButtonLabel?: string | null;
+  saveButtonAriaLabel?: string | null;
 }
 
 const EditorContainer: React.FC<Props> = ({
@@ -64,6 +66,8 @@ const EditorContainer: React.FC<Props> = ({
   validateEntry = null,
   returnFunction = null,
   onSave: customOnSave = null,
+  saveButtonLabel = null,
+  saveButtonAriaLabel = null,
 }) => {
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -186,13 +190,13 @@ const EditorContainer: React.FC<Props> = ({
               <FormattedMessage {...messages.cancelButtonLabel} />
             </Button>
             <Button
-              aria-label={intl.formatMessage(messages.saveButtonAriaLabel)}
+              aria-label={saveButtonAriaLabel || intl.formatMessage(messages.saveButtonAriaLabel)}
               onClick={onSave}
               disabled={disableSave}
             >
               {disableSave
                 ? <Spinner animation="border" className="mr-3" />
-                : <FormattedMessage {...messages.saveButtonLabel} />}
+                : (saveButtonLabel || <FormattedMessage {...messages.saveButtonLabel} />)}
             </Button>
           </ActionRow>
         </ModalDialog.Footer>

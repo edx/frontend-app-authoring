@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { connect, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { navigateCallback } from '../../hooks';
-import analyticsEvt from '../../data/constants/analyticsEvt';
 import {
   Form,
   Spinner,
@@ -18,6 +16,8 @@ import {
   Plus,
   InfoOutline,
 } from '@openedx/paragon/icons';
+import { navigateCallback } from '../../hooks';
+import analyticsEvt from '../../data/constants/analyticsEvt';
 import {
   actions,
   selectors,
@@ -50,7 +50,6 @@ export const InVideoQuizEditor = ({
   problems,
   quizItems,
   setSelectedVideo,
-  setQuizItems,
   addQuizItem,
   removeQuizItem,
   updateProblemId,
@@ -68,6 +67,24 @@ export const InVideoQuizEditor = ({
 
   const isValidTimeFormat = useCallback((value) => /^\d+:[0-5]\d$/.test(value), []);
 
+  const getValidationState = useCallback((item) => {
+    const validation = { problem: null, time: null };
+
+    if (item.problemId && !item.time) {
+      validation.time = 'error';
+    }
+
+    if (item.time && !item.problemId) {
+      validation.problem = 'error';
+    }
+
+    if (item.time && !isValidTimeFormat(item.time)) {
+      validation.time = 'error';
+    }
+
+    return validation;
+  }, [isValidTimeFormat]);
+
   useEffect(() => {
     if (blockFinished && blockId && blockValue && !settingsLoaded) {
       loadInVideoQuizSettings();
@@ -83,6 +100,16 @@ export const InVideoQuizEditor = ({
     ));
     if (hasInvalidTime) {
       setSaveError(intl.formatMessage(messages.timeFormatError));
+      return;
+    }
+    const hasProblemWithoutTimer = quizItems.some((item) => item.problemId && !item.time);
+    if (hasProblemWithoutTimer) {
+      setSaveError(intl.formatMessage(messages.timerRequiredError));
+      return;
+    }
+    const hasTimerWithoutProblem = quizItems.some((item) => item.time && !item.problemId);
+    if (hasTimerWithoutProblem) {
+      setSaveError(intl.formatMessage(messages.problemRequiredError));
       return;
     }
     const destination = returnFunction ? '' : returnUrl;
@@ -111,37 +138,35 @@ export const InVideoQuizEditor = ({
     updateProblemId({ index, problemId: value });
   }, [updateProblemId]);
 
-  const formatTimeInput = (value, prevValue = '') => {
+  const formatTimeInput = (value) => {
     // Remove all non-digits
     const digits = value.replace(/\D/g, '');
-    
-    if (digits.length === 0) return '';
-    if (digits.length === 1) return digits;
-    if (digits.length === 2) return digits;
+
+    if (digits.length === 0) { return ''; }
+    if (digits.length === 1) { return digits; }
+    if (digits.length === 2) { return digits; }
     if (digits.length === 3) {
       const minutes = digits.slice(0, 1);
       const seconds = digits.slice(1, 3);
       const sec = parseInt(seconds, 10);
       return `${minutes}:${sec > 59 ? '59' : seconds}`;
     }
-    
+
     // 4 or more digits
     const minutes = digits.slice(0, -2);
     const seconds = digits.slice(-2);
     const sec = parseInt(seconds, 10);
-    
+
     return `${minutes}:${sec > 59 ? '59' : seconds}`;
   };
 
   const handleTimeChange = useCallback((index, e) => {
-    const currentValue = quizItems[index]?.time || '';
-    const formatted = formatTimeInput(e.target.value, currentValue);
+    const formatted = formatTimeInput(e.target.value);
     updateTime({ index, time: formatted });
   }, [quizItems, updateTime]);
 
   const handleJumpBackChange = useCallback((index, e) => {
-    const currentValue = quizItems[index]?.jumpBack || '';
-    const formatted = formatTimeInput(e.target.value, currentValue);
+    const formatted = formatTimeInput(e.target.value);
     updateJumpBack({ index, jumpBack: formatted });
   }, [quizItems, updateJumpBack]);
 
@@ -176,6 +201,7 @@ export const InVideoQuizEditor = ({
     <div className="in-video-quiz-editor">
       {saveError && (
         <Alert variant="danger" dismissible onClose={() => setSaveError(null)}>
+          <Alert.Heading>{intl.formatMessage(messages.saveErrorTitle)}</Alert.Heading>
           {saveError}
         </Alert>
       )}
@@ -198,85 +224,106 @@ export const InVideoQuizEditor = ({
       </div>
 
       <div className="quiz-items-list">
-        {quizItems.map((item, index) => (
-          <div key={item.id} className="quiz-item-row d-flex align-items-start p-4 my-3">
-            <div className="problem-select">
-              <Form.Group>
-                <Form.Label size="sm" className="invideo-form-label font-weight-bold">{intl.formatMessage(messages.problemLabel)}</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={item.problemId}
-                  onChange={(e) => handleProblemChange(index, e.target.value)}
-                >
-                  <option value="">{intl.formatMessage(messages.selectProblem)}</option>
-                  {problems.map((problem) => (
-                    <option key={problem.id} value={problem.id}>
-                      {problem.display_name}
-                    </option>
-                  ))}
-                </Form.Control>
-              </Form.Group>
-            </div>
-
-            <div className="time-input">
-              <Form.Group>
-                <Form.Label size="sm" className="invideo-form-label font-weight-bold" >{intl.formatMessage(messages.timeLabel)}</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={item.time || ''}
-                  onChange={(e) => handleTimeChange(index, e)}
-                  placeholder="00:00"
-                  maxLength={8}
-                />
-                <Form.Text>{intl.formatMessage(messages.timeHelperText)}</Form.Text>
-              </Form.Group>
-            </div>
-
-            <div className="jump-back-input">
-              <Form.Group>
-                <Form.Label size="sm" className="invideo-form-label font-weight-bold d-flex align-items-center">
-                  {intl.formatMessage(messages.jumpBackLabel)}
-                  <OverlayTrigger
-                    placement="top"
-                    overlay={(
-                      <Tooltip id={`tooltip-jump-back-${index}`}>
-                        {intl.formatMessage(messages.jumpBackTooltip)}
-                      </Tooltip>
-                    )}
+        {quizItems.map((item, index) => {
+          const validation = getValidationState(item);
+          return (
+            <div key={item.id} className="quiz-item-row d-flex align-items-start p-4 my-3">
+              <div className="problem-select">
+                <Form.Group>
+                  <Form.Label size="sm" className="invideo-form-label font-weight-bold">{intl.formatMessage(messages.problemLabel)}</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={item.problemId}
+                    onChange={(e) => handleProblemChange(index, e.target.value)}
+                    isInvalid={validation.problem === 'error'}
                   >
-                    <Icon src={InfoOutline} size="xs" className="ml-1" />
-                  </OverlayTrigger>
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  value={item.jumpBack || ''}
-                  onChange={(e) => handleJumpBackChange(index, e)}
-                  placeholder="00:00"
-                  maxLength={8}
-                />
-                <Form.Text className="form-helper-text">{intl.formatMessage(messages.timeHelperText)}</Form.Text>
-              </Form.Group>
-            </div>
+                    <option value="">{intl.formatMessage(messages.selectProblem)}</option>
+                    {problems.map((problem) => (
+                      <option key={problem.id} value={problem.id}>
+                        {problem.display_name}
+                      </option>
+                    ))}
+                  </Form.Control>
+                  {validation.problem === 'error' && (
+                  <Form.Control.Feedback type="invalid">
+                    {intl.formatMessage(messages.problemRequiredError)}
+                  </Form.Control.Feedback>
+                  )}
+                </Form.Group>
+              </div>
 
+              <div className="time-input">
+                <Form.Group>
+                  <Form.Label size="sm" className="invideo-form-label font-weight-bold">{intl.formatMessage(messages.timeLabel)}</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={item.time || ''}
+                    onChange={(e) => handleTimeChange(index, e)}
+                    placeholder="00:00"
+                    maxLength={8}
+                    isInvalid={validation.time === 'error'}
+                  />
+                  {validation.time === 'error' && item.problemId && !item.time && (
+                  <Form.Control.Feedback type="invalid">
+                    {intl.formatMessage(messages.timerRequiredError)}
+                  </Form.Control.Feedback>
+                  )}
+                  {validation.time === 'error' && item.time && !isValidTimeFormat(item.time) && (
+                  <Form.Control.Feedback type="invalid">
+                    {intl.formatMessage(messages.timeFormatError)}
+                  </Form.Control.Feedback>
+                  )}
+                  {!validation.time && (
+                  <Form.Text className="form-helper-text timer-help-text">{intl.formatMessage(messages.timeHelperText)}</Form.Text>
+                  )}
+                </Form.Group>
+              </div>
 
-            <OverlayTrigger
-                    placement="top"
-                    overlay={(
-                      <Tooltip id={`tooltip-delete-problem-${index}`}>
-                        {intl.formatMessage(messages.deleteProblem)}
-                      </Tooltip>
+              <div className="jump-back-input">
+                <Form.Group>
+                  <Form.Label size="sm" className="invideo-form-label font-weight-bold d-flex align-items-center">
+                    {intl.formatMessage(messages.jumpBackLabel)}
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={(
+                        <Tooltip id={`tooltip-jump-back-${index}`}>
+                          {intl.formatMessage(messages.jumpBackTooltip)}
+                        </Tooltip>
                     )}
-                  >
-                                <IconButton
-              className="delete-btn"
-              src={DeleteOutline}
-              iconAs={Icon}
-              alt={intl.formatMessage(messages.deleteProblem)}
-              onClick={() => handleRemoveProblem(index)}
-            />
-            </OverlayTrigger>
-          </div>
-        ))}
+                    >
+                      <Icon src={InfoOutline} size="xs" className="ml-1" />
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={item.jumpBack || ''}
+                    onChange={(e) => handleJumpBackChange(index, e)}
+                    placeholder="00:00"
+                    maxLength={8}
+                  />
+                  <Form.Text className="form-helper-text timer-help-text">{intl.formatMessage(messages.timeHelperText)}</Form.Text>
+                </Form.Group>
+              </div>
+
+              <OverlayTrigger
+                placement="top"
+                overlay={(
+                  <Tooltip id={`tooltip-delete-problem-${index}`}>
+                    {intl.formatMessage(messages.deleteProblem)}
+                  </Tooltip>
+                    )}
+              >
+                <IconButton
+                  className="delete-btn"
+                  src={DeleteOutline}
+                  iconAs={Icon}
+                  alt={intl.formatMessage(messages.deleteProblem)}
+                  onClick={() => handleRemoveProblem(index)}
+                />
+              </OverlayTrigger>
+            </div>
+          );
+        })}
       </div>
 
       <Button
@@ -297,6 +344,8 @@ export const InVideoQuizEditor = ({
       returnFunction={returnFunction}
       isDirty={() => isDirty}
       onSave={handleSave}
+      saveButtonLabel={intl.formatMessage(messages.addToCourse)}
+      saveButtonAriaLabel={intl.formatMessage(messages.addToCourse)}
     >
       <div className="editor-body h-75 overflow-auto">
         {!blockFinished ? loading : page}
@@ -328,7 +377,6 @@ InVideoQuizEditor.propTypes = {
     jumpBack: PropTypes.string,
   })),
   setSelectedVideo: PropTypes.func.isRequired,
-  setQuizItems: PropTypes.func.isRequired,
   addQuizItem: PropTypes.func.isRequired,
   removeQuizItem: PropTypes.func.isRequired,
   updateProblemId: PropTypes.func.isRequired,
@@ -361,7 +409,6 @@ export const mapStateToProps = (state) => ({
 
 export const mapDispatchToProps = {
   setSelectedVideo: actions.inVideoQuiz.setSelectedVideo,
-  setQuizItems: actions.inVideoQuiz.setQuizItems,
   addQuizItem: actions.inVideoQuiz.addQuizItem,
   removeQuizItem: actions.inVideoQuiz.removeQuizItem,
   updateProblemId: actions.inVideoQuiz.updateProblemId,

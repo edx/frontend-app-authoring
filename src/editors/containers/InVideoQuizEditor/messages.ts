@@ -91,6 +91,31 @@ const messages = defineMessages({
     defaultMessage: 'Please select a video and at least one problem.',
     description: 'Validation error message.',
   },
+  timemapParseError: {
+    id: 'InVideoQuizEditor.timemapParseError',
+    defaultMessage: 'Failed to parse quiz timemap data',
+    description: 'Error message when timemap JSON parsing fails.',
+  },
+  jumpBackParseError: {
+    id: 'InVideoQuizEditor.jumpBackParseError',
+    defaultMessage: 'Failed to parse jump back data',
+    description: 'Error message when jump back JSON parsing fails.',
+  },
+  saveErrorTitle: {
+    id: 'InVideoQuizEditor.saveErrorTitle',
+    defaultMessage: 'Error saving in-video quiz',
+    description: 'Error alert title when saving fails.',
+  },
+  timerRequiredError: {
+    id: 'InVideoQuizEditor.timerRequiredError',
+    defaultMessage: 'Please enter a time for the selected problem.',
+    description: 'Validation error when problem is selected but timer is missing.',
+  },
+  problemRequiredError: {
+    id: 'InVideoQuizEditor.problemRequiredError',
+    defaultMessage: 'Please select a problem for the entered time.',
+    description: 'Validation error when timer is entered but problem is missing.',
+  },
 });
 
 export default messages;

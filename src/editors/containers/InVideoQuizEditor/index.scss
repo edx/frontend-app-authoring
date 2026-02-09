@@ -3,12 +3,18 @@
   border-radius: 6px;
 
   .problem-select {
-    flex: 2;
+    flex: 1;
+    margin-right: 25px;
   }
 
-  .time-input,
+  .time-input {
+    max-width: 160px;
+    margin-right: 25px;
+  }
+
   .jump-back-input {
-    max-width: 120px;
+    max-width: 160px;
+    margin-right: 25px;
   }
 
   .delete-btn {
@@ -18,4 +24,9 @@
 
 .invideo-form-label {
   color: var(--primary-500, #00262B) !important;
+}
+
+.timer-help-text {
+  color: var(--text-secondary, #6c757d) !important;
+  font-weight: normal !important;
 }
