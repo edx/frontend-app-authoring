@@ -118,7 +118,7 @@ export const deleteGameImage = ({ index, imageType, filePath }) => (dispatch) =>
     onSuccess: (response) => {
       if (response.data.success === false) {
         dispatch(actions.requests.failRequest({
-          requestKey: RequestKeys.uploadAsset,
+          requestKey: RequestKeys.deleteAsset,
           error: response.data?.error,
         }));
         return;
@@ -133,7 +133,7 @@ export const deleteGameImage = ({ index, imageType, filePath }) => (dispatch) =>
     },
     onFailure: (error) => {
       dispatch(actions.requests.failRequest({
-        requestKey: RequestKeys.uploadAsset,
+        requestKey: RequestKeys.deleteAsset,
         error,
       }));
     },

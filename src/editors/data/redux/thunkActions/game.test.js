@@ -591,12 +591,12 @@ describe('game thunkActions', () => {
           mockOnSuccess(failureResponse);
 
           expect(requestsActions.failRequest).toHaveBeenCalledWith({
-            requestKey: RequestKeys.uploadAsset,
+            requestKey: RequestKeys.deleteAsset,
             error: 'File not found',
           });
           expect(dispatch).toHaveBeenCalledWith(
             requestsActions.failRequest({
-              requestKey: RequestKeys.uploadAsset,
+              requestKey: RequestKeys.deleteAsset,
               error: 'File not found',
             }),
           );
@@ -616,12 +616,12 @@ describe('game thunkActions', () => {
           mockOnFailure(mockError);
 
           expect(requestsActions.failRequest).toHaveBeenCalledWith({
-            requestKey: RequestKeys.uploadAsset,
+            requestKey: RequestKeys.deleteAsset,
             error: mockError,
           });
           expect(dispatch).toHaveBeenCalledWith(
             requestsActions.failRequest({
-              requestKey: RequestKeys.uploadAsset,
+              requestKey: RequestKeys.deleteAsset,
               error: mockError,
             }),
           );
