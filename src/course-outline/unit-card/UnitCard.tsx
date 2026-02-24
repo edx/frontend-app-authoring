@@ -211,6 +211,13 @@ const UnitCard = ({
 
   const supportsMFEEditor = (blockType: string): boolean => Boolean(supportedEditors[blockType]);
 
+  const getComponentEditorUrl = (blockType: string, blockId: string): string => {
+    if (supportsMFEEditor(blockType)) {
+      return `/course/${courseId}/editor/${blockType}/${blockId}`;
+    }
+    return `${getConfig().STUDIO_BASE_URL}/xblock/${blockId}/action/edit`;
+  };
+
   const handleShowLegacyEditModal = (blockId: string) => {
     setEditXBlockId(blockId);
     setShowLegacyEditModal(true);
@@ -497,7 +504,22 @@ const UnitCard = ({
                             actions={(
                               <>
                                 <Icon src={ComponentIcon} className="mr-2 text-dark" />
-                                <span className="flex-grow-1">{component.displayName}</span>
+                                <a
+                                  href={getComponentEditorUrl(component.blockType, component.blockId)}
+                                  className="flex-grow-1"
+                                  data-testid="component-editor-link"
+                                  onClick={(e) => {
+                                    if (e.metaKey || e.ctrlKey) {
+                                      e.stopPropagation();
+                                      return;
+                                    }
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleComponentEdit(e, component.blockType, component.blockId);
+                                  }}
+                                >
+                                  {component.displayName}
+                                </a>
                                 <IconButtonWithTooltip
                                   className="component-card-button-icon btn-icon btn-icon-primary btn-icon-md"
                                   data-testid="component-edit-button"
