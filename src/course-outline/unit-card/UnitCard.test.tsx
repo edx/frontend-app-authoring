@@ -290,45 +290,54 @@ describe('<UnitCard />', () => {
       fireEvent.click(expandButton);
     };
 
-    it('renders component names as links with correct href for MFE-supported types', async () => {
+    it('renders component names as links to the unit page', async () => {
       await setupExpandedView([htmlComponent]);
 
-      const link = await screen.findByTestId('component-editor-link');
+      const link = await screen.findByTestId('component-name-link');
       expect(link.tagName).toBe('A');
-      expect(link).toHaveAttribute('href', `/course/5/editor/html/${htmlComponent.blockId}`);
+      expect(link).toHaveAttribute('href', `/some/${unit.id}#${htmlComponent.blockId}`);
       expect(link).toHaveTextContent('HTML Component');
     });
 
-    it('renders component names as links with legacy Studio URL for non-MFE types', async () => {
+    it('renders edit button with correct href for MFE-supported types', async () => {
+      await setupExpandedView([htmlComponent]);
+
+      const editButton = await screen.findByTestId('component-edit-button');
+      expect(editButton.tagName).toBe('A');
+      expect(editButton).toHaveAttribute('href', `/course/5/editor/html/${htmlComponent.blockId}`);
+    });
+
+    it('renders edit button with legacy Studio URL for non-MFE types', async () => {
       await setupExpandedView([oraComponent]);
 
-      const link = await screen.findByTestId('component-editor-link');
-      expect(link).toHaveAttribute(
+      const editButton = await screen.findByTestId('component-edit-button');
+      const returnTo = encodeURIComponent(`${getConfig().STUDIO_BASE_URL}/container/${unit.id}`);
+      expect(editButton).toHaveAttribute(
         'href',
-        `${getConfig().STUDIO_BASE_URL}/xblock/${oraComponent.blockId}/action/edit`,
+        `${getConfig().STUDIO_BASE_URL}/xblock/${oraComponent.blockId}/action/edit?returnTo=${returnTo}`,
       );
     });
 
-    it('opens modal editor on plain left-click (does not navigate)', async () => {
+    it('opens modal editor on plain left-click on edit button (does not navigate)', async () => {
       await setupExpandedView([htmlComponent]);
 
-      const link = await screen.findByTestId('component-editor-link');
+      const editButton = await screen.findByTestId('component-edit-button');
       const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
       Object.defineProperty(clickEvent, 'metaKey', { value: false });
       Object.defineProperty(clickEvent, 'ctrlKey', { value: false });
       Object.defineProperty(clickEvent, 'button', { value: 0 });
 
-      const prevented = !link.dispatchEvent(clickEvent);
+      const prevented = !editButton.dispatchEvent(clickEvent);
       expect(prevented).toBe(true);
     });
 
-    it('allows Ctrl+click to open in new tab (does not prevent default)', async () => {
+    it('allows Ctrl+click on edit button to open in new tab (does not prevent default)', async () => {
       await setupExpandedView([htmlComponent]);
 
-      const link = await screen.findByTestId('component-editor-link');
+      const editButton = await screen.findByTestId('component-edit-button');
       const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
 
-      const prevented = !link.dispatchEvent(clickEvent);
+      const prevented = !editButton.dispatchEvent(clickEvent);
       expect(prevented).toBe(false);
     });
   });

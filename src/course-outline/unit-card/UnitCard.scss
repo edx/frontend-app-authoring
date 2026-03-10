@@ -41,6 +41,18 @@
             text-decoration: underline;
           }
         }
+
+        >a.component-card-button-icon {
+          text-decoration: none;
+          color: var(--pgn-color-primary-500);
+
+          &:hover,
+          &:focus {
+            text-decoration: none;
+            color: var(--pgn-color-white);
+            background-color: var(--pgn-color-primary-500);
+          }
+        }
       }
     }
 
