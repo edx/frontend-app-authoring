@@ -107,7 +107,7 @@ describe('XpertUnitSummarySettings', () => {
 
     test('Shows switch on if enabled from backend', async () => {
       const enableBadge = await findByTestId(container, 'enable-badge');
-      expect(container.querySelector('#enable-xpert-unit-summary-toggle').checked).toBeTruthy();
+      expect(container.querySelector('#enable-xpert_unit_summary-toggle').checked).toBeTruthy();
       expect(enableBadge).toBeTruthy();
     });
 
@@ -119,13 +119,13 @@ describe('XpertUnitSummarySettings', () => {
         }));
 
       renderComponent();
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
-      expect(container.querySelector('#enable-xpert-unit-summary-toggle').checked).toBeTruthy();
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
+      expect(container.querySelector('#enable-xpert_unit_summary-toggle').checked).toBeTruthy();
       expect(queryByTestId(container, 'enable-badge')).toBeTruthy();
     });
 
     test('Shows enable radio selected if enabled from backend', async () => {
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       expect(queryByTestId(container, 'enable-radio').checked).toBeTruthy();
     });
 
@@ -137,7 +137,7 @@ describe('XpertUnitSummarySettings', () => {
         }));
 
       renderComponent();
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       expect(queryByTestId(container, 'disable-radio').checked).toBeTruthy();
     });
   });
@@ -154,8 +154,8 @@ describe('XpertUnitSummarySettings', () => {
     });
 
     test('Does not show as enabled if configuration does not exist', async () => {
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
-      expect(container.querySelector('#enable-xpert-unit-summary-toggle').checked).not.toBeTruthy();
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
+      expect(container.querySelector('#enable-xpert_unit_summary-toggle').checked).not.toBeTruthy();
       expect(queryByTestId(container, 'enable-badge')).not.toBeTruthy();
     });
   });
@@ -180,11 +180,11 @@ describe('XpertUnitSummarySettings', () => {
     test('Saving configuration changes', async () => {
       jest.spyOn(API, 'postXpertSettings');
 
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       expect(queryByTestId(container, 'disable-radio').checked).toBeTruthy();
       fireEvent.click(queryByTestId(container, 'enable-radio'));
       fireEvent.click(getByText(container, 'Save'));
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       expect(API.postXpertSettings).toBeCalled();
     });
   });
@@ -206,7 +206,7 @@ describe('XpertUnitSummarySettings', () => {
     });
   });
 
-  describe('removing course configuration', () => {
+  describe('disabling course configuration', () => {
     beforeEach(() => {
       axiosMock.onGet(API.getXpertSettingsUrl(courseId))
         .reply(200, generateCourseLevelAPIResponse({
@@ -214,23 +214,23 @@ describe('XpertUnitSummarySettings', () => {
           enabled: true,
         }));
 
-      axiosMock.onDelete(API.getXpertSettingsUrl(courseId))
+      axiosMock.onPost(API.getXpertSettingsUrl(courseId))
         .reply(200, generateCourseLevelAPIResponse({
           success: true,
-          enabled: undefined,
+          enabled: false,
         }));
 
       renderComponent();
     });
 
-    test('Deleting course configuration', async () => {
-      jest.spyOn(API, 'deleteXpertSettings');
+    test('Disabling course configuration', async () => {
+      jest.spyOn(API, 'postXpertSettings');
 
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
-      fireEvent.click(container.querySelector('#enable-xpert-unit-summary-toggle'));
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
+      fireEvent.click(container.querySelector('#enable-xpert_unit_summary-toggle'));
       fireEvent.click(getByText(container, 'Save'));
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
-      expect(API.deleteXpertSettings).toBeCalled();
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
+      expect(API.postXpertSettings).toBeCalledWith(courseId, { enabled: false });
     });
   });
 
@@ -252,7 +252,7 @@ describe('XpertUnitSummarySettings', () => {
 
       jest.spyOn(API, 'postXpertSettings');
 
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       fireEvent.click(queryByTestId(container, 'reset-units'));
       expect(API.postXpertSettings).toBeCalledWith(courseId, { reset: true, enabled: true });
     });
@@ -274,7 +274,7 @@ describe('XpertUnitSummarySettings', () => {
 
       jest.spyOn(API, 'postXpertSettings');
 
-      await waitFor(() => expect(container.querySelector('#enable-xpert-unit-summary-toggle')).toBeTruthy());
+      await waitFor(() => expect(container.querySelector('#enable-xpert_unit_summary-toggle')).toBeTruthy());
       fireEvent.click(queryByTestId(container, 'reset-units'));
       expect(API.postXpertSettings).toBeCalledWith(courseId, { reset: true, enabled: false });
     });
