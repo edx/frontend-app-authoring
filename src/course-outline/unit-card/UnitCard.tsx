@@ -42,7 +42,7 @@ import EditorPage from '@src/editors/EditorPage';
 import supportedEditors from '@src/editors/supportedEditors';
 import DraggableList, { SortableItem as GenericSortableItem } from '@src/generic/DraggableList';
 import { ToastContext } from '@src/generic/toast-context';
-import { useUnitHandler } from './data/hooks';
+import { useUnitHandler, useComponentTemplates } from './data/hooks';
 import AddComponentWidget from './AddComponentWidget';
 import type { CreatedXBlockInfo } from './AddComponentWidget';
 import messages from './messages';
@@ -136,6 +136,14 @@ const UnitCard = ({
     refetch: refetchUnitData,
   } = useUnitHandler(id, isExpanded && waffleFlags.enableUnitExpandedView);
 
+  // Fetch component templates separately via the existing container_handler API.
+  // Templates are course-level (same for every unit), so cached per courseId.
+  const { data: componentTemplates } = useComponentTemplates(
+    id,
+    courseId || '',
+    isExpanded && waffleFlags.enableUnitExpandedView && waffleFlags.enableOutlineComponentCreation,
+  );
+
   const blockSyncData = useMemo(() => {
     if (!upstreamInfo?.readyToSync) {
       return undefined;
@@ -210,7 +218,7 @@ const UnitCard = ({
     try {
       await pasteBlock(id);
       dispatch(fetchCourseSectionQuery([section.id]));
-      refetchUnitData();
+      await refetchUnitData();
     } catch {
       showToast(intl.formatMessage(messages.addComponentError));
     }
@@ -592,17 +600,17 @@ const UnitCard = ({
                 );
               })()}
               {waffleFlags.enableOutlineComponentCreation
-                && unitData?.componentTemplates
-                && unitData.componentTemplates.length > 0 && (
+                && componentTemplates
+                && componentTemplates.length > 0 && (
                 <div className="mt-3 mb-0" data-testid="add-component-widget">
                   <AddComponentWidget
                     unitId={id}
-                    componentTemplates={unitData.componentTemplates}
+                    componentTemplates={componentTemplates}
                     showPasteXBlock={!!showPasteXBlock}
                     onPasteComponent={handlePasteComponent}
-                    onComponentCreated={(info: CreatedXBlockInfo) => {
+                    onComponentCreated={async (info: CreatedXBlockInfo) => {
                       dispatch(fetchCourseSectionQuery([section.id]));
-                      refetchUnitData();
+                      await refetchUnitData();
                       const editorBlockType = info.category || info.type;
                       if (supportsMFEEditor(editorBlockType)) {
                         // MFE editor available (html, video, problem, games, etc.)

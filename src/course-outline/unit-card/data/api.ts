@@ -33,17 +33,32 @@ export interface UnitHandlerData {
   unitId: string;
   displayName: string;
   components: UnitComponent[];
-  componentTemplates: ComponentTemplate[];
 }
 
 export const getUnitHandlerApiUrl = (unitId: string) => `${getStudioBaseUrl()}/api/contentstore/v1/unit_handler/${unitId}`;
 
 /**
- * Get unit handler data including components and available component templates.
+ * Get unit handler data (components list).
  * @param {string} unitId
  * @returns {Promise<UnitHandlerData>}
  */
 export async function getUnitHandler(unitId: string): Promise<UnitHandlerData> {
   const { data } = await getAuthenticatedHttpClient().get(getUnitHandlerApiUrl(unitId));
   return camelCaseObject(data) as UnitHandlerData;
+}
+
+// Reuse the existing container_handler endpoint that already serves component_templates.
+const getContainerHandlerApiUrl = (unitId: string) => `${getStudioBaseUrl()}/api/contentstore/v1/container_handler/${unitId}`;
+
+/**
+ * Fetch component templates for a unit by calling the existing container_handler API.
+ * Templates are course-level (identical for all units in a course), so callers
+ * should cache the result per courseId rather than per unit.
+ * @param {string} unitId – any unit in the course
+ * @returns {Promise<ComponentTemplate[]>}
+ */
+export async function getComponentTemplates(unitId: string): Promise<ComponentTemplate[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getContainerHandlerApiUrl(unitId));
+  const camelData = camelCaseObject(data);
+  return (camelData.componentTemplates ?? []) as ComponentTemplate[];
 }

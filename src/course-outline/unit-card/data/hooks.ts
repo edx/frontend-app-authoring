@@ -1,13 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { camelCaseObject } from '@edx/frontend-platform';
 import { createCourseXblock } from '@src/course-unit/data/api';
-import { getUnitHandler } from './api';
+import { getUnitHandler, getComponentTemplates } from './api';
 
-// Hook to fetch unit data (components + templates) when expanded
+// Hook to fetch unit data (components list) when expanded
 export const useUnitHandler = (unitId: string, enabled: boolean = false) => useQuery({
   queryKey: ['unitHandler', unitId],
   queryFn: () => getUnitHandler(unitId),
   enabled: enabled && !!unitId,
+});
+
+// Hook to fetch component templates via the existing container_handler endpoint.
+// Templates are course-level (identical for every unit in a course), so we key
+// by courseId and use a long staleTime to avoid re-fetching on every unit expand.
+export const useComponentTemplates = (
+  unitId: string,
+  courseId: string,
+  enabled: boolean = false,
+) => useQuery({
+  queryKey: ['componentTemplates', courseId],
+  queryFn: () => getComponentTemplates(unitId),
+  enabled: enabled && !!unitId && !!courseId,
+  staleTime: 5 * 60 * 1000, // 5 minutes — templates rarely change within a session
 });
 
 // Hook to create a new xblock component inside a unit, reusing the course-unit API

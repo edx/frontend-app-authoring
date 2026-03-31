@@ -9,14 +9,6 @@ const mockUnitHandlerResponse = {
     { block_id: 'block-v1:edX+DemoX+Demo+type@html+block@1', block_type: 'html', display_name: 'Text' },
     { block_id: 'block-v1:edX+DemoX+Demo+type@video+block@2', block_type: 'video', display_name: 'Video' },
   ],
-  component_templates: [
-    {
-      type: 'html',
-      display_name: 'Text',
-      templates: [{ display_name: 'Text', category: 'html', boilerplate_name: null }],
-      support_legend: {},
-    },
-  ],
 };
 
 describe('unit-card data/api', () => {
@@ -53,8 +45,6 @@ describe('unit-card data/api', () => {
       expect(result.displayName).toBe(mockUnitHandlerResponse.display_name);
       expect(result.components).toHaveLength(2);
       expect(result.components[0].blockType).toBe('html');
-      expect(result.componentTemplates).toHaveLength(1);
-      expect(result.componentTemplates[0].displayName).toBe('Text');
     });
 
     it('throws on network error', async () => {

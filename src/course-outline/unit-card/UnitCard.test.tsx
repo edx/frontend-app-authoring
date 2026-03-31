@@ -12,6 +12,7 @@ import componentMessages from './messages';
 const mockUseAcceptLibraryBlockChanges = jest.fn();
 const mockUseIgnoreLibraryBlockChanges = jest.fn();
 const mockUseUnitHandler = jest.fn();
+const mockUseComponentTemplates = jest.fn();
 const mockCreateXBlock = jest.fn();
 const mockPasteBlock = jest.fn();
 const mockCopyToClipboard = jest.fn();
@@ -28,6 +29,7 @@ jest.mock('@src/course-unit/data/apiHooks', () => ({
 
 jest.mock('./data/hooks', () => ({
   useUnitHandler: (...args: unknown[]) => mockUseUnitHandler(...args),
+  useComponentTemplates: (...args: unknown[]) => mockUseComponentTemplates(...args),
   useCreateXBlockInUnit: () => ({
     mutateAsync: mockCreateXBlock,
     isPending: false,
@@ -159,6 +161,8 @@ describe('<UnitCard />', () => {
     mockUseUnitHandler.mockReturnValue({
       data: undefined, isLoading: false, isError: false, error: null, refetch: jest.fn(),
     });
+    mockUseComponentTemplates.mockReset();
+    mockUseComponentTemplates.mockReturnValue({ data: undefined });
     mockPasteBlock.mockReset();
     mockCreateXBlock.mockReset();
     mockShowPasteXBlock.current = false;
@@ -431,12 +435,13 @@ describe('<UnitCard />', () => {
     it('renders AddComponentWidget when enableOutlineComponentCreation flag is true', async () => {
       mockWaffleFlags({ enableUnitExpandedView: true, enableOutlineComponentCreation: true });
       mockUseUnitHandler.mockReturnValue({
-        data: { components: [], componentTemplates },
+        data: { components: [] },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
       });
+      mockUseComponentTemplates.mockReturnValue({ data: componentTemplates });
 
       renderComponent();
 
@@ -450,12 +455,13 @@ describe('<UnitCard />', () => {
     it('hides AddComponentWidget when enableOutlineComponentCreation flag is false', async () => {
       mockWaffleFlags({ enableUnitExpandedView: true, enableOutlineComponentCreation: false });
       mockUseUnitHandler.mockReturnValue({
-        data: { components: [], componentTemplates },
+        data: { components: [] },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
       });
+      mockUseComponentTemplates.mockReturnValue({ data: componentTemplates });
 
       renderComponent();
 
@@ -472,12 +478,13 @@ describe('<UnitCard />', () => {
     it('hides AddComponentWidget when there are no component templates', async () => {
       mockWaffleFlags({ enableUnitExpandedView: true, enableOutlineComponentCreation: true });
       mockUseUnitHandler.mockReturnValue({
-        data: { components: [], componentTemplates: [] },
+        data: { components: [] },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
       });
+      mockUseComponentTemplates.mockReturnValue({ data: [] });
 
       renderComponent();
 
@@ -496,17 +503,19 @@ describe('<UnitCard />', () => {
       mockUseUnitHandler.mockReturnValue({
         data: {
           components: [],
-          componentTemplates: [{
-            type: 'html',
-            displayName: 'Text',
-            templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
-            supportLegend: {},
-          }],
         },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
+      });
+      mockUseComponentTemplates.mockReturnValue({
+        data: [{
+          type: 'html',
+          displayName: 'Text',
+          templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
+          supportLegend: {},
+        }],
       });
 
       renderComponent();
@@ -530,17 +539,19 @@ describe('<UnitCard />', () => {
       mockUseUnitHandler.mockReturnValue({
         data: {
           components: [],
-          componentTemplates: [{
-            type: 'html',
-            displayName: 'Text',
-            templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
-            supportLegend: {},
-          }],
         },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
+      });
+      mockUseComponentTemplates.mockReturnValue({
+        data: [{
+          type: 'html',
+          displayName: 'Text',
+          templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
+          supportLegend: {},
+        }],
       });
 
       renderComponent();
@@ -567,17 +578,19 @@ describe('<UnitCard />', () => {
       mockUseUnitHandler.mockReturnValue({
         data: {
           components: [],
-          componentTemplates: [{
-            type: 'html',
-            displayName: 'Text',
-            templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
-            supportLegend: {},
-          }],
         },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
+      });
+      mockUseComponentTemplates.mockReturnValue({
+        data: [{
+          type: 'html',
+          displayName: 'Text',
+          templates: [{ displayName: 'Text', category: 'html', boilerplateName: undefined }],
+          supportLegend: {},
+        }],
       });
 
       renderComponent();
@@ -607,21 +620,23 @@ describe('<UnitCard />', () => {
       mockUseUnitHandler.mockReturnValue({
         data: {
           components: [],
-          componentTemplates: [{
-            type: 'openassessment',
-            displayName: 'Open Response',
-            templates: [{
-              displayName: 'Open Response Assessment',
-              category: 'openassessment',
-              boilerplateName: undefined,
-            }],
-            supportLegend: {},
-          }],
         },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
+      });
+      mockUseComponentTemplates.mockReturnValue({
+        data: [{
+          type: 'openassessment',
+          displayName: 'Open Response',
+          templates: [{
+            displayName: 'Open Response Assessment',
+            category: 'openassessment',
+            boilerplateName: undefined,
+          }],
+          supportLegend: {},
+        }],
       });
 
       renderComponent();
@@ -655,12 +670,13 @@ describe('<UnitCard />', () => {
       mockShowPasteXBlock.current = true;
       mockWaffleFlags({ enableUnitExpandedView: true, enableOutlineComponentCreation: true });
       mockUseUnitHandler.mockReturnValue({
-        data: { components: [], componentTemplates },
+        data: { components: [] },
         isLoading: false,
         isError: false,
         error: null,
         refetch: jest.fn(),
       });
+      mockUseComponentTemplates.mockReturnValue({ data: componentTemplates });
 
       renderComponent();
 

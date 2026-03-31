@@ -83,7 +83,7 @@ const AddComponentWidget = ({
   };
 
   /** Handle clicking a dropdown item – open modal if multiple templates, otherwise create directly */
-  const handleDropdownItemClick = (template: ComponentTemplate) => {
+  const handleDropdownItemClick = async (template: ComponentTemplate) => {
     if (template.templates.length > 1) {
       // Multiple sub-types available – show selection modal
       setModalTemplate(template);
@@ -92,7 +92,7 @@ const AddComponentWidget = ({
     } else {
       // Single template – create immediately
       const firstTemplate = template.templates[0];
-      handleAddComponent(
+      await handleAddComponent(
         template.type,
         firstTemplate?.category || template.type,
         firstTemplate?.boilerplateName,
@@ -101,7 +101,7 @@ const AddComponentWidget = ({
   };
 
   /** Submit the modal – create the xblock with the selected template */
-  const handleModalSubmit = () => {
+  const handleModalSubmit = async () => {
     if (!modalTemplate || !selectedTemplateValue) {
       return;
     }
@@ -110,7 +110,7 @@ const AddComponentWidget = ({
       (tpl) => (tpl.boilerplateName || tpl.category) === selectedTemplateValue,
     );
     if (selected) {
-      handleAddComponent(
+      await handleAddComponent(
         modalTemplate.type,
         selected.category || modalTemplate.type,
         selected.boilerplateName,
@@ -153,7 +153,7 @@ const AddComponentWidget = ({
       return null;
     }
     if (supportLevel === 'ps') {
-      return intl.formatMessage(messages.supportPartiallySuppported);
+      return intl.formatMessage(messages.supportPartiallySupported);
     }
     return intl.formatMessage(messages.supportNotSupported);
   };

@@ -51,7 +51,7 @@ const messages = defineMessages({
     defaultMessage: 'Paste component',
     description: 'Label for the paste component option in the add component dropdown',
   },
-  supportPartiallySuppported: {
+  supportPartiallySupported: {
     id: 'course-authoring.course-outline.unit.support-partially-supported',
     defaultMessage: 'Partially supported',
     description: 'Label shown next to advanced components that are partially supported',

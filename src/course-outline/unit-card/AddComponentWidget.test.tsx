@@ -107,12 +107,12 @@ describe('<AddComponentWidget />', () => {
 
     // LTI Consumer (fs) - no support label
     const ltiItem = screen.getByTestId('add-component-item-advanced-lti_consumer');
-    expect(ltiItem).not.toHaveTextContent(messages.supportPartiallySuppported.defaultMessage);
+    expect(ltiItem).not.toHaveTextContent(messages.supportPartiallySupported.defaultMessage);
     expect(ltiItem).not.toHaveTextContent(messages.supportNotSupported.defaultMessage);
 
     // Poll (ps) - partially supported label
     const pollItem = screen.getByTestId('add-component-item-advanced-poll');
-    expect(pollItem).toHaveTextContent(messages.supportPartiallySuppported.defaultMessage);
+    expect(pollItem).toHaveTextContent(messages.supportPartiallySupported.defaultMessage);
 
     // Custom XBlock (us) - not supported label
     const customItem = screen.getByTestId('add-component-item-advanced-custom_xblock');
