@@ -29,6 +29,8 @@ const initialState = {
   },
   showTranscriptByDefault: false,
   handout: null,
+  audioDescription: null,
+  audioDescriptionUploadProgress: 0,
   licenseType: null,
   licenseDetails: {
     attribution: true,

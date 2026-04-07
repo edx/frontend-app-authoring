@@ -53,6 +53,7 @@ export const waffleFlagDefaults = {
   useNewGroupConfigurationsPage: true,
   useReactMarkdownEditor: true,
   useVideoGalleryFlow: false,
+  enableAudioDescriptionUpload: false,
 } as const;
 
 export type WaffleFlagName = keyof typeof waffleFlagDefaults;

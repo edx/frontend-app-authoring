@@ -24,6 +24,10 @@ const initialState = {
   [RequestKeys.importTranscript]: { status: RequestStates.inactive },
   [RequestKeys.fetchVideoFeatures]: { status: RequestStates.inactive },
   [RequestKeys.fetchAdvancedSettings]: { status: RequestStates.inactive },
+  [RequestKeys.getAudioDescriptionUploadUrl]: { status: RequestStates.inactive },
+  [RequestKeys.uploadAudioDescriptionToS3]: { status: RequestStates.inactive },
+  [RequestKeys.completeAudioDescriptionUpload]: { status: RequestStates.inactive },
+  [RequestKeys.deleteAudioDescription]: { status: RequestStates.inactive },
 };
 
 // eslint-disable-next-line no-unused-vars

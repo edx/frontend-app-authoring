@@ -89,6 +89,8 @@ export const loadVideoData = (selectedVideoId, selectedVideoUrl) => (dispatch, g
       total: rawVideoData.duration || 0, // TODO can we get total duration? if not, probably dropping from widget
     },
     handout: rawVideoData.handout,
+    audioDescription: rawVideoData.audio_description || null,
+    audioDescriptionUploadProgress: 0,
     licenseType,
     licenseDetails: {
       attribution: licenseOptions.by,
@@ -280,6 +282,86 @@ export const uploadThumbnail = ({ thumbnail, emptyCanvas }) => (dispatch, getSta
   }));
 };
 
+// Audio Description Thunks:
+
+/**
+ * Orchestrates the 3-step upload flow for an audio description file:
+ *   1. Ask CMS for a pre-signed S3 PUT URL.
+ *   2. PUT the file directly to S3 (bytes never traverse Studio).
+ *   3. Tell CMS the upload is complete so it can flip the edx-val record
+ *      to `ready` and persist the filename on the XBlock.
+ *
+ * Caller must pass an AbortController so the widget can cancel the in-flight
+ * S3 PUT and have the cleanup happen here.
+ */
+export const uploadAudioDescription = ({
+  file,
+  controller,
+  onSuccess,
+  onFailure,
+}) => (dispatch) => {
+  dispatch(requests.getAudioDescriptionUploadUrl({
+    fileName: file.name,
+    contentType: file.type,
+    fileSize: file.size,
+    onSuccess: ({ data: uploadUrlData }) => {
+      // edx-val keys are snake_case; the post helper does not camelCase responses.
+      const uploadUrl = uploadUrlData.upload_url;
+      const s3Key = uploadUrlData.s3_key;
+      const edxVideoId = uploadUrlData.edx_video_id;
+      dispatch(requests.uploadAudioDescriptionToS3({
+        uploadUrl,
+        file,
+        signal: controller.signal,
+        onProgress: (progress) => {
+          dispatch(actions.video.updateField({
+            audioDescriptionUploadProgress: progress,
+          }));
+        },
+        onSuccess: () => {
+          dispatch(requests.completeAudioDescriptionUpload({
+            edxVideoId,
+            s3Key,
+            onSuccess: ({ data: completeData }) => {
+              dispatch(actions.video.updateField({
+                audioDescription: completeData.file_name || file.name,
+                audioDescriptionUploadProgress: 0,
+                videoId: completeData.edx_video_id || edxVideoId,
+              }));
+              if (onSuccess) { onSuccess(completeData); }
+            },
+            onFailure: (e) => {
+              dispatch(actions.video.updateField({ audioDescriptionUploadProgress: 0 }));
+              if (onFailure) { onFailure(e); }
+            },
+          }));
+        },
+        onFailure: (e) => {
+          dispatch(actions.video.updateField({ audioDescriptionUploadProgress: 0 }));
+          if (onFailure) { onFailure(e); }
+        },
+      }));
+    },
+    onFailure: (e) => {
+      dispatch(actions.video.updateField({ audioDescriptionUploadProgress: 0 }));
+      if (onFailure) { onFailure(e); }
+    },
+  }));
+};
+
+export const deleteAudioDescription = ({ onSuccess, onFailure } = {}) => (dispatch) => {
+  dispatch(requests.deleteAudioDescription({
+    onSuccess: () => {
+      dispatch(actions.video.updateField({
+        audioDescription: null,
+        audioDescriptionUploadProgress: 0,
+      }));
+      if (onSuccess) { onSuccess(); }
+    },
+    onFailure,
+  }));
+};
+
 // Handout Thunks:
 
 export const uploadHandout = ({ file }) => (dispatch) => {
@@ -465,6 +547,8 @@ export default {
   updateTranscriptLanguage,
   replaceTranscript,
   uploadHandout,
+  uploadAudioDescription,
+  deleteAudioDescription,
   uploadVideo,
   updateTranscriptHandlerUrl,
 };

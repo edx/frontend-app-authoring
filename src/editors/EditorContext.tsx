@@ -15,6 +15,8 @@ export interface EditorContext {
   learningContextId: string;
   /** Is the so-called "Markdown" problem editor available in this learning context? */
   isMarkdownEditorEnabledForContext: boolean;
+  /** Is the audio description (AD) upload UI in the video editor enabled in this learning context? */
+  isAudioDescriptionUploadEnabledForContext: boolean;
 }
 
 export type EditorContextInit = {
@@ -38,15 +40,19 @@ export const EditorContextProvider: React.FC<{ children: React.ReactNode; } & Ed
   learningContextId,
 }) => {
   const courseIdIfCourse = isCourseKey(learningContextId) ? learningContextId : undefined;
-  const isMarkdownEditorEnabledForContext = useWaffleFlags(courseIdIfCourse).useReactMarkdownEditor;
+  const waffleFlags = useWaffleFlags(courseIdIfCourse);
+  const isMarkdownEditorEnabledForContext = waffleFlags.useReactMarkdownEditor;
+  const isAudioDescriptionUploadEnabledForContext = waffleFlags.enableAudioDescriptionUpload;
 
   const ctx: EditorContext = React.useMemo(() => ({
     learningContextId,
     isMarkdownEditorEnabledForContext,
+    isAudioDescriptionUploadEnabledForContext,
   }), [
     // Dependencies - make sure we update the context object if any of these values change:
     learningContextId,
     isMarkdownEditorEnabledForContext,
+    isAudioDescriptionUploadEnabledForContext,
   ]);
   return <context.Provider value={ctx}>{children}</context.Provider>;
 };

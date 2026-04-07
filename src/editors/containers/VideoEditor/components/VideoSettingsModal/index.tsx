@@ -5,6 +5,7 @@ import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
 // import VideoPreview from './components/VideoPreview';
 import { ErrorSummary } from './ErrorSummary';
+import AudioDescriptionWidget from './components/AudioDescriptionWidget';
 import DurationWidget from './components/DurationWidget';
 import HandoutWidget from './components/HandoutWidget';
 import LicenseWidget from './components/LicenseWidget';
@@ -52,6 +53,7 @@ const VideoSettingsModal: React.FC<Props> = ({
     )}
     <ThumbnailWidget />
     <TranscriptWidget />
+    <AudioDescriptionWidget />
     <DurationWidget />
     <HandoutWidget />
     <LicenseWidget />

@@ -8,6 +8,7 @@ type ErrCategory = [errors: ErrRecord, setter: (newErrors: ErrRecord) => void];
 interface ErrorContextData {
   duration: ErrCategory;
   handout: ErrCategory;
+  audioDescription: ErrCategory;
   license: ErrCategory;
   thumbnail: ErrCategory;
   transcripts: ErrCategory;
@@ -18,6 +19,7 @@ interface ErrorContextData {
 export const ErrorContext = createContext<ErrorContextData>({
   duration: [{}, () => {}],
   handout: [{}, () => {}],
+  audioDescription: [{}, () => {}],
   license: [{}, () => {}],
   thumbnail: [{}, () => {}],
   transcripts: [{}, () => {}],
@@ -28,6 +30,7 @@ export const state = StrictDict({
   /* eslint-disable react-hooks/rules-of-hooks */
   durationErrors: (val) => useState(val),
   handoutErrors: (val) => useState(val),
+  audioDescriptionErrors: (val) => useState(val),
   licenseErrors: (val) => useState(val),
   thumbnailErrors: (val) => useState(val),
   transcriptsErrors: (val) => useState(val),
@@ -38,6 +41,7 @@ export const state = StrictDict({
 export const errorsHook = (): { error: ErrorContextData, validateEntry: () => boolean } => {
   const [durationErrors, setDurationErrors] = state.durationErrors({});
   const [handoutErrors, setHandoutErrors] = state.handoutErrors({});
+  const [audioDescriptionErrors, setAudioDescriptionErrors] = state.audioDescriptionErrors({});
   const [licenseErrors, setLicenseErrors] = state.licenseErrors({});
   const [thumbnailErrors, setThumbnailErrors] = state.thumbnailErrors({});
   const [transcriptsErrors, setTranscriptsErrors] = state.transcriptsErrors({});
@@ -47,6 +51,7 @@ export const errorsHook = (): { error: ErrorContextData, validateEntry: () => bo
     error: {
       duration: [durationErrors, setDurationErrors],
       handout: [handoutErrors, setHandoutErrors],
+      audioDescription: [audioDescriptionErrors, setAudioDescriptionErrors],
       license: [licenseErrors, setLicenseErrors],
       thumbnail: [thumbnailErrors, setThumbnailErrors],
       transcripts: [transcriptsErrors, setTranscriptsErrors],
@@ -55,6 +60,7 @@ export const errorsHook = (): { error: ErrorContextData, validateEntry: () => bo
     validateEntry: () => {
       if (Object.keys(durationErrors).length > 0) { return false; }
       if (Object.keys(handoutErrors).length > 0) { return false; }
+      if (Object.keys(audioDescriptionErrors).length > 0) { return false; }
       if (Object.keys(licenseErrors).length > 0) { return false; }
       if (Object.keys(thumbnailErrors).length > 0) { return false; }
       if (Object.keys(transcriptsErrors).length > 0) { return false; }

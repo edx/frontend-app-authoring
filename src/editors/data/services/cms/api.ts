@@ -284,6 +284,83 @@ export const apiMethods = {
       data,
     );
   },
+  getAudioDescriptionUploadUrl: ({
+    blockId,
+    studioEndpointUrl,
+    fileName,
+    contentType,
+    fileSize,
+  }) => post(
+    urls.audioDescription({ studioEndpointUrl, blockId }),
+    {
+      action: 'get_upload_url',
+      file_name: fileName,
+      content_type: contentType,
+      file_size: fileSize,
+    },
+  ),
+  /**
+   * Direct PUT to S3 against a pre-signed URL. Uses XMLHttpRequest so we get
+   * upload progress events and AbortController-style cancellation in one
+   * dependency-free package. Bytes never traverse Studio.
+   */
+  uploadAudioDescriptionToS3: ({
+    uploadUrl,
+    file,
+    onProgress,
+    signal,
+  }: {
+    uploadUrl: string;
+    file: File;
+    onProgress?: (progress: number) => void;
+    signal?: AbortSignal;
+  }): Promise<{ data: { status: number } }> => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', file.type);
+
+    xhr.upload.addEventListener('progress', (evt) => {
+      if (evt.lengthComputable && onProgress) {
+        onProgress(Math.round((evt.loaded / evt.total) * 100));
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ data: { status: xhr.status } });
+      } else {
+        reject(new Error(`S3 upload failed with status ${xhr.status}`));
+      }
+    });
+    xhr.addEventListener('error', () => reject(new Error('Network error during S3 upload')));
+    xhr.addEventListener('abort', () => reject(new Error('S3 upload aborted')));
+
+    if (signal) {
+      if (signal.aborted) {
+        xhr.abort();
+      } else {
+        signal.addEventListener('abort', () => xhr.abort(), { once: true });
+      }
+    }
+
+    xhr.send(file);
+  }),
+  completeAudioDescriptionUpload: ({
+    blockId,
+    studioEndpointUrl,
+    edxVideoId,
+    s3Key,
+  }) => post(
+    urls.audioDescription({ studioEndpointUrl, blockId }),
+    {
+      action: 'complete',
+      edx_video_id: edxVideoId,
+      s3_key: s3Key,
+    },
+  ),
+  deleteAudioDescription: ({ blockId, studioEndpointUrl }) => deleteObject(
+    urls.audioDescription({ studioEndpointUrl, blockId }),
+  ),
   normalizeContent: ({
     blockId,
     blockType,
@@ -352,6 +429,7 @@ export const apiMethods = {
           track: '', // TODO Downloadable Transcript URL. Backend expects a file name, for example: "something.srt"
           show_captions: content.showTranscriptByDefault,
           handout: content.handout,
+          audio_description: content.audioDescription || '',
           start_time: durationStringFromValue(content.duration.startTime),
           end_time: durationStringFromValue(content.duration.stopTime),
           license: processLicense(content.licenseType, content.licenseDetails),

@@ -365,6 +365,63 @@ export const uploadTranscript = ({
   }
 };
 
+export const getAudioDescriptionUploadUrl = ({
+  fileName, contentType, fileSize, ...rest
+}) => (dispatch, getState) => {
+  dispatch(module.networkRequest({
+    requestKey: RequestKeys.getAudioDescriptionUploadUrl,
+    promise: api.getAudioDescriptionUploadUrl({
+      blockId: selectors.app.blockId(getState()),
+      studioEndpointUrl: selectors.app.studioEndpointUrl(getState()),
+      fileName,
+      contentType,
+      fileSize,
+    }),
+    ...rest,
+  }));
+};
+
+export const uploadAudioDescriptionToS3 = ({
+  uploadUrl, file, onProgress, signal, ...rest
+}) => (dispatch) => {
+  dispatch(module.networkRequest({
+    requestKey: RequestKeys.uploadAudioDescriptionToS3,
+    promise: api.uploadAudioDescriptionToS3({
+      uploadUrl,
+      file,
+      onProgress,
+      signal,
+    }),
+    ...rest,
+  }));
+};
+
+export const completeAudioDescriptionUpload = ({
+  edxVideoId, s3Key, ...rest
+}) => (dispatch, getState) => {
+  dispatch(module.networkRequest({
+    requestKey: RequestKeys.completeAudioDescriptionUpload,
+    promise: api.completeAudioDescriptionUpload({
+      blockId: selectors.app.blockId(getState()),
+      studioEndpointUrl: selectors.app.studioEndpointUrl(getState()),
+      edxVideoId,
+      s3Key,
+    }),
+    ...rest,
+  }));
+};
+
+export const deleteAudioDescription = ({ ...rest }) => (dispatch, getState) => {
+  dispatch(module.networkRequest({
+    requestKey: RequestKeys.deleteAudioDescription,
+    promise: api.deleteAudioDescription({
+      blockId: selectors.app.blockId(getState()),
+      studioEndpointUrl: selectors.app.studioEndpointUrl(getState()),
+    }),
+    ...rest,
+  }));
+};
+
 export const updateTranscriptLanguage = ({
   file,
   languageBeforeChange,
@@ -571,4 +628,8 @@ export default StrictDict({
   getGamesSettings,
   saveGamesSettings,
   deleteGamesImage,
+  getAudioDescriptionUploadUrl,
+  uploadAudioDescriptionToS3,
+  completeAudioDescriptionUpload,
+  deleteAudioDescription,
 });

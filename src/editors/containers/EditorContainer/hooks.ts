@@ -89,6 +89,15 @@ export const handleCancel = ({
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const isInitialized = () => useSelector(selectors.app.isInitialized);
 
+// Disable Save while a multi-step audio description upload is in flight, so
+// the modal can't be torn down mid-PUT and orphan a pending edx-val record.
+// eslint-disable-next-line react-hooks/rules-of-hooks
+export const isAudioDescriptionUploadPending = () => useSelector((rootState) => (
+  selectors.requests.isPending(rootState, { requestKey: RequestKeys.getAudioDescriptionUploadUrl })
+  || selectors.requests.isPending(rootState, { requestKey: RequestKeys.uploadAudioDescriptionToS3 })
+  || selectors.requests.isPending(rootState, { requestKey: RequestKeys.completeAudioDescriptionUpload })
+));
+
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const saveFailed = () => useSelector((rootState) => (
   selectors.requests.isFailed(rootState, { requestKey: RequestKeys.saveBlock })
