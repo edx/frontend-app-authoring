@@ -397,14 +397,13 @@ export const uploadAudioDescriptionToS3 = ({
 };
 
 export const completeAudioDescriptionUpload = ({
-  edxVideoId, s3Key, ...rest
+  s3Key, ...rest
 }) => (dispatch, getState) => {
   dispatch(module.networkRequest({
     requestKey: RequestKeys.completeAudioDescriptionUpload,
     promise: api.completeAudioDescriptionUpload({
       blockId: selectors.app.blockId(getState()),
       studioEndpointUrl: selectors.app.studioEndpointUrl(getState()),
-      edxVideoId,
       s3Key,
     }),
     ...rest,

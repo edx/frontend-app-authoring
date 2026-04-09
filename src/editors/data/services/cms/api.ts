@@ -348,13 +348,11 @@ export const apiMethods = {
   completeAudioDescriptionUpload: ({
     blockId,
     studioEndpointUrl,
-    edxVideoId,
     s3Key,
   }) => post(
     urls.audioDescription({ studioEndpointUrl, blockId }),
     {
       action: 'complete',
-      edx_video_id: edxVideoId,
       s3_key: s3Key,
     },
   ),

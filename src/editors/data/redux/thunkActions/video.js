@@ -320,7 +320,6 @@ export const uploadAudioDescription = ({
         },
         onSuccess: () => {
           dispatch(requests.completeAudioDescriptionUpload({
-            edxVideoId,
             s3Key,
             onSuccess: ({ data: completeData }) => {
               dispatch(actions.video.updateField({
