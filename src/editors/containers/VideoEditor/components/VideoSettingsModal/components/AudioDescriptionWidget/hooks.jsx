@@ -13,7 +13,7 @@ export const MAX_BYTES = 500 * 1024 * 1024;
 
 // Allowed audio file extensions and MIME types. Mirrors the backend
 // VIDEO_AUDIO_DESCRIPTION_SETTINGS['ALLOWED_CONTENT_TYPES'].
-export const ALLOWED_EXTENSIONS = '.mp3,.m4a,.wav,.aac';
+export const ALLOWED_EXTENSIONS = '.mp3,.m4a,.wav,.aac,.ogg,.flac';
 export const ALLOWED_MIME_TYPES = new Set([
   'audio/mpeg',
   'audio/mp4',
@@ -22,6 +22,8 @@ export const ALLOWED_MIME_TYPES = new Set([
   'audio/wave',
   'audio/x-wav',
   'audio/aac',
+  'audio/ogg',
+  'audio/flac',
 ]);
 
 export const parseFileName = (audioDescription) => {

@@ -43,7 +43,7 @@ const messages = defineMessages({
   },
   fileTypeError: {
     id: 'authoring.videoeditor.audioDescription.error.fileTypeError',
-    defaultMessage: 'Unsupported audio file type. Please upload an MP3, M4A, WAV, or AAC file.',
+    defaultMessage: 'Unsupported audio file type. Please upload an MP3, M4A, WAV, AAC, OGG, or FLAC file.',
     description: 'Message presented when audio description file type is not supported',
   },
   durationWarning: {
