@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
@@ -23,12 +23,11 @@ const InfoModal = ({
   thumbnailPreview,
   usagePathStatus,
   error,
-  sidebar,
+  renderContent,
 }) => {
   const intl = useIntl();
-  const [activeTab, setActiveTab] = useState('fileInfo');
-  const showTranscriptionError = TRANSCRIPT_FAILURE_STATUSES.includes(file?.transcriptionStatus)
-    && activeTab !== 'fileInfo';
+  const { details, sidebar } = renderContent?.(file) || {};
+  const showTranscriptionError = TRANSCRIPT_FAILURE_STATUSES.includes(file?.transcriptionStatus);
 
   return (
     <ModalDialog
@@ -75,6 +74,7 @@ const InfoModal = ({
                 thumbnailPreview={thumbnailPreview}
                 imageSize={{ width: '503px', height: '281px' }}
               />
+              {details}
               <div>
                 <div className="row m-0 font-weight-bold">
                   <FormattedMessage {...messages.usageTitle} />
@@ -84,7 +84,7 @@ const InfoModal = ({
             </Stack>
           </div>
           <div className="col-5">
-            {sidebar(file, activeTab, setActiveTab)}
+            {sidebar}
           </div>
         </div>
       </ModalDialog.Body>
@@ -113,11 +113,12 @@ InfoModal.propTypes = {
   usagePathStatus: PropTypes.string.isRequired,
   error: PropTypes.arrayOf(PropTypes.string).isRequired,
   thumbnailPreview: PropTypes.func.isRequired,
-  sidebar: PropTypes.func.isRequired,
+  renderContent: PropTypes.func,
 };
 
 InfoModal.defaultProps = {
   file: null,
+  renderContent: null,
 };
 
 export default InfoModal;

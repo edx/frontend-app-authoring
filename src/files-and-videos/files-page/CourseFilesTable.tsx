@@ -23,7 +23,7 @@ import {
 import { useModels } from '@src/generic/model-store';
 import { DeprecatedReduxState } from '@src/store';
 import { getFileSizeToClosestByte } from '@src/utils';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
@@ -62,14 +62,17 @@ export const CourseFilesTable = () => {
   };
 
   const thumbnailPreview = (props) => FileThumbnail(props);
-  const infoModalSidebar = (asset) => FileInfoModalSidebar({
-    asset,
-    handleLockedAsset: handleLockFile,
-  });
+  const renderInfoModalContent = useCallback((asset) => ({
+    sidebar: (
+      <FileInfoModalSidebar
+        asset={asset}
+        handleLockedAsset={handleLockFile}
+      />
+    ),
+  }), [handleLockFile]);
 
   const assets = useModels('assets', assetIds);
   const data = {
-    fileIds: assetIds,
     loadingStatus,
     usagePathStatus,
     usageErrorMessages: errorMessages.usageMetrics,
@@ -173,7 +176,7 @@ export const CourseFilesTable = () => {
           tableColumns,
           maxFileSize,
           thumbnailPreview,
-          infoModalSidebar,
+          renderInfoModalContent,
           files: assets,
         }}
       />

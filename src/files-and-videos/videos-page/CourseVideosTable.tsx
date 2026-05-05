@@ -24,14 +24,15 @@ import {
   updateVideoOrder,
 } from '@src/files-and-videos/videos-page/data/thunks';
 import { getFormattedDuration, resampleFile } from '@src/files-and-videos/videos-page/data/utils';
-import VideoInfoModalSidebar from '@src/files-and-videos/videos-page/info-sidebar';
+import TranscriptTab from '@src/files-and-videos/videos-page/info-sidebar/TranscriptTab';
+import InfoTab from '@src/files-and-videos/videos-page/info-sidebar/InfoTab';
 import messages from '@src/files-and-videos/videos-page/messages';
 import TranscriptSettings from '@src/files-and-videos/videos-page/transcript-settings';
 import UploadModal from '@src/files-and-videos/videos-page/upload-modal';
 import VideoThumbnail from '@src/files-and-videos/videos-page/VideoThumbnail';
 import { useModels } from '@src/generic/model-store';
 import { DeprecatedReduxState } from '@src/store';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
@@ -151,15 +152,24 @@ export const CourseVideosTable = () => {
     handleAddThumbnail,
     videoImageSettings,
   });
-  const infoModalSidebar = (video, activeTab, setActiveTab) => (
-    <VideoInfoModalSidebar video={video} activeTab={activeTab} setActiveTab={setActiveTab} />
-  );
+  const renderInfoModalContent = useCallback((video) => ({
+    details: (
+      <div className="video-info-details">
+        <InfoTab video={video} />
+      </div>
+    ),
+    sidebar: (
+      <div className="video-info-sidebar">
+        <TranscriptTab video={video} />
+      </div>
+    ),
+  }), []);
   const maxFileSize = videoUploadMaxFileSize * 1073741824;
   const transcriptColumn = {
     id: 'transcriptStatus',
     Header: 'Transcript',
     accessor: 'transcriptStatus',
-    Cell: ({ row }) => TranscriptColumn({ row }),
+    Cell: ({ row }) => TranscriptColumn({ row, onClick: undefined }),
     Filter: CheckboxFilter,
     filter: 'exactTextCase',
     filterChoices: [
@@ -268,7 +278,7 @@ export const CourseVideosTable = () => {
               tableColumns,
               maxFileSize,
               thumbnailPreview,
-              infoModalSidebar,
+              renderInfoModalContent,
               files: videos,
             }}
           />

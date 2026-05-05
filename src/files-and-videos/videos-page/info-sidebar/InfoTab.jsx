@@ -4,9 +4,11 @@ import { Stack } from '@openedx/paragon';
 import { FormattedDate, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getFileSizeToClosestByte } from '../../../utils';
 import { getFormattedDuration } from '../data/utils';
+import UsageMetricsMessages from '../../generic/UsageMetricsMessage';
+import genericMessages from '../../generic/messages';
 import messages from './messages';
 
-const InfoTab = ({ video }) => {
+const InfoTab = ({ video, usagePathStatus, usageError }) => {
   const fileSize = getFileSizeToClosestByte(video?.fileSize);
   const duration = getFormattedDuration(video?.duration);
 
@@ -31,6 +33,18 @@ const InfoTab = ({ video }) => {
         <FormattedMessage {...messages.videoLengthTitle} />
       </div>
       {duration}
+      {usagePathStatus && (
+        <>
+          <div className="font-weight-bold mt-3">
+            <FormattedMessage {...genericMessages.usageTitle} />
+          </div>
+          <UsageMetricsMessages
+            usageLocations={video?.usageLocations}
+            usagePathStatus={usagePathStatus}
+            error={usageError || []}
+          />
+        </>
+      )}
     </Stack>
   );
 };
@@ -40,11 +54,16 @@ InfoTab.propTypes = {
     duration: PropTypes.number.isRequired,
     dateAdded: PropTypes.string.isRequired,
     fileSize: PropTypes.number.isRequired,
+    usageLocations: PropTypes.arrayOf(PropTypes.shape({})),
   }),
+  usagePathStatus: PropTypes.string,
+  usageError: PropTypes.arrayOf(PropTypes.string),
 };
 
 InfoTab.defaultProps = {
   video: {},
+  usagePathStatus: undefined,
+  usageError: undefined,
 };
 
 export default InfoTab;

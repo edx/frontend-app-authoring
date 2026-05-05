@@ -50,7 +50,11 @@ describe('TranscriptActionMenu', () => {
 
       test('it dispatches the correct thunk', () => {
         const cb = componentModule.hooks.replaceFileCallback({
-          dispatch: mockDispatch, language: lang1Code,
+          dispatch: mockDispatch,
+          language: lang1Code,
+          onEmptyFail: jest.fn(),
+          onSizeFail: jest.fn(),
+          onInvalidFail: jest.fn(),
         });
         cb(mockEvent);
         expect(thunkActions.video.replaceTranscript).toHaveBeenCalledWith(result);

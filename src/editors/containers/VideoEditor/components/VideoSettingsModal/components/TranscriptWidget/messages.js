@@ -122,6 +122,16 @@ const messages = defineMessages({
     defaultMessage: 'To add transcripts, save and reopen this video',
     description: 'Warning message when the user is creating a video',
   },
+  emptyTranscriptError: {
+    id: 'authoring.videoeditor.transcript.error.emptyTranscriptError',
+    defaultMessage: 'Transcript file is empty. Please upload a valid .srt file.',
+    description: 'Message presented to user when uploaded transcript file is empty',
+  },
+  invalidSrtError: {
+    id: 'authoring.videoeditor.transcript.error.invalidSrtError',
+    defaultMessage: 'Invalid SRT file. Please upload a valid .srt file.',
+    description: 'Message presented to user when uploaded transcript is not a valid SRT file',
+  },
 });
 
 export default messages;

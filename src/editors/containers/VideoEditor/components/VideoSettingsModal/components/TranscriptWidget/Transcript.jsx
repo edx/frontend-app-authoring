@@ -9,11 +9,14 @@ import {
   IconButton,
   Icon,
   ActionRow,
+  Stack,
 } from '@openedx/paragon';
 import { DeleteOutline } from '@openedx/paragon/icons';
 
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { thunkActions } from '../../../../../../data/redux';
+import { useErrorToggle } from '../../../../../../sharedComponents/FileInput/fileValidation';
+import ErrorAlert from '../../../../../../sharedComponents/ErrorAlerts/ErrorAlert';
 
 import TranscriptActionMenu from './TranscriptActionMenu';
 import LanguageSelector from './LanguageSelector';
@@ -47,6 +50,9 @@ const Transcript = ({
   deleteTranscript,
 }) => {
   const { inDeleteConfirmation, launchDeleteConfirmation, cancelDelete } = module.hooks.setUpDeleteConfirmation();
+  const emptyFileError = useErrorToggle();
+  const fileSizeError = useErrorToggle();
+  const invalidSrtError = useErrorToggle();
   return (
     // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
@@ -78,27 +84,44 @@ const Transcript = ({
           </Card>
         )
         : (
-          <ActionRow>
-            <LanguageSelector
-              title={index}
-              language={language}
-            />
-            <ActionRow.Spacer />
-            { language === '' ? (
-              <IconButton
-                iconAs={Icon}
-                src={DeleteOutline}
-                onClick={() => launchDeleteConfirmation()}
-              />
-            ) : (
-              <TranscriptActionMenu
-                index={index}
+          <Stack gap={0}>
+            <ActionRow>
+              <LanguageSelector
+                title={index}
                 language={language}
-                transcriptUrl={transcriptUrl}
-                launchDeleteConfirmation={launchDeleteConfirmation}
+                onEmptyFail={emptyFileError.set}
+                onSizeFail={fileSizeError.set}
+                onInvalidFail={invalidSrtError.set}
               />
-            )}
-          </ActionRow>
+              <ActionRow.Spacer />
+              { language === '' ? (
+                <IconButton
+                  iconAs={Icon}
+                  src={DeleteOutline}
+                  onClick={() => launchDeleteConfirmation()}
+                />
+              ) : (
+                <TranscriptActionMenu
+                  index={index}
+                  language={language}
+                  transcriptUrl={transcriptUrl}
+                  launchDeleteConfirmation={launchDeleteConfirmation}
+                  onEmptyFail={emptyFileError.set}
+                  onSizeFail={fileSizeError.set}
+                  onInvalidFail={invalidSrtError.set}
+                />
+              )}
+            </ActionRow>
+            <ErrorAlert dismissError={emptyFileError.dismiss} hideHeading isError={emptyFileError.show}>
+              <FormattedMessage {...messages.emptyTranscriptError} />
+            </ErrorAlert>
+            <ErrorAlert dismissError={fileSizeError.dismiss} hideHeading isError={fileSizeError.show}>
+              <FormattedMessage {...messages.fileSizeError} />
+            </ErrorAlert>
+            <ErrorAlert dismissError={invalidSrtError.dismiss} hideHeading isError={invalidSrtError.show}>
+              <FormattedMessage {...messages.invalidSrtError} />
+            </ErrorAlert>
+          </Stack>
         )}
     </>
   );

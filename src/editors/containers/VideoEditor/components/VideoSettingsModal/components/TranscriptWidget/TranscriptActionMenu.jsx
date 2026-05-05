@@ -9,6 +9,7 @@ import { MoreHoriz } from '@openedx/paragon/icons';
 import { thunkActions, selectors } from '../../../../../../data/redux';
 
 import { FileInput, fileInput } from '../../../../../../sharedComponents/FileInput';
+import { validateSrtFile } from '../../../../../../../files-and-videos/videos-page/transcript-editor/srtUtils';
 // This 'module' self-import hack enables mocking during tests.
 // See src/editors/decisions/0005-internal-editor-testability-decisions.md. The whole approach to how hooks are tested
 // should be re-thought and cleaned up to avoid this pattern.
@@ -17,13 +18,16 @@ import * as module from './TranscriptActionMenu';
 import messages from './messages';
 
 export const hooks = {
-  replaceFileCallback: ({ language, dispatch }) => (file) => {
-    dispatch(thunkActions.video.replaceTranscript({
-      newFile: file,
-      newFilename: file.name,
-      language,
-    }));
-  },
+  replaceFileCallback: ({
+    language, dispatch, onEmptyFail, onSizeFail, onInvalidFail,
+  }) => (file) => validateSrtFile(file, {
+    onEmptyFail,
+    onSizeFail,
+    onInvalidFail,
+    onValid: (f) => dispatch(thunkActions.video.replaceTranscript({
+      newFile: f, newFilename: f.name, language,
+    })),
+  }),
 };
 
 const TranscriptActionMenu = ({
@@ -31,11 +35,22 @@ const TranscriptActionMenu = ({
   language,
   transcriptUrl,
   launchDeleteConfirmation,
+  onEmptyFail,
+  onSizeFail,
+  onInvalidFail,
   // redux
   getTranscriptDownloadUrl,
   buildTranscriptUrl,
 }) => {
-  const input = fileInput({ onAddFile: module.hooks.replaceFileCallback({ language, dispatch: useDispatch() }) });
+  const input = fileInput({
+    onAddFile: module.hooks.replaceFileCallback({
+      language,
+      dispatch: useDispatch(),
+      onEmptyFail,
+      onSizeFail,
+      onInvalidFail,
+    }),
+  });
   const downloadLink = transcriptUrl ? buildTranscriptUrl({ transcriptUrl }) : getTranscriptDownloadUrl({ language });
   return (
     <Dropdown>
@@ -68,6 +83,9 @@ const TranscriptActionMenu = ({
 
 TranscriptActionMenu.defaultProps = {
   transcriptUrl: undefined,
+  onEmptyFail: () => {},
+  onSizeFail: () => {},
+  onInvalidFail: () => {},
 };
 
 TranscriptActionMenu.propTypes = {
@@ -75,6 +93,9 @@ TranscriptActionMenu.propTypes = {
   language: PropTypes.string.isRequired,
   transcriptUrl: PropTypes.string,
   launchDeleteConfirmation: PropTypes.func.isRequired,
+  onEmptyFail: PropTypes.func,
+  onSizeFail: PropTypes.func,
+  onInvalidFail: PropTypes.func,
   // redux
   getTranscriptDownloadUrl: PropTypes.func.isRequired,
   buildTranscriptUrl: PropTypes.func.isRequired,

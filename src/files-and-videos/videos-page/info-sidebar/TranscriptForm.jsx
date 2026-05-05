@@ -1,0 +1,171 @@
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import {
+  Button, Icon, IconButton, Spinner, Stack,
+} from '@openedx/paragon';
+import {
+  Article, DeleteOutline, ErrorOutline, FileUpload,
+} from '@openedx/paragon/icons';
+import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
+import { isEmpty } from 'lodash';
+
+import LanguageSelect from './transcript-item/LanguageSelect';
+import { FileInput, useFileInput } from '../../generic';
+import { validateSrtFile } from '../transcript-editor/srtUtils';
+import messages from './messages';
+import transcriptItemMessages from './transcript-item/messages';
+
+const TranscriptForm = ({
+  languages,
+  previousSelection,
+  onCancel,
+  onSubmit,
+  onFileTooLarge,
+  isUploading,
+  uploadFailed,
+}) => {
+  const intl = useIntl();
+  const [language, setLanguage] = useState('');
+  const [file, setFile] = useState(null);
+
+  const [localError, setLocalError] = useState(null);
+
+  const input = useFileInput({
+    onAddFile: (files) => {
+      const [picked] = files;
+      validateSrtFile(picked, {
+        onEmptyFail: () => setLocalError('empty'),
+        onSizeFail: onFileTooLarge,
+        onInvalidFail: () => { setLocalError('invalid'); setFile(null); },
+        onValid: (f) => { setLocalError(null); setFile(f); },
+      });
+    },
+    setSelectedRows: () => {},
+    setAddOpen: () => {},
+  });
+
+  const canSubmit = !isEmpty(language) && file && !localError;
+
+  const uploadButton = (
+    <>
+      <Button
+        variant="outline-primary"
+        onClick={() => input.click()}
+        iconBefore={FileUpload}
+        className="new-transcript-form__upload-button"
+        block
+      >
+        <FormattedMessage {...messages.uploadFileButton} />
+      </Button>
+      <div className="new-transcript-form__hint">
+        <FormattedMessage {...messages.uploadFileHint} />
+      </div>
+    </>
+  );
+
+  const renderUploadArea = () => {
+    if (isUploading) {
+      return (
+        <div className="new-transcript-form__file-row">
+          <Spinner animation="border" size="sm" className="new-transcript-form__spinner" />
+          <span className="new-transcript-form__uploading-name">{file?.name}</span>
+        </div>
+      );
+    }
+    if (uploadFailed || localError) {
+      return (
+        <>
+          <div className="new-transcript-form__file-row new-transcript-form__file-row--error">
+            <Icon src={ErrorOutline} className="new-transcript-form__error-icon" />
+            <span className="new-transcript-form__error-text">
+              {localError === 'empty' && <FormattedMessage {...messages.emptyFileError} />}
+              {localError === 'invalid' && <FormattedMessage {...messages.invalidFileError} />}
+              {uploadFailed && !localError && <FormattedMessage {...messages.uploadFailedError} />}
+            </span>
+          </div>
+          {uploadButton}
+        </>
+      );
+    }
+    if (file) {
+      return (
+        <div className="new-transcript-form__file-row">
+          <Icon src={Article} className="new-transcript-form__file-icon" />
+          <span className="new-transcript-form__file-name">{file.name}</span>
+          <IconButton
+            src={DeleteOutline}
+            iconAs={Icon}
+            alt={intl.formatMessage(messages.clearFileLabel)}
+            onClick={() => setFile(null)}
+            size="sm"
+            className="new-transcript-form__file-delete"
+          />
+        </div>
+      );
+    }
+    return uploadButton;
+  };
+
+  const handleSubmit = () => {
+    if (!canSubmit) {
+      return;
+    }
+    onSubmit({ language, file });
+  };
+
+  return (
+    <div className="new-transcript-form">
+      <h4 className="new-transcript-form__heading">
+        <FormattedMessage {...messages.newTranscriptHeading} />
+      </h4>
+
+      <div className="new-transcript-form__field">
+        <LanguageSelect
+          options={languages}
+          value={language}
+          placeholderText={intl.formatMessage(transcriptItemMessages.languageSelectPlaceholder)}
+          previousSelection={previousSelection}
+          handleSelect={setLanguage}
+          wrapperClassName="col-12 p-0"
+        />
+      </div>
+
+      <div className="new-transcript-form__upload">
+        {renderUploadArea()}
+      </div>
+
+      <Stack direction="horizontal" gap={2} className="new-transcript-form__actions justify-content-end">
+        <Button variant="tertiary" onClick={onCancel} disabled={isUploading}>
+          <FormattedMessage {...messages.cancelLabel} />
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={!canSubmit || isUploading}
+          className="new-transcript-form__submit-button"
+        >
+          <FormattedMessage {...messages.addTranscriptLabel} />
+        </Button>
+      </Stack>
+
+      <FileInput key="new-transcript-input" fileInput={input} supportedFileFormats={['.srt']} />
+    </div>
+  );
+};
+
+TranscriptForm.propTypes = {
+  languages: PropTypes.shape({}).isRequired,
+  previousSelection: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onCancel: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onFileTooLarge: PropTypes.func.isRequired,
+  isUploading: PropTypes.bool,
+  uploadFailed: PropTypes.bool,
+};
+
+TranscriptForm.defaultProps = {
+  isUploading: false,
+  uploadFailed: false,
+};
+
+export default TranscriptForm;

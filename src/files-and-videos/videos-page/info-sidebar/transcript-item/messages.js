@@ -21,6 +21,11 @@ const messages = defineMessages({
     defaultMessage: 'Download',
     description: 'Message Presented To user for action to download transcript',
   },
+  editTranscript: {
+    id: 'course-authoring.video-uploads.file-info.transcript.editTranscript',
+    defaultMessage: 'Edit transcript',
+    description: 'Menu item that opens the in-platform transcript editor.',
+  },
   languageSelectPlaceholder: {
     id: 'course-authoriong.video-uploads.file-info.transcripts.languageSelectPlaceholder',
     defaultMessage: 'Select language',

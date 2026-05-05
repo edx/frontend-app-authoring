@@ -27,7 +27,7 @@ const slice = createSlice({
   },
   reducers: {
     setVideoIds: (state, { payload }) => {
-      state.videoIds = payload.videoIds;
+      state.videoIds = [...new Set(payload.videoIds)];
     },
     setPageSettings: (state, { payload }) => {
       state.pageSettings = payload;
@@ -64,7 +64,7 @@ const slice = createSlice({
       state.videoIds = state.videoIds.filter(id => id !== payload.videoId);
     },
     addVideoById: (state, { payload }) => {
-      state.videoIds = [payload.videoId, ...state.videoIds];
+      state.videoIds = [...new Set([payload.videoId, ...state.videoIds])];
     },
     updateTranscriptCredentialsSuccess: (state, { payload }) => {
       const { provider } = payload;

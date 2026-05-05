@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import isEmpty from 'lodash/isEmpty';
@@ -24,9 +26,77 @@ import {
   MoreInfoColumn,
   FilterStatus,
   Footer,
+  TranscriptColumn,
 } from './table-components';
 import ApiStatusToast from './ApiStatusToast';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+
+const FileTableContext = createContext({});
+
+const MoreInfoCell = ({ row }) => {
+  const {
+    handleLockFile,
+    handleBulkDownload,
+    handleOpenFileInfo,
+    handleOpenDeleteConfirmation,
+    fileType,
+  } = useContext(FileTableContext);
+  return (
+    <MoreInfoColumn
+      row={row}
+      handleLock={handleLockFile}
+      handleBulkDownload={handleBulkDownload}
+      handleOpenFileInfo={handleOpenFileInfo}
+      handleOpenDeleteConfirmation={handleOpenDeleteConfirmation}
+      fileType={fileType}
+    />
+  );
+};
+
+MoreInfoCell.propTypes = {
+  row: PropTypes.shape({}).isRequired,
+};
+
+const TranscriptCell = ({ row }) => {
+  const { handleOpenFileInfo } = useContext(FileTableContext);
+  return <TranscriptColumn row={row} onClick={handleOpenFileInfo} />;
+};
+
+TranscriptCell.propTypes = {
+  row: PropTypes.shape({}).isRequired,
+};
+
+const GalleryCardCell = ({ className, original }) => {
+  const {
+    handleLockFile,
+    handleBulkDownload,
+    handleOpenFileInfo,
+    handleOpenDeleteConfirmation,
+    thumbnailPreview,
+    fileType,
+  } = useContext(FileTableContext);
+  return (
+    <GalleryCard
+      handleLockFile={handleLockFile}
+      handleBulkDownload={handleBulkDownload}
+      handleOpenDeleteConfirmation={handleOpenDeleteConfirmation}
+      handleOpenFileInfo={handleOpenFileInfo}
+      thumbnailPreview={thumbnailPreview}
+      className={className}
+      original={original}
+      fileType={fileType}
+    />
+  );
+};
+
+GalleryCardCell.propTypes = {
+  className: PropTypes.string,
+  original: PropTypes.shape({}).isRequired,
+};
+
+GalleryCardCell.defaultProps = {
+  className: null,
+};
 
 const FileTable = ({
   files,
@@ -41,10 +111,20 @@ const FileTable = ({
   tableColumns,
   maxFileSize,
   thumbnailPreview,
-  infoModalSidebar,
+  renderInfoModalContent,
 }) => {
   const intl = useIntl();
-  const pageCount = Math.ceil(files.length / 50);
+
+  const uniqueFiles = useMemo(() => {
+    const seen = new Set();
+    return (files || []).filter((file) => {
+      if (!file || !file.id || seen.has(file.id)) { return false; }
+      seen.add(file.id);
+      return true;
+    });
+  }, [files]);
+
+  const pageCount = Math.ceil(uniqueFiles.length / 50);
   const columnSizes = {
     xs: 12,
     sm: 6,
@@ -85,13 +165,13 @@ const FileTable = ({
       selectedRows.forEach(row => {
         const currentFile = row.original;
         if (currentFile) {
-          const [updatedFile] = files.filter(file => file.id === currentFile?.id);
+          const [updatedFile] = uniqueFiles.filter(file => file.id === currentFile?.id);
           updatedRows.push({ original: updatedFile });
         }
       });
       setSelectedRows(updatedRows);
     }
-  }, [files]);
+  }, [uniqueFiles]);
 
   const fileInputControl = useFileInput({
     onAddFile: (uploads) => handleAddFile(uploads),
@@ -127,17 +207,22 @@ const FileTable = ({
     handleDownloadFile(selectedFlatRows);
   }, []);
 
-  const handleOpenDeleteConfirmation = (selectedFlatRows) => {
+  const handleErrorResetRef = useRef(handleErrorReset);
+  handleErrorResetRef.current = handleErrorReset;
+  const handleUsagePathsRef = useRef(handleUsagePaths);
+  handleUsagePathsRef.current = handleUsagePaths;
+
+  const handleOpenDeleteConfirmation = useCallback((selectedFlatRows) => {
     setSelectedRows(selectedFlatRows);
     openDeleteConfirmation();
-  };
+  }, [openDeleteConfirmation]);
 
-  const handleOpenFileInfo = (original) => {
-    handleErrorReset({ errorType: 'usageMetrics' });
+  const handleOpenFileInfo = useCallback((original) => {
+    handleErrorResetRef.current({ errorType: 'usageMetrics' });
     setSelectedRows([{ original }]);
-    handleUsagePaths(original);
+    handleUsagePathsRef.current(original);
     openAssetInfo();
-  };
+  }, [openAssetInfo]);
 
   const headerActions = ({ selectedFlatRows }) => (
     <TableActions
@@ -155,105 +240,98 @@ const FileTable = ({
     />
   );
 
-  const fileCard = ({ className, original }) => (
-    <GalleryCard
-      {...{
-        handleLockFile,
-        handleBulkDownload,
-        handleOpenDeleteConfirmation,
-        handleOpenFileInfo,
-        thumbnailPreview,
-        className,
-        original,
-        fileType,
-      }}
-    />
-  );
+  const columns = useMemo(() => {
+    const cols = [...tableColumns];
+    if (!cols.some(col => col.id === 'moreInfo')) {
+      cols.push({ id: 'moreInfo', Header: '', Cell: MoreInfoCell });
+    }
+    const transcriptColIdx = cols.findIndex(col => col.id === 'transcriptStatus');
+    if (transcriptColIdx !== -1) {
+      cols[transcriptColIdx] = { ...cols[transcriptColIdx], Cell: TranscriptCell };
+    }
+    return cols;
+  }, [tableColumns]);
 
-  const moreInfoColumn = {
-    id: 'moreInfo',
-    Header: '',
-    Cell: ({ row }) => MoreInfoColumn({
-      row,
-      handleLock: handleLockFile,
-      handleBulkDownload,
-      handleOpenFileInfo,
-      handleOpenDeleteConfirmation,
-      fileType,
-    }),
-  };
-
-  const hasMoreInfoColumn = tableColumns.filter(col => col.id === 'moreInfo').length === 1;
-  if (!hasMoreInfoColumn) {
-    tableColumns.push({ ...moreInfoColumn });
-  }
+  const contextValue = useMemo(() => ({
+    handleLockFile,
+    handleBulkDownload,
+    handleOpenFileInfo,
+    handleOpenDeleteConfirmation,
+    thumbnailPreview,
+    fileType,
+  }), [
+    handleLockFile, handleBulkDownload, handleOpenFileInfo,
+    handleOpenDeleteConfirmation, thumbnailPreview, fileType,
+  ]);
 
   return (
-    <div className="files-table">
-      <DataTable
-        isFilterable
-        isLoading={loadingStatus === RequestStatus.IN_PROGRESS}
-        isSortable
-        isSelectable
-        isPaginated
-        defaultColumnValues={{ Filter: TextFilter }}
-        dataViewToggleOptions={{
-          isDataViewToggleEnabled: true,
-          onDataViewToggle: (val) => {
-            if (fileType === 'video') {
-              localStorage.setItem('videosCurrentView', val);
-              setCurrentView(val);
-            } else {
+    <FileTableContext.Provider value={contextValue}>
+      <div className="files-table">
+        <DataTable
+          isFilterable
+          isLoading={loadingStatus === RequestStatus.IN_PROGRESS}
+          isSortable
+          isSelectable
+          isPaginated
+          initialTableOptions={{ getRowId: (row) => row.id }}
+          defaultColumnValues={{ Filter: TextFilter }}
+          dataViewToggleOptions={{
+            isDataViewToggleEnabled: true,
+            onDataViewToggle: (val) => {
+              if (fileType === 'video') {
+                localStorage.setItem('videosCurrentView', val);
+                setCurrentView(val);
+              } else {
               // There's only 2 fileTypes currently being used i.e. video or file
-              localStorage.setItem('filesCurrentView', val);
-              setCurrentView(val);
-            }
-          },
-          defaultActiveStateValue: defaultCurrentView,
-          togglePlacement: 'left',
-        }}
-        initialState={initialState}
-        tableActions={headerActions}
-        bulkActions={headerActions}
-        columns={tableColumns}
-        itemCount={files.length}
-        pageCount={pageCount}
-        data={files}
-        FilterStatusComponent={FilterStatus}
-        RowStatusComponent={RowStatus}
-      >
-        {isEmpty(files) && loadingStatus !== RequestStatus.IN_PROGRESS ? (
-          <Dropzone
-            data-testid="files-dropzone"
-            accept={supportedFileFormats}
-            onProcessUpload={handleDropzoneAsset}
-            maxSize={maxFileSize}
-            errorMessages={{
-              invalidSize: intl.formatMessage(messages.fileSizeError),
-              multipleDragged: 'Dropzone can only upload a single file.',
-            }}
+                localStorage.setItem('filesCurrentView', val);
+                setCurrentView(val);
+              }
+            },
+            defaultActiveStateValue: defaultCurrentView,
+            togglePlacement: 'left',
+          }}
+          initialState={initialState}
+          tableActions={headerActions}
+          bulkActions={headerActions}
+          columns={columns}
+          itemCount={uniqueFiles.length}
+          pageCount={pageCount}
+          data={uniqueFiles}
+          FilterStatusComponent={FilterStatus}
+          RowStatusComponent={RowStatus}
+        >
+          {isEmpty(uniqueFiles) && loadingStatus !== RequestStatus.IN_PROGRESS ? (
+            <Dropzone
+              data-testid="files-dropzone"
+              accept={supportedFileFormats}
+              onProcessUpload={handleDropzoneAsset}
+              maxSize={maxFileSize}
+              errorMessages={{
+                invalidSize: intl.formatMessage(messages.fileSizeError),
+                multipleDragged: 'Dropzone can only upload a single file.',
+              }}
+            />
+          ) : (
+            <div data-testid="files-data-table" className="bg-light-200">
+              <DataTable.TableControlBar />
+              <hr className="mb-5 border-light-700" />
+              { currentView === 'card' && <CardView CardComponent={GalleryCardCell} columnSizes={columnSizes} selectionPlacement="left" skeletonCardCount={6} /> }
+              { currentView === 'list' && <DataTable.Table /> }
+              <DataTable.EmptyTable content={intl.formatMessage(messages.noResultsFoundMessage)} />
+              <Footer />
+            </div>
+          )}
+
+          <ApiStatusToast
+            actionType={intl.formatMessage(messages.apiStatusDeletingAction)}
+            selectedRowCount={selectedRows.length}
+            isOpen={isDeleteOpen}
+            setClose={setDeleteClose}
+            setSelectedRows={setSelectedRows}
+            fileType={fileType}
           />
-        ) : (
-          <div data-testid="files-data-table" className="bg-light-200">
-            <DataTable.TableControlBar />
-            <hr className="mb-5 border-light-700" />
-            { currentView === 'card' && <CardView CardComponent={fileCard} columnSizes={columnSizes} selectionPlacement="left" skeletonCardCount={6} /> }
-            { currentView === 'list' && <DataTable.Table /> }
-            <DataTable.EmptyTable content={intl.formatMessage(messages.noResultsFoundMessage)} />
-            <Footer />
-          </div>
-        )}
 
-        <ApiStatusToast
-          actionType={intl.formatMessage(messages.apiStatusDeletingAction)}
-          selectedRowCount={selectedRows.length}
-          isOpen={isDeleteOpen}
-          setClose={setDeleteClose}
-          setSelectedRows={setSelectedRows}
-          fileType={fileType}
-        />
-
-        {fileType === 'file' && (
+          {fileType === 'file' && (
           <ApiStatusToast
             actionType={intl.formatMessage(messages.apiStatusAddingAction)}
             selectedRowCount={selectedRows.length}
@@ -262,29 +340,29 @@ const FileTable = ({
             setSelectedRows={setSelectedRows}
             fileType={fileType}
           />
-        )}
+          )}
 
-        <ApiStatusToast
-          actionType={intl.formatMessage(messages.apiStatusDownloadingAction)}
-          selectedRowCount={selectedRows.length}
-          isOpen={isDownloadOpen}
-          setClose={setDownloadClose}
-          setSelectedRows={setSelectedRows}
-          fileType={fileType}
-        />
+          <ApiStatusToast
+            actionType={intl.formatMessage(messages.apiStatusDownloadingAction)}
+            selectedRowCount={selectedRows.length}
+            isOpen={isDownloadOpen}
+            setClose={setDownloadClose}
+            setSelectedRows={setSelectedRows}
+            fileType={fileType}
+          />
 
-        <DeleteConfirmationModal
-          {...{
-            isDeleteConfirmationOpen,
-            closeDeleteConfirmation,
-            handleBulkDelete,
-            selectedRows,
-            fileType,
-          }}
-        />
-      </DataTable>
-      <FileInput key="generic-file-upload" fileInput={fileInputControl} supportedFileFormats={supportedFileFormats} />
-      {!isEmpty(selectedRows) && (
+          <DeleteConfirmationModal
+            {...{
+              isDeleteConfirmationOpen,
+              closeDeleteConfirmation,
+              handleBulkDelete,
+              selectedRows,
+              fileType,
+            }}
+          />
+        </DataTable>
+        <FileInput key="generic-file-upload" fileInput={fileInputControl} supportedFileFormats={supportedFileFormats} />
+        {isAssetInfoOpen && selectedRows[0] && (
         <InfoModal
           file={selectedRows[0].original}
           onClose={closeAssetinfo}
@@ -292,19 +370,17 @@ const FileTable = ({
           thumbnailPreview={thumbnailPreview}
           usagePathStatus={usagePathStatus}
           error={usageErrorMessages}
-          sidebar={infoModalSidebar}
+          renderContent={renderInfoModalContent}
         />
-      )}
-
-    </div>
+        )}
+      </div>
+    </FileTableContext.Provider>
   );
 };
 
 FileTable.propTypes = {
-  courseId: PropTypes.string.isRequired, // eslint-disable-line react/no-unused-prop-types
   files: PropTypes.arrayOf(PropTypes.shape({})),
   data: PropTypes.shape({
-    fileIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     loadingStatus: PropTypes.string.isRequired,
     usagePathStatus: PropTypes.string.isRequired,
     usageErrorMessages: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -325,12 +401,13 @@ FileTable.propTypes = {
   })).isRequired,
   maxFileSize: PropTypes.number.isRequired,
   thumbnailPreview: PropTypes.func.isRequired,
-  infoModalSidebar: PropTypes.func.isRequired,
+  renderInfoModalContent: PropTypes.func,
 };
 
 FileTable.defaultProps = {
   files: null,
   handleLockFile: () => {},
+  renderInfoModalContent: null,
 };
 
 export default FileTable;

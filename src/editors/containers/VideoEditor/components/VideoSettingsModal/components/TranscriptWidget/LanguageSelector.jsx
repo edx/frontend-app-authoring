@@ -8,12 +8,13 @@ import {
   Icon,
 } from '@openedx/paragon';
 
-import { Check } from '@openedx/paragon/icons';
+import { Check, Search } from '@openedx/paragon/icons';
 import { connect, useDispatch } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { thunkActions, selectors } from '../../../../../../data/redux';
 import { videoTranscriptLanguages } from '../../../../../../data/constants/video';
 import { FileInput, fileInput } from '../../../../../../sharedComponents/FileInput';
+import { validateSrtFile } from '../../../../../../../files-and-videos/videos-page/transcript-editor/srtUtils';
 import messages from './messages';
 
 export const hooks = {
@@ -34,13 +35,16 @@ export const hooks = {
     );
   },
 
-  addFileCallback: ({ dispatch, localLang }) => (file) => {
-    dispatch(thunkActions.video.uploadTranscript({
-      file,
-      filename: file.name,
-      language: localLang,
-    }));
-  },
+  addFileCallback: ({
+    dispatch, localLang, onEmptyFail, onSizeFail, onInvalidFail,
+  }) => (file) => validateSrtFile(file, {
+    onEmptyFail,
+    onSizeFail,
+    onInvalidFail,
+    onValid: (f) => dispatch(thunkActions.video.uploadTranscript({
+      file: f, filename: f.name, language: localLang,
+    })),
+  }),
 
 };
 
@@ -49,12 +53,33 @@ const LanguageSelector = ({
   language,
   // Redux
   openLanguages, // Only allow those languages not already associated with a transcript to be selected
+  onEmptyFail,
+  onSizeFail,
+  onInvalidFail,
 }) => {
   const intl = useIntl();
   const [localLang, setLocalLang] = React.useState(language);
-  const input = fileInput({ onAddFile: hooks.addFileCallback({ dispatch: useDispatch(), localLang }) });
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const searchInputRef = React.useCallback((node) => {
+    if (node !== null) { node.focus(); }
+  }, []);
+  const input = fileInput({
+    onAddFile: hooks.addFileCallback({
+      dispatch: useDispatch(),
+      localLang,
+      onEmptyFail: () => { setLocalLang(language); onEmptyFail(); },
+      onSizeFail: () => { setLocalLang(language); onSizeFail(); },
+      onInvalidFail: () => { setLocalLang(language); onInvalidFail(); },
+    }),
+  });
   const onLanguageChange = hooks.onSelectLanguage({
-    dispatch: useDispatch(), languageBeforeChange: localLang, setLocalLang, triggerupload: input.click,
+    dispatch: useDispatch(),
+    languageBeforeChange: localLang,
+    setLocalLang,
+    triggerupload: () => {
+      if (input.ref.current) { input.ref.current.value = ''; }
+      input.click();
+    },
   });
 
   const getTitle = () => {
@@ -76,11 +101,16 @@ const LanguageSelector = ({
     );
   };
 
+  const filteredLanguages = Object.entries(videoTranscriptLanguages).filter(
+    ([, text]) => text && text.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
     <>
 
       <Dropdown
         className="w-100 mb-2"
+        onToggle={(isOpen) => { if (!isOpen) { setSearchQuery(''); } }}
       >
         <Dropdown.Toggle
           iconAs={Button}
@@ -92,16 +122,50 @@ const LanguageSelector = ({
         >
           {getTitle()}
         </Dropdown.Toggle>
-        <Dropdown.Menu>
-          {Object.entries(videoTranscriptLanguages).map(([lang, text]) => {
-            if (language === lang) {
-              return (<Dropdown.Item>{text}<Icon className="text-primary-500" src={Check} /></Dropdown.Item>);
-            }
-            if (openLanguages.some(row => row.includes(lang))) {
-              return (<Dropdown.Item onClick={() => onLanguageChange({ newLang: lang })}>{text}</Dropdown.Item>);
-            }
-            return (<Dropdown.Item className="disabled">{text}</Dropdown.Item>);
-          })}
+        <Dropdown.Menu className="language-selector-menu">
+          <div
+            className="language-selector-search"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <div className="language-selector-search__box">
+              <Icon src={Search} className="language-selector-search__icon" />
+              <input
+                type="text"
+                className="language-selector-search__input"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                ref={searchInputRef}
+              />
+            </div>
+          </div>
+          <div className="language-selector-list">
+            {filteredLanguages.length === 0 && (
+              <div className="language-selector-no-results">No results</div>
+            )}
+            {filteredLanguages.map(([lang, text]) => {
+              if (language === lang) {
+                return (
+                  <Dropdown.Item key={lang}>
+                    {text}
+                    <Icon className="text-primary-500" src={Check} />
+                  </Dropdown.Item>
+                );
+              }
+              if (openLanguages.some(row => row.includes(lang))) {
+                return (
+                  <Dropdown.Item key={lang} onClick={() => onLanguageChange({ newLang: lang })}>
+                    {text}
+                  </Dropdown.Item>
+                );
+              }
+              return (
+                <Dropdown.Item key={lang} className="disabled">{text}</Dropdown.Item>
+              );
+            })}
+          </div>
         </Dropdown.Menu>
       </Dropdown>
       <FileInput fileInput={input} acceptedFiles=".srt" />
@@ -111,12 +175,18 @@ const LanguageSelector = ({
 
 LanguageSelector.defaultProps = {
   openLanguages: [],
+  onEmptyFail: () => {},
+  onSizeFail: () => {},
+  onInvalidFail: () => {},
 };
 
 LanguageSelector.propTypes = {
   openLanguages: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
   language: PropTypes.string.isRequired,
+  onEmptyFail: PropTypes.func,
+  onSizeFail: PropTypes.func,
+  onInvalidFail: PropTypes.func,
 };
 
 export const mapStateToProps = (state) => ({

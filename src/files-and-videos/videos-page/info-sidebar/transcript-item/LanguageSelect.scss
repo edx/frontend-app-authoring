@@ -1,23 +1,105 @@
 .language-select {
-  padding: 8px 0;
-  margin: 0;
-  overflow-x: hidden;
-  max-height: 275px;
   width: 300px;
+  background: #ffffff;
+  border-radius: 4px;
   box-shadow: var(--pgn-elevation-box-shadow-down-2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
-  .pgn__menu-item {
+  &__search {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  &__search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1.5px solid #c0c0c0;
+    border-radius: 4px;
+    background: #f9f9f9;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus-within {
+      border-color: #0075b4;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgb(0 117 180 / 0.15);
+    }
+
+    .pgn__icon {
+      color: #707070;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__search-input {
+    border: none;
+    outline: none;
     width: 100%;
-    justify-content: start;
-    font-weight: 400;
+    font-size: 0.875rem;
+    color: #2d323e;
+    background: transparent;
 
-    &:hover {
-      background-color: var(--pgn-color-light-300);
+    &::placeholder {
+      color: #aaaaaa;
+    }
+  }
+
+  &__list {
+    padding: 6px 0;
+    margin: 0;
+    max-height: 240px;
+    overflow: hidden scroll;
+
+    // Custom scrollbar
+    scrollbar-width: thin;
+    scrollbar-color: #c0c0c0 transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
     }
 
-    .pgn__menu-item-text {
-      display: flex;
-      align-items: center;
+    &::-webkit-scrollbar-track {
+      background: transparent;
     }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #c0c0c0;
+      border-radius: 3px;
+
+      &:hover {
+        background-color: #999999;
+      }
+    }
+
+    .pgn__menu-item {
+      width: 100%;
+      justify-content: start;
+      font-weight: 400 !important;
+      border-radius: 0 !important;
+
+      &:hover {
+        background-color: var(--pgn-color-light-300);
+      }
+
+      .pgn__menu-item-text {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+
+  &__no-results {
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    color: #707070;
   }
 }

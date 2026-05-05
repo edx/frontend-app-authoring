@@ -9,7 +9,9 @@ import {
   MenuItem,
   useToggle,
 } from '@openedx/paragon';
-import { Check, ExpandMore, ExpandLess } from '@openedx/paragon/icons';
+import {
+  Check, ExpandMore, ExpandLess, Search,
+} from '@openedx/paragon/icons';
 import { isEmpty } from 'lodash';
 
 const LanguageSelect = ({
@@ -18,86 +20,119 @@ const LanguageSelect = ({
   options,
   handleSelect,
   placeholderText,
+  wrapperClassName,
 }) => {
   const currentSelection = isEmpty(value) ? placeholderText : options[value];
 
   const [isOpen, , close, toggle] = useToggle();
   const [target, setTarget] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = React.useCallback((node) => {
+    if (node !== null) { node.focus(); }
+  }, []);
+
+  const handleClose = () => {
+    setSearchQuery('');
+    close();
+  };
+
+  const handleToggle = () => {
+    if (isOpen) {
+      setSearchQuery('');
+    }
+    toggle();
+  };
+
+  const filteredEntries = Object.entries(options).filter(
+    ([, text]) => text && text.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <>
-      <div className="col-9 p-0">
-        <Button
-          variant="tertiary"
-          size="sm"
-          className="border border-gray-700 justify-content-between"
-          style={{ minWidth: '100%' }}
+      <div className={wrapperClassName}>
+        <button
+          type="button"
+          className={`language-select-trigger border border-gray-700${isOpen ? ' is-open' : ''}`}
           id={`language-select-dropdown-${currentSelection}`}
           data-testid="language-select-dropdown"
-          iconAfter={isOpen ? ExpandLess : ExpandMore}
-          onClick={toggle}
+          onClick={handleToggle}
           ref={setTarget}
         >
-          {currentSelection}
-        </Button>
+          <span className="language-select-trigger__text">{currentSelection}</span>
+          <span className="language-select-trigger__divider" aria-hidden="true" />
+          <Icon src={isOpen ? ExpandLess : ExpandMore} className="language-select-trigger__icon" />
+        </button>
       </div>
       <ModalPopup
         placement="bottom-end"
         positionRef={target}
         isOpen={isOpen}
-        onClose={close}
-        onEscapeKey={close}
+        onClose={handleClose}
+        onEscapeKey={handleClose}
       >
-        <Menu
-          className="language-select"
-        >
-          <div>
-            {Object.entries(options).map(([valueKey, text]) => {
-              if (valueKey === value) {
+        <div className="language-select">
+          <div className="language-select__search">
+            <div className="language-select__search-box">
+              <Icon src={Search} className="language-select__search-icon" />
+              <input
+                type="text"
+                className="language-select__search-input"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                ref={searchInputRef}
+              />
+            </div>
+          </div>
+          <Menu className="language-select__list">
+            <div>
+              {filteredEntries.length === 0 && (
+                <div className="language-select__no-results">No results</div>
+              )}
+              {filteredEntries.map(([valueKey, text]) => {
+                if (valueKey === value) {
+                  return (
+                    <MenuItem
+                      as={Button}
+                      variant="tertiary"
+                      size="sm"
+                      key={`${valueKey}-item`}
+                    >
+                      <Icon size="inline" src={Check} />
+                      <span className="pl-1">{text}</span>
+                    </MenuItem>
+                  );
+                }
+                if (!previousSelection.includes(valueKey)) {
+                  return (
+                    <MenuItem
+                      as={Button}
+                      variant="tertiary"
+                      size="sm"
+                      onClick={() => {
+                        handleSelect(valueKey);
+                        handleClose();
+                      }}
+                      key={`${valueKey}-item`}
+                    >
+                      <span className="pl-3">{text}</span>
+                    </MenuItem>
+                  );
+                }
                 return (
                   <MenuItem
-                    as={Button}
+                    disabled
                     variant="tertiary"
-                    size="sm"
-                    key={`${valueKey}-item`}
-                  >
-                    <Icon size="inline" src={Check} />
-                    <span className="pl-1">{text}</span>
-                  </MenuItem>
-                );
-              }
-              if (!previousSelection.includes(valueKey)) {
-                return (
-                  <MenuItem
                     as={Button}
-                    variant="tertiary"
                     size="sm"
-                    onClick={() => {
-                      handleSelect(valueKey);
-                      close();
-                    }}
                     key={`${valueKey}-item`}
                   >
                     <span className="pl-3">{text}</span>
                   </MenuItem>
                 );
-              }
-              return (
-                <MenuItem
-                  disabled
-                  variant="tertiary"
-                  as={Button}
-                  size="sm"
-                  key={`${valueKey}-item`}
-                >
-                  <span className="pl-3">{text}</span>
-                </MenuItem>
-              );
-            })}
-          </div>
-        </Menu>
-        <div className="row justify-content-center">
-          <Icon src={ExpandMore} size="xs" />
+              })}
+            </div>
+          </Menu>
         </div>
       </ModalPopup>
     </>
@@ -110,6 +145,11 @@ LanguageSelect.propTypes = {
   handleSelect: PropTypes.func.isRequired,
   placeholderText: PropTypes.string.isRequired,
   previousSelection: PropTypes.arrayOf(PropTypes.string).isRequired,
+  wrapperClassName: PropTypes.string,
+};
+
+LanguageSelect.defaultProps = {
+  wrapperClassName: 'col-9 p-0',
 };
 
 export default LanguageSelect;

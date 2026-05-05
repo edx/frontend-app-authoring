@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Card,
+  ActionRow,
+  AlertModal,
   Button,
   Icon,
   IconButton,
@@ -14,12 +15,18 @@ import LanguageSelect from './LanguageSelect';
 import TranscriptMenu from './TranscriptMenu';
 import messages from './messages';
 import { FileInput, useFileInput } from '../../../generic';
+import { validateSrtFile } from '../../transcript-editor/srtUtils';
 
 const Transcript = ({
   languages,
   transcript,
   previousSelection,
   handleTranscript,
+  editEnabled,
+  onEdit,
+  onEmptyFile,
+  onSizeFail,
+  onInvalidFile,
   // injected
   intl,
 }) => {
@@ -34,11 +41,12 @@ const Transcript = ({
   const input = useFileInput({
     onAddFile: (files) => {
       const [file] = files;
-      handleTranscript({
-        file,
-        language,
-        newLanguage,
-      }, 'upload');
+      validateSrtFile(file, {
+        onEmptyFail: onEmptyFile,
+        onSizeFail,
+        onInvalidFail: onInvalidFile,
+        onValid: (f) => handleTranscript({ file: f, language, newLanguage }, 'upload'),
+      });
     },
     setSelectedRows: () => {},
     setAddOpen: () => {},
@@ -53,65 +61,64 @@ const Transcript = ({
 
   return (
     <>
-      {isConfirmationOpen ? (
-        <Card className="my-2">
-          <Card.Header className="h3" title={(<FormattedMessage {...messages.deleteConfirmationHeader} />)} />
-          <Card.Body>
-            <Card.Section>
-              <FormattedMessage {...messages.deleteConfirmationMessage} />
-            </Card.Section>
-            <Card.Footer>
-              <Button size="sm" variant="tertiary" className="mb-2 mb-sm-0" onClick={closeConfirmation}>
-                <FormattedMessage {...messages.cancelDeleteLabel} />
-              </Button>
-              <Button
-                variant="danger"
-                className="mb-2 mb-sm-0"
-                size="sm"
-                onClick={() => {
-                  handleTranscript({ language: transcript }, 'delete');
-                  closeConfirmation();
-                }}
-              >
-                <FormattedMessage {...messages.confirmDeleteLabel} />
-              </Button>
-            </Card.Footer>
-          </Card.Body>
-        </Card>
-      ) : (
-        <div
-          className="row m-0 align-items-center justify-content-between"
-          key={`transcript-${language}`}
-          data-testid={`transcript-${language}`}
-        >
-          <LanguageSelect
-            options={languages}
-            value={newLanguage}
-            placeholderText={intl.formatMessage(messages.languageSelectPlaceholder)}
-            previousSelection={previousSelection}
-            handleSelect={updateLangauge}
-          />
-          { transcript === '' ? (
-            <IconButton
-              iconAs={Icon}
-              src={DeleteOutline}
-              onClick={openConfirmation}
-              alt="delete empty transcript"
-            />
-          ) : (
-            <TranscriptMenu
-              {...{
-                language,
-                newLanguage,
-                setNewLanguage,
-                handleTranscript,
-                input,
-                launchDeleteConfirmation: openConfirmation,
+      <AlertModal
+        title={<FormattedMessage {...messages.deleteConfirmationHeader} />}
+        isOpen={isConfirmationOpen}
+        onClose={closeConfirmation}
+        variant="warning"
+        footerNode={(
+          <ActionRow>
+            <Button variant="tertiary" onClick={closeConfirmation}>
+              <FormattedMessage {...messages.cancelDeleteLabel} />
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                handleTranscript({ language: transcript }, 'delete');
+                closeConfirmation();
               }}
-            />
-          )}
-        </div>
-      )}
+            >
+              <FormattedMessage {...messages.confirmDeleteLabel} />
+            </Button>
+          </ActionRow>
+        )}
+      >
+        <p><FormattedMessage {...messages.deleteConfirmationMessage} /></p>
+      </AlertModal>
+      <div
+        className="row m-0 align-items-center justify-content-between"
+        key={`transcript-${language}`}
+        data-testid={`transcript-${language}`}
+      >
+        <LanguageSelect
+          options={languages}
+          value={newLanguage}
+          placeholderText={intl.formatMessage(messages.languageSelectPlaceholder)}
+          previousSelection={previousSelection}
+          handleSelect={updateLangauge}
+        />
+        { transcript === '' ? (
+          <IconButton
+            iconAs={Icon}
+            src={DeleteOutline}
+            onClick={openConfirmation}
+            alt="delete empty transcript"
+          />
+        ) : (
+          <TranscriptMenu
+            {...{
+              language,
+              newLanguage,
+              setNewLanguage,
+              handleTranscript,
+              input,
+              launchDeleteConfirmation: openConfirmation,
+              editEnabled,
+              onEdit,
+            }}
+          />
+        )}
+      </div>
       <FileInput key="transcript-input" fileInput={input} supportedFileFormats={['.srt']} />
     </>
   );
@@ -122,8 +129,21 @@ Transcript.propTypes = {
   transcript: PropTypes.string.isRequired,
   previousSelection: PropTypes.arrayOf(PropTypes.string).isRequired,
   handleTranscript: PropTypes.func.isRequired,
+  editEnabled: PropTypes.bool,
+  onEdit: PropTypes.func,
+  onEmptyFile: PropTypes.func,
+  onSizeFail: PropTypes.func,
+  onInvalidFile: PropTypes.func,
   // injected
   intl: intlShape.isRequired,
+};
+
+Transcript.defaultProps = {
+  editEnabled: false,
+  onEdit: () => {},
+  onEmptyFile: () => {},
+  onSizeFail: () => {},
+  onInvalidFile: () => {},
 };
 
 export default injectIntl(Transcript);

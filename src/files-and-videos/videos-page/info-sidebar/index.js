@@ -1,3 +1,3 @@
-import VideoInfoModalSidebar from './VideoInfoModalSidebar';
+import TranscriptTab from './TranscriptTab';
 
-export default VideoInfoModalSidebar;
+export default TranscriptTab;

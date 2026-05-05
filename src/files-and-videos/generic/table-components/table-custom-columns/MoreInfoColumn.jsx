@@ -89,7 +89,10 @@ const MoreInfoColumn = ({
               <MenuItem
                 as={Button}
                 variant="tertiary"
-                onClick={() => handleLock(id, !locked)}
+                onClick={() => {
+                  handleLock(id, !locked);
+                  close();
+                }}
               >
                 {locked ? intl.formatMessage(messages.unlockMenuTitle) : intl.formatMessage(messages.lockMenuTitle)}
               </MenuItem>
@@ -98,18 +101,24 @@ const MoreInfoColumn = ({
           <MenuItem
             as={Button}
             variant="tertiary"
-            onClick={() => handleBulkDownload(
-              [{ original: { id, displayName, downloadLink } }],
-            )}
+            onClick={() => {
+              handleBulkDownload(
+                [{ original: { id, displayName, downloadLink } }],
+              );
+              close();
+            }}
           >
             {intl.formatMessage(messages.downloadTitle)}
           </MenuItem>
           <MenuItem
             as={Button}
             variant="tertiary"
-            onClick={() => handleOpenFileInfo(row.original)}
+            onClick={() => {
+              handleOpenFileInfo(row.original);
+              close();
+            }}
           >
-            {intl.formatMessage(messages.infoTitle)}
+            {intl.formatMessage(fileType === 'video' ? messages.videoInfoTitle : messages.infoTitle)}
           </MenuItem>
           <hr className="my-2" />
           <MenuItem
