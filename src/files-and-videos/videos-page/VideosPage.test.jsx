@@ -40,6 +40,11 @@ import {
 import * as api from './data/api';
 import videoMessages from './messages';
 import messages from '../generic/messages';
+import infoSidebarMessages from './info-sidebar/messages';
+
+jest.mock('../../data/apiHooks', () => ({
+  useWaffleFlags: jest.fn(() => ({ enableTranscriptEditor: false })),
+}));
 
 const { getVideosUrl, getCourseVideosApiUrl, getApiBaseUrl } = api;
 
@@ -501,10 +506,10 @@ describe('Videos page', () => {
             });
 
           fireEvent.click(within(videoMenuButton).getByLabelText('file-menu-toggle'));
-          fireEvent.click(screen.getByText('Info'));
+          fireEvent.click(screen.getByText(messages.videoInfoTitle.defaultMessage));
 
           await waitFor(() => {
-            expect(screen.getByText(messages.infoTitle.defaultMessage)).toBeVisible();
+            expect(screen.getByText('subsection - unit / block')).toBeVisible();
           });
 
           const { usageStatus } = store.getState().videos;
@@ -520,15 +525,12 @@ describe('Videos page', () => {
 
           axiosMock.onGet(`${getVideosUrl(courseId)}/mOckID1/usage`).reply(201, { usageLocations: [] });
           fireEvent.click(within(videoMenuButton).getByLabelText('file-menu-toggle'));
-          fireEvent.click(screen.getByText('Info'));
+          fireEvent.click(screen.getByText(messages.videoInfoTitle.defaultMessage));
           await waitFor(() => {
             expect(screen.getByText(messages.usageNotInUseMessage.defaultMessage)).toBeVisible();
           });
 
-          const infoTab = screen.getAllByRole('tab')[0];
-          expect(infoTab).toBeVisible();
-
-          expect(infoTab).toHaveClass('active');
+          expect(screen.getByText(infoSidebarMessages.dateAddedTitle.defaultMessage)).toBeVisible();
         });
 
         it('should open video info modal and show transcript tab', async () => {
@@ -537,16 +539,13 @@ describe('Videos page', () => {
 
           axiosMock.onGet(`${getVideosUrl(courseId)}/mOckID1/usage`).reply(201, { usageLocations: [] });
           fireEvent.click(within(videoMenuButton).getByLabelText('file-menu-toggle'));
-          fireEvent.click(screen.getByText('Info'));
+          fireEvent.click(screen.getByText(messages.videoInfoTitle.defaultMessage));
           await waitFor(() => {
             expect(screen.getByText(messages.usageNotInUseMessage.defaultMessage)).toBeVisible();
           });
 
-          const transcriptTab = screen.getAllByRole('tab')[1];
-          fireEvent.click(transcriptTab);
-          expect(transcriptTab).toBeVisible();
-
-          expect(transcriptTab).toHaveClass('active');
+          const dialog = screen.getByRole('dialog');
+          expect(within(dialog).getByText((_, node) => node?.textContent === 'Transcripts (0)')).toBeVisible();
         });
 
         it('should show transcript error', async () => {
@@ -555,12 +554,10 @@ describe('Videos page', () => {
 
           axiosMock.onGet(`${getVideosUrl(courseId)}/mOckID3/usage`).reply(201, { usageLocations: [] });
           fireEvent.click(within(videoMenuButton).getByLabelText('file-menu-toggle'));
-          fireEvent.click(screen.getByText('Info'));
+          fireEvent.click(screen.getByText(messages.videoInfoTitle.defaultMessage));
 
-          const transcriptTab = screen.getAllByRole('tab')[1];
-          fireEvent.click(transcriptTab);
-
-          expect(screen.getByText('Transcript (1)')).toBeVisible();
+          const dialog = await screen.findByRole('dialog');
+          expect(within(dialog).getByText((_, node) => node?.textContent === 'Transcripts (1)')).toBeVisible();
         });
       });
 
@@ -590,7 +587,7 @@ describe('Videos page', () => {
           expect(screen.getByText('Delete mOckID1.mp4')).toBeVisible();
         });
 
-        fireEvent.click(screen.getByText(messages.deleteFileButtonLabel.defaultMessage));
+        fireEvent.click(within(screen.getByRole('dialog')).getByText(messages.deleteFileButtonLabel.defaultMessage));
         await waitFor(() => {
           expect(screen.queryByText('Delete mOckID1.mp4')).toBeNull();
         });
@@ -689,7 +686,7 @@ describe('Videos page', () => {
           expect(screen.getByText('Delete mOckID1.mp4')).toBeVisible();
         });
 
-        fireEvent.click(screen.getByText(messages.deleteFileButtonLabel.defaultMessage));
+        fireEvent.click(within(screen.getByRole('dialog')).getByText(messages.deleteFileButtonLabel.defaultMessage));
         await waitFor(async () => {
           expect(screen.queryByText('Delete mOckID1.mp4')).toBeNull();
         });
@@ -711,7 +708,7 @@ describe('Videos page', () => {
 
         axiosMock.onGet(`${getVideosUrl(courseId)}/mOckID3/usage`).reply(404);
         fireEvent.click(within(videoMenuButton).getByLabelText('file-menu-toggle'));
-        fireEvent.click(screen.getByText('Info'));
+        fireEvent.click(screen.getByText(messages.videoInfoTitle.defaultMessage));
         await executeThunk(getUsagePaths({
           courseId,
           video: { id: 'mOckID3', displayName: 'mOckID3' },

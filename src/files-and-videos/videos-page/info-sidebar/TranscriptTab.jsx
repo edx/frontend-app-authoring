@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useState, useContext, useRef,
+  useEffect, useMemo, useState, useContext, useRef,
 } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,7 +33,7 @@ const TranscriptTab = ({
   const { showToast } = useContext(ToastContext);
   const { courseId } = useContext(VideosPageContext);
   const waffleFlags = useWaffleFlags(courseId);
-  const transcriptEditorEnabled = Boolean(waffleFlags?.transcriptEditor);
+  const transcriptEditorEnabled = Boolean(waffleFlags?.enableTranscriptEditor);
   const [editorLanguage, setEditorLanguage] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const prevTranscriptStatusRef = useRef(null);
@@ -49,14 +49,17 @@ const TranscriptTab = ({
     transcriptDownloadHandlerUrl,
   } = videoTranscriptSettings;
   const { transcripts, id, displayName } = video;
-  const languages = getLanguages(transcriptAvailableLanguages);
-  let sortedTranscripts = getSortedTranscripts(languages, transcripts);
-  const [previousSelection, setPreviousSelection] = useState(sortedTranscripts);
+  const languages = useMemo(
+    () => getLanguages(transcriptAvailableLanguages),
+    [transcriptAvailableLanguages],
+  );
+  const [previousSelection, setPreviousSelection] = useState(
+    () => getSortedTranscripts(languages, transcripts),
+  );
 
   useEffect(() => {
     dispatch(resetErrors({ errorType: 'transcript' }));
-    sortedTranscripts = getSortedTranscripts(languages, transcripts);
-    setPreviousSelection(sortedTranscripts);
+    setPreviousSelection(getSortedTranscripts(languages, transcripts));
   }, [dispatch, languages, transcripts]);
 
   useEffect(() => {

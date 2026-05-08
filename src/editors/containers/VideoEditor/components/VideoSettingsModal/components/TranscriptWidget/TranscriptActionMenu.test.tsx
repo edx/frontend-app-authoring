@@ -3,6 +3,7 @@ import {
   render, screen, initializeMocks, fireEvent,
 } from '@src/testUtils';
 import { thunkActions, selectors } from '../../../../../../data/redux';
+import { validateSrtFile } from '../../../../../../../files-and-videos/videos-page/transcript-editor/srtUtils';
 
 import * as componentModule from './TranscriptActionMenu';
 
@@ -38,7 +39,17 @@ jest.mock('../../../../../../sharedComponents/FileInput', () => ({
   fileInput: jest.fn((args) => ({ click: jest.fn().mockName('click input'), onAddFile: args.onAddFile })),
 }));
 
+jest.mock('../../../../../../../files-and-videos/videos-page/transcript-editor/srtUtils', () => ({
+  validateSrtFile: jest.fn(),
+}));
+
 describe('TranscriptActionMenu', () => {
+  const mockValidateSrtFile = validateSrtFile as jest.Mock;
+
+  beforeEach(() => {
+    mockValidateSrtFile.mockReset();
+  });
+
   describe('hooks', () => {
     describe('replaceFileCallback', () => {
       const lang1Code = 'coDe';
@@ -48,7 +59,13 @@ describe('TranscriptActionMenu', () => {
       const mockDispatch = jest.fn();
       const result = { newFile: { mockFile, name: mockFileName }, newFilename: mockFileName, language: lang1Code };
 
+      beforeEach(() => {
+        mockDispatch.mockClear();
+        (thunkActions.video.replaceTranscript as jest.Mock).mockClear();
+      });
+
       test('it dispatches the correct thunk', () => {
+        mockValidateSrtFile.mockImplementation((_file, callbacks) => callbacks.onValid(mockEvent));
         const cb = componentModule.hooks.replaceFileCallback({
           dispatch: mockDispatch,
           language: lang1Code,
@@ -59,6 +76,24 @@ describe('TranscriptActionMenu', () => {
         cb(mockEvent);
         expect(thunkActions.video.replaceTranscript).toHaveBeenCalledWith(result);
         expect(mockDispatch).toHaveBeenCalledWith({ replaceTranscript: result });
+      });
+
+      test('it forwards validation failures without dispatching', () => {
+        const onInvalidFail = jest.fn();
+        mockValidateSrtFile.mockImplementation((_file, callbacks) => callbacks.onInvalidFail());
+
+        const cb = componentModule.hooks.replaceFileCallback({
+          dispatch: mockDispatch,
+          language: lang1Code,
+          onEmptyFail: jest.fn(),
+          onSizeFail: jest.fn(),
+          onInvalidFail,
+        });
+
+        cb(mockEvent);
+
+        expect(onInvalidFail).toHaveBeenCalled();
+        expect(mockDispatch).not.toHaveBeenCalled();
       });
     });
   });

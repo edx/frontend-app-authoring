@@ -79,6 +79,17 @@ export async function downloadTranscript({
   saveAs(file, filename);
 }
 
+export async function fetchTranscriptText({ videoId, language, apiUrl }) {
+  const url = `${getApiBaseUrl()}${apiUrl}`
+    + `?edx_video_id=${encodeURIComponent(videoId)}`
+    + `&language_code=${encodeURIComponent(language)}`;
+  const { data } = await getAuthenticatedHttpClient().get(url, {
+    responseType: 'text',
+    transformResponse: (v) => v,
+  });
+  return typeof data === 'string' ? data : String(data ?? '');
+}
+
 export async function uploadTranscript({
   videoId,
   newLanguage,

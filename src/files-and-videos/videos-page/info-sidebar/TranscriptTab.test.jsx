@@ -5,34 +5,53 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import ReactDOM from 'react-dom';
-
-import {
-  initializeMockApp,
-} from '@edx/frontend-platform';
-import MockAdapter from 'axios-mock-adapter';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { AppProvider } from '@edx/frontend-platform/react';
+import { initializeMockApp } from '@edx/frontend-platform';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
+import { Provider } from 'react-redux';
 
 import initializeStore from '../../../store';
-import { executeThunk } from '../../../utils';
 import { RequestStatus } from '../../../data/constants';
 import TranscriptTab from './TranscriptTab';
 import {
   courseId,
   initialState,
 } from '../factories/mockApiResponses';
-
-import { getApiBaseUrl } from '../data/api';
+import { ToastContext } from '../../../generic/toast-context';
+import { useWaffleFlags } from '../../../data/apiHooks';
+import { updateEditStatus } from '../data/slice';
 import messages from './messages';
-import genericMessages from '../../generic/messages';
-import transcriptRowMessages from './transcript-item/messages';
 import VideosPageProvider from '../VideosPageProvider';
-import { deleteVideoTranscript } from '../data/thunks';
 
-ReactDOM.createPortal = jest.fn(node => node);
+import TranscriptForm from './TranscriptForm';
+import Transcript from './transcript-item';
+import { TranscriptEditorModal } from '../transcript-editor';
+import { uploadVideoTranscript } from '../data/thunks';
+
+jest.mock('../../../data/apiHooks', () => ({
+  useWaffleFlags: jest.fn(),
+}));
+
+jest.mock('./TranscriptForm', () => ({
+  __esModule: true,
+  default: jest.fn(() => null),
+}));
+
+jest.mock('./transcript-item', () => ({
+  __esModule: true,
+  default: jest.fn(() => null),
+}));
+
+jest.mock('../transcript-editor', () => ({
+  TranscriptEditorModal: jest.fn(() => null),
+}));
+
+jest.mock('../data/thunks', () => ({
+  deleteVideoTranscript: jest.fn(() => () => Promise.resolve()),
+  downloadVideoTranscript: jest.fn(() => () => Promise.resolve()),
+  resetErrors: jest.fn(() => ({ type: 'videos/resetErrors' })),
+  updateVideoTranscriptLanguage: jest.fn(() => ({ type: 'videos/updateTranscriptLanguage' })),
+  uploadVideoTranscript: jest.fn(() => () => Promise.resolve()),
+}));
 
 const defaultProps = {
   id: 'mOckID0',
@@ -47,26 +66,43 @@ const defaultProps = {
   courseVideoImageUrl: '/video',
   transcripts: [],
   status: 'Imported',
+  downloadLink: 'http://mOckID0.mp4',
 };
 
-let axiosMock;
-let store;
-jest.mock('file-saver');
-
-const renderComponent = (props) => {
+const renderComponent = ({
+  props = defaultProps,
+  waffleFlags = { enableTranscriptEditor: false },
+} = {}) => {
+  useWaffleFlags.mockReturnValue({
+    enableTranscriptEditor: false,
+    ...waffleFlags,
+  });
+  const store = initializeStore(initialState);
+  const showToast = jest.fn();
   render(
     <IntlProvider locale="en">
-      <AppProvider store={store}>
-        <VideosPageProvider courseId={courseId}>
-          <TranscriptTab video={props} />
-        </VideosPageProvider>
-      </AppProvider>
+      <Provider store={store}>
+        <ToastContext.Provider
+          value={{
+            toastMessage: null,
+            toastAction: undefined,
+            showToast,
+            closeToast: jest.fn(),
+          }}
+        >
+          <VideosPageProvider courseId={courseId}>
+            <TranscriptTab video={props} />
+          </VideosPageProvider>
+        </ToastContext.Provider>
+      </Provider>
     </IntlProvider>,
   );
+
+  return { showToast, store };
 };
 
 describe('TranscriptTab', () => {
-  beforeEach(async () => {
+  beforeAll(() => {
     initializeMockApp({
       authenticatedUser: {
         userId: 3,
@@ -75,262 +111,115 @@ describe('TranscriptTab', () => {
         roles: [],
       },
     });
-    store = initializeStore(initialState);
-    axiosMock = new MockAdapter(getAuthenticatedHttpClient());
   });
 
-  describe('with no transcripts preloaded', () => {
-    it('should have add transcript button', async () => {
-      renderComponent(defaultProps);
-      const addButton = screen.getByText(messages.uploadButtonLabel.defaultMessage);
-      const transcriptRow = screen.queryByTestId('transcript', { exact: false });
-      expect(addButton).toBeInTheDocument();
-      expect(transcriptRow).toBeNull();
-    });
+  beforeEach(() => {
+    jest.clearAllMocks();
 
-    it('should delete empty transcript row', async () => {
-      renderComponent(defaultProps);
-      const addButton = screen.getByText(messages.uploadButtonLabel.defaultMessage);
-      await act(async () => { fireEvent.click(addButton); });
+    TranscriptForm.mockImplementation(({ onCancel, onSubmit }) => (
+      <div>
+        <div>TranscriptForm</div>
+        <button
+          type="button"
+          onClick={() => onSubmit({
+            language: 'en',
+            file: new File(['1\n00:00:00,000 --> 00:00:01,000\nHello'], 'captions.srt', { type: 'text/plain' }),
+          })}
+        >
+          Submit new transcript
+        </button>
+        <button type="button" onClick={onCancel}>Cancel new transcript</button>
+      </div>
+    ));
 
-      const deleteButton = screen.getByLabelText('delete empty transcript');
-      await act(async () => { fireEvent.click(deleteButton); });
+    Transcript.mockImplementation(({ transcript, editEnabled, onEdit }) => (
+      <div data-testid={`transcript-${transcript}`}>
+        <span>{`transcript:${transcript}`}</span>
+        <span>{`edit:${String(editEnabled)}`}</span>
+        <button type="button" onClick={() => onEdit(transcript)}>Edit transcript</button>
+      </div>
+    ));
 
-      expect(screen.getByText(transcriptRowMessages.deleteConfirmationHeader.defaultMessage)).toBeVisible();
-
-      const confirmButton = screen.getByText(transcriptRowMessages.confirmDeleteLabel.defaultMessage);
-      await act(async () => { fireEvent.click(confirmButton); });
-
-      expect(screen.queryByTestId('transcript-')).toBeNull();
-    });
-
-    describe('uploadVideoTranscript as add function', () => {
-      let addButton;
-      const file = new File(['(⌐□_□)'], 'download.srt', { type: 'text/srt' });
-      beforeEach(async () => {
-        renderComponent(defaultProps);
-        addButton = screen.getByText(messages.uploadButtonLabel.defaultMessage);
-
-        await act(async () => { fireEvent.click(addButton); });
-      });
-
-      it('should upload new transcript', async () => {
-        const user = userEvent.setup();
-        axiosMock.onPost(`${getApiBaseUrl()}/transcript_upload/`).reply(204);
-        await act(async () => {
-          const addFileInput = screen.getByLabelText(genericMessages.fileInputAriaLabel.defaultMessage);
-          expect(addFileInput).toBeInTheDocument();
-
-          await user.upload(addFileInput, file);
-        });
-        const addStatus = store.getState().videos.transcriptStatus;
-
-        expect(addStatus).toEqual(RequestStatus.SUCCESSFUL);
-      });
-
-      it('should show default error message', async () => {
-        const user = userEvent.setup();
-        axiosMock.onPost(`${getApiBaseUrl()}/transcript_upload/`).reply(404);
-        await act(async () => {
-          const addFileInput = screen.getByLabelText(genericMessages.fileInputAriaLabel.defaultMessage);
-          await user.upload(addFileInput, file);
-        });
-        const addStatus = store.getState().videos.transcriptStatus;
-
-        expect(addStatus).toEqual(RequestStatus.FAILED);
-
-        expect(screen.getAllByText('Failed to add .')[0]).toBeVisible();
-      });
-
-      it('should show api provided error message', async () => {
-        const user = userEvent.setup();
-        axiosMock.onPost(`${getApiBaseUrl()}/transcript_upload/`).reply(404, { error: 'api error' });
-        await act(async () => {
-          const addFileInput = screen.getByLabelText(genericMessages.fileInputAriaLabel.defaultMessage);
-          await user.upload(addFileInput, file);
-        });
-        const addStatus = store.getState().videos.transcriptStatus;
-
-        expect(addStatus).toEqual(RequestStatus.FAILED);
-
-        expect(screen.getAllByText('api error')[0]).toBeVisible();
-      });
-    });
+    TranscriptEditorModal.mockImplementation(({ languageName }) => (
+      <div>{`TranscriptEditorModal:${languageName}`}</div>
+    ));
   });
 
-  describe('with one transcripts preloaded', () => {
-    const updatedProps = { ...defaultProps, transcripts: ['ar'] };
-    beforeEach(() => {
-      renderComponent(updatedProps);
-    });
+  it('shows the add transcript CTA when there are no transcripts', () => {
+    renderComponent();
 
-    it('should contain transcript row', () => {
-      const addButton = screen.getByText(messages.uploadButtonLabel.defaultMessage);
-      const transcriptRow = screen.getByTestId('transcript-ar');
-      expect(addButton).toBeInTheDocument();
-      expect(transcriptRow).toBeInTheDocument();
-    });
-
-    describe('deleteVideoTranscript', () => {
-      beforeEach(async () => {
-        const menuButton = screen.getByTestId('ar-transcript-menu');
-        await waitFor(() => {
-          fireEvent.click(menuButton);
-        });
-
-        const deleteButton = screen.getByText(transcriptRowMessages.deleteTranscript.defaultMessage).closest('button');
-        fireEvent.click(deleteButton);
-      });
-
-      it('should open delete confirmation modal and cancel delete', async () => {
-        const cancelButton = screen.getByText(transcriptRowMessages.cancelDeleteLabel.defaultMessage);
-        await waitFor(() => {
-          fireEvent.click(cancelButton);
-        });
-
-        expect(screen.queryByText(transcriptRowMessages.deleteConfirmationHeader.defaultMessage)).toBeNull();
-      });
-
-      it('should open delete confirmation modal and handle delete', async () => {
-        const confirmButton = screen.getByText(transcriptRowMessages.confirmDeleteLabel.defaultMessage);
-        axiosMock.onDelete(`${getApiBaseUrl()}/transcript_delete/${courseId}/mOckID0/ar`).reply(204);
-        await act(async () => {
-          fireEvent.click(confirmButton);
-          await executeThunk(deleteVideoTranscript({
-            language: 'ar',
-            videoId: updatedProps.id,
-            transcripts: updatedProps.transcripts,
-            apiUrl: `/transcript_delete/${courseId}`,
-          }), store.dispatch);
-        });
-        const deleteStatus = store.getState().videos.transcriptStatus;
-
-        expect(deleteStatus).toEqual(RequestStatus.SUCCESSFUL);
-
-        expect(screen.queryByText(transcriptRowMessages.deleteConfirmationHeader.defaultMessage)).toBeNull();
-      });
-
-      it('should show error message', async () => {
-        const confirmButton = screen.getByText(transcriptRowMessages.confirmDeleteLabel.defaultMessage);
-        axiosMock.onDelete(`${getApiBaseUrl()}/transcript_delete/${courseId}/mOckID0/ar`).reply(404);
-        await act(async () => {
-          fireEvent.click(confirmButton);
-          await executeThunk(deleteVideoTranscript({
-            language: 'ar',
-            videoId: updatedProps.id,
-            transcripts: updatedProps.transcripts,
-            apiUrl: `/transcript_delete/${courseId}`,
-          }), store.dispatch);
-        });
-        const deleteStatus = store.getState().videos.transcriptStatus;
-
-        expect(deleteStatus).toEqual(RequestStatus.FAILED);
-
-        expect(screen.queryByText(transcriptRowMessages.deleteConfirmationHeader.defaultMessage)).toBeNull();
-
-        expect(screen.getAllByText('Failed to delete ar transcript.')[0]).toBeVisible();
-      });
-    });
-
-    describe('downloadVideoTranscript', () => {
-      let downloadButton;
-      beforeEach(async () => {
-        const menuButton = screen.getByTestId('ar-transcript-menu');
-        await waitFor(() => {
-          fireEvent.click(menuButton);
-        });
-        downloadButton = screen.getByText(
-          transcriptRowMessages.downloadTranscript.defaultMessage,
-        ).closest('button');
-      });
-
-      it('should download transcript', async () => {
-        axiosMock.onGet(
-          `${getApiBaseUrl()}/transcript_download/?edx_video_id=${updatedProps.id}&language_code=ar`,
-        ).reply(200, 'string of transcript');
-        await act(async () => {
-          fireEvent.click(downloadButton);
-        });
-        const downloadStatus = store.getState().videos.transcriptStatus;
-
-        expect(downloadStatus).toEqual(RequestStatus.SUCCESSFUL);
-      });
-
-      it('should show error message', async () => {
-        const filename = 'mOckID0.mp4-ar.srt';
-        axiosMock.onGet(
-          `${getApiBaseUrl()}/transcript_download/?edx_video_id=${updatedProps.id}&language_code=ar`,
-        ).reply(404);
-        await act(async () => {
-          fireEvent.click(downloadButton);
-        });
-        const downloadStatus = store.getState().videos.transcriptStatus;
-
-        expect(downloadStatus).toEqual(RequestStatus.FAILED);
-
-        expect(screen.getAllByText(`Failed to download ${filename}.`)[0]).toBeVisible();
-      });
-    });
+    expect(screen.getByText(messages.uploadButtonLabel.defaultMessage)).toBeInTheDocument();
+    expect(screen.queryByText('TranscriptForm')).not.toBeInTheDocument();
   });
 
-  describe('with multiple transcripts preloaded', () => {
-    describe('uploadVideoTranscript as replace function', () => {
-      const file = new File(['(⌐□_□)'], 'download.srt', { type: 'text/srt' });
-      beforeEach(async () => {
-        const updatedProps = { ...defaultProps, transcripts: ['fr', 'ar'] };
-        renderComponent(updatedProps);
-        const dropdownButton = screen.getAllByTestId('language-select-dropdown')[0];
-        await waitFor(() => {
-          fireEvent.click(dropdownButton);
-        });
+  it('switches to the new transcript form and back on cancel', () => {
+    renderComponent();
 
-        const englishOption = screen.getByText('English');
-        await act(async () => {
-          fireEvent.click(englishOption);
-        });
+    fireEvent.click(screen.getByText(messages.uploadButtonLabel.defaultMessage));
+    expect(screen.getByText('TranscriptForm')).toBeInTheDocument();
 
-        const menuButton = screen.getByTestId('ar-transcript-menu');
-        await waitFor(() => {
-          fireEvent.click(menuButton);
-        });
-        const replaceButton = screen.getByText(
-          transcriptRowMessages.replaceTranscript.defaultMessage,
-        ).closest('button');
-        fireEvent.click(replaceButton);
-      });
+    fireEvent.click(screen.getByText('Cancel new transcript'));
 
-      it('should replace transcript', async () => {
-        const user = userEvent.setup();
-        axiosMock.onPost(`${getApiBaseUrl()}/transcript_upload/`).reply(204);
+    expect(screen.queryByText('TranscriptForm')).not.toBeInTheDocument();
+    expect(screen.getByText(messages.uploadButtonLabel.defaultMessage)).toBeInTheDocument();
+  });
 
-        await act(async () => {
-          const addFileInput = screen.getAllByLabelText(genericMessages.fileInputAriaLabel.defaultMessage)[0];
-          await user.upload(addFileInput, file);
-        });
-        const addStatus = store.getState().videos.transcriptStatus;
-
-        expect(addStatus).toEqual(RequestStatus.SUCCESSFUL);
-
-        const updatedTranscripts = store.getState().models.videos[defaultProps.id].transcripts;
-
-        expect(updatedTranscripts).toEqual(['fr', 'en']);
-      });
-
-      it('should show error message', async () => {
-        const user = userEvent.setup();
-        axiosMock.onPost(`${getApiBaseUrl()}/transcript_upload/`).reply(404);
-
-        await act(async () => {
-          const addFileInput = screen.getAllByLabelText(genericMessages.fileInputAriaLabel.defaultMessage)[0];
-          await user.upload(addFileInput, file);
-        });
-
-        const addStatus = store.getState().videos.transcriptStatus;
-
-        expect(addStatus).toEqual(RequestStatus.FAILED);
-
-        expect(screen.getAllByText('Failed to replace ar with en.')[0]).toBeVisible();
-      });
+  it('passes editEnabled to transcript rows when the transcript editor flag is enabled', () => {
+    renderComponent({
+      props: {
+        ...defaultProps,
+        transcripts: ['ar'],
+      },
+      waffleFlags: { enableTranscriptEditor: true },
     });
+
+    expect(screen.getByText('edit:true')).toBeInTheDocument();
+  });
+
+  it('opens the transcript editor modal when a transcript row requests edit', () => {
+    renderComponent({
+      props: {
+        ...defaultProps,
+        transcripts: ['ar'],
+      },
+      waffleFlags: { enableTranscriptEditor: true },
+    });
+
+    fireEvent.click(screen.getByText('Edit transcript'));
+
+    expect(screen.getByText('TranscriptEditorModal:Arabic')).toBeInTheDocument();
+  });
+
+  it('shows an upload toast and exits add mode after a successful upload transition', async () => {
+    const { showToast, store } = renderComponent();
+
+    fireEvent.click(screen.getByText(messages.uploadButtonLabel.defaultMessage));
+    fireEvent.click(screen.getByText('Submit new transcript'));
+
+    expect(uploadVideoTranscript).toHaveBeenCalledWith(expect.objectContaining({
+      videoId: defaultProps.id,
+      language: '',
+      newLanguage: 'en',
+    }));
+
+    act(() => {
+      store.dispatch(updateEditStatus({
+        editType: 'transcript',
+        status: RequestStatus.IN_PROGRESS,
+      }));
+    });
+
+    act(() => {
+      store.dispatch(updateEditStatus({
+        editType: 'transcript',
+        status: RequestStatus.SUCCESSFUL,
+      }));
+    });
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith(messages.transcriptUploadedToast.defaultMessage);
+    });
+    expect(screen.queryByText('TranscriptForm')).not.toBeInTheDocument();
+    expect(screen.getByText(messages.uploadButtonLabel.defaultMessage)).toBeInTheDocument();
   });
 });

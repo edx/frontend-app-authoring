@@ -3,7 +3,6 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import {
   ModalDialog,
   Spinner,
@@ -13,7 +12,7 @@ import {
 } from '@openedx/paragon';
 import { Sync, CheckCircle, Add } from '@openedx/paragon/icons';
 
-import { getApiBaseUrl, uploadTranscript } from '../data/api';
+import { fetchTranscriptText, uploadTranscript } from '../data/api';
 import { parseSrt, serializeSrt, validateCues } from './srtUtils';
 import TranscriptCueBlock from './TranscriptCueBlock';
 import messages from './messages';
@@ -113,15 +112,12 @@ const TranscriptEditorModal = ({
     setHasEdited(false);
     (async () => {
       try {
-        const url = `${getApiBaseUrl()}${transcriptDownloadHandlerUrl}`
-          + `?edx_video_id=${encodeURIComponent(videoId)}`
-          + `&language_code=${encodeURIComponent(language)}`;
-        const { data } = await getAuthenticatedHttpClient().get(url, {
-          responseType: 'text',
-          transformResponse: (v) => v,
+        const text = await fetchTranscriptText({
+          videoId,
+          language,
+          apiUrl: transcriptDownloadHandlerUrl,
         });
         if (cancelled) { return; }
-        const text = typeof data === 'string' ? data : String(data ?? '');
         setCues(parseSrt(text));
         setLoadStatus('loaded');
       } catch (err) {

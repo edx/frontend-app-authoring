@@ -529,7 +529,7 @@ describe('FilesAndUploads', () => {
           expect(screen.getByText('Delete mOckID1')).toBeVisible();
         });
 
-        fireEvent.click(screen.getByText(messages.deleteFileButtonLabel.defaultMessage));
+        fireEvent.click(within(screen.getByRole('dialog')).getByText(messages.deleteFileButtonLabel.defaultMessage));
         await waitFor(() => {
           expect(screen.queryByText('Delete mOckID1')).toBeNull();
         });
@@ -616,7 +616,7 @@ describe('FilesAndUploads', () => {
           expect(screen.getByText('Delete mOckID3')).toBeVisible();
         });
 
-        fireEvent.click(screen.getByText(messages.deleteFileButtonLabel.defaultMessage));
+        fireEvent.click(within(screen.getByRole('dialog')).getByText(messages.deleteFileButtonLabel.defaultMessage));
         await waitFor(() => {
           expect(screen.queryByText('Delete mOckID3')).toBeNull();
         });
