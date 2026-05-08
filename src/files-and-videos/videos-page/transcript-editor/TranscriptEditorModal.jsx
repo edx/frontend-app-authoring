@@ -9,6 +9,7 @@ import {
   Spinner,
   Stack,
   Icon,
+  Button,
 } from '@openedx/paragon';
 import { Sync, CheckCircle, Add } from '@openedx/paragon/icons';
 
@@ -282,7 +283,7 @@ const TranscriptEditorModal = ({
   const renderHeaderStatus = () => {
     if (saveStatus === 'saving') {
       return (
-        <span className="text-muted small d-inline-flex align-items-center">
+        <span className="text-muted small d-inline-flex align-items-center align-self-end">
           <Icon src={Sync} size="inline" className="mr-1" />
           {intl.formatMessage(messages.statusSaving)}
         </span>
@@ -290,7 +291,7 @@ const TranscriptEditorModal = ({
     }
     if (saveStatus === 'saved') {
       return (
-        <span className="small d-inline-flex align-items-center transcript-editor-modal__status--saved">
+        <span className="small d-inline-flex align-items-center transcript-editor-modal__status--saved align-self-end">
           <Icon src={CheckCircle} size="inline" className="mr-1 transcript-editor-modal__status--saved" />
           {intl.formatMessage(messages.statusSaved)}
         </span>
@@ -298,7 +299,7 @@ const TranscriptEditorModal = ({
     }
     if (saveStatus === 'error') {
       return (
-        <span className="text-danger small">
+        <span className="text-danger small align-self-end">
           {intl.formatMessage(messages.statusError, { detail: saveError || '' })}
         </span>
       );
@@ -316,19 +317,19 @@ const TranscriptEditorModal = ({
       className="transcript-editor-modal"
     >
       <ModalDialog.Header>
-        <Stack direction="horizontal" gap={3} className="transcript-editor-modal__header">
+        <Stack direction="horizontal" gap={3} className="transcript-editor-modal__header w-100 align-items-baseline">
           <ModalDialog.Title className="transcript-editor-modal__title">
-            <div className="transcript-editor-modal__course">{courseName || ''}</div>
-            <div className="transcript-editor-modal__filename">{videoFilename}</div>
+            <Stack className="transcript-editor-modal__course text-truncate">{courseName || ''}</Stack>
+            <Stack className="transcript-editor-modal__filename text-truncate">{videoFilename}</Stack>
             {languageName && (
-              <div className="transcript-editor-modal__language">{languageName}</div>
+              <Stack className="transcript-editor-modal__language text-truncate fw-semibold">{languageName}</Stack>
             )}
           </ModalDialog.Title>
-          <div className="transcript-editor-modal__status">{renderHeaderStatus()}</div>
+          <Stack className="transcript-editor-modal__status ms-auto me-4 flex-shrink-0 text-nowrap">{renderHeaderStatus()}</Stack>
         </Stack>
       </ModalDialog.Header>
       <ModalDialog.Body className="transcript-editor-modal__body">
-        <div className="transcript-editor-modal__sticky-video">
+        <Stack className="transcript-editor-modal__sticky-video flex-shrink-0">
           {videoSrc ? (
             <video
               ref={videoRef}
@@ -336,31 +337,31 @@ const TranscriptEditorModal = ({
               controls
               controlsList="nodownload"
               disablePictureInPicture
-              className="transcript-editor-modal__video"
+              className="transcript-editor-modal__video w-100 d-block"
             >
               <track kind="captions" label={languageName || language} default />
             </video>
           ) : (
-            <div className="text-muted small p-3">
+            <Stack className="text-muted small p-3">
               {intl.formatMessage(messages.videoUnavailable)}
-            </div>
+            </Stack>
           )}
-        </div>
-        <div className="transcript-editor-modal__cue-list-wrapper">
-          <div
+        </Stack>
+        <Stack className="transcript-editor-modal__cue-list-wrapper overflow-hidden">
+          <Stack
             ref={cueListRef}
             className="transcript-editor-modal__cue-list"
             onScroll={handleCueListScroll}
           >
-            <div className="transcript-editor-modal__cue-list-inner">
+            <Stack className="transcript-editor-modal__cue-list-inner">
               {loadStatus === 'loading' && (
-                <div className="d-flex align-items-center text-muted">
+                <Stack direction="horizontal" className="align-items-center text-muted">
                   <Spinner animation="border" size="sm" screenReaderText="" className="mr-2" />
-                  {intl.formatMessage(messages.loading)}
-                </div>
+                    {intl.formatMessage(messages.loading)}
+                </Stack>
               )}
               {loadStatus === 'error' && (
-                <div className="text-danger small">{intl.formatMessage(messages.loadError)}</div>
+                <Stack className="text-danger small">{intl.formatMessage(messages.loadError)}</Stack>
               )}
               {loadStatus === 'loaded' && cues.map((cue, i) => (
                 <TranscriptCueBlock
@@ -384,18 +385,19 @@ const TranscriptEditorModal = ({
                 />
               ))}
               {loadStatus === 'loaded' && (
-                <button
-                  type="button"
-                  className="transcript-editor-modal__append-btn"
+                <Button
+                  variant="outline-primary"
+                  className="transcript-editor-modal__append-btn mt-2"
                   onClick={appendCue}
+                  iconBefore={Add}
+                  block
                 >
-                  <Icon src={Add} size="inline" className="mr-1" />
-                  <span>{intl.formatMessage(messages.appendCueLabel)}</span>
-                </button>
+                  {intl.formatMessage(messages.appendCueLabel)}
+                </Button>
               )}
-            </div>
-          </div>
-        </div>
+            </Stack>
+          </Stack>
+        </Stack>
       </ModalDialog.Body>
     </ModalDialog>
   );

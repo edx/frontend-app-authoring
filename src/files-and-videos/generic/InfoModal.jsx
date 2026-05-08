@@ -75,12 +75,12 @@ const InfoModal = ({
                 imageSize={{ width: '503px', height: '281px' }}
               />
               {details}
-              <div>
-                <div className="row m-0 font-weight-bold">
+              <Stack>
+                <div className="m-0 font-weight-bold">
                   <FormattedMessage {...messages.usageTitle} />
                 </div>
                 <UsageMetricsMessages {...{ usageLocations: file?.usageLocations, usagePathStatus, error }} />
-              </div>
+              </Stack>
             </Stack>
           </div>
           <div className="col-5">

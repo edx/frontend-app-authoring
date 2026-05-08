@@ -3,16 +3,21 @@ import PropTypes from 'prop-types';
 
 import {
   Button,
+  Form,
   Icon,
+  Stack,
   ModalPopup,
   Menu,
   MenuItem,
   useToggle,
 } from '@openedx/paragon';
+import './LanguageSelect.scss';
 import {
   Check, ExpandMore, ExpandLess, Search,
 } from '@openedx/paragon/icons';
 import { isEmpty } from 'lodash';
+import { useIntl } from '@edx/frontend-platform/i18n';
+import messages from './messages';
 
 const LanguageSelect = ({
   value,
@@ -22,6 +27,7 @@ const LanguageSelect = ({
   placeholderText,
   wrapperClassName,
 }) => {
+  const intl = useIntl();
   const currentSelection = isEmpty(value) ? placeholderText : options[value];
 
   const [isOpen, , close, toggle] = useToggle();
@@ -50,18 +56,19 @@ const LanguageSelect = ({
   return (
     <>
       <div className={wrapperClassName}>
-        <button
-          type="button"
-          className={`language-select-trigger border border-gray-700${isOpen ? ' is-open' : ''}`}
+        <Button
+          block
+          className={`language-select-trigger d-flex w-100 rounded border border-gray-700 align-items-center justify-content-start text-start${isOpen ? ' is-open' : ''}`}
+          variant="tertiary"
           id={`language-select-dropdown-${currentSelection}`}
           data-testid="language-select-dropdown"
           onClick={handleToggle}
           ref={setTarget}
         >
-          <span className="language-select-trigger__text">{currentSelection}</span>
-          <span className="language-select-trigger__divider" aria-hidden="true" />
-          <Icon src={isOpen ? ExpandLess : ExpandMore} className="language-select-trigger__icon" />
-        </button>
+          <span className="language-select-trigger__text flex-grow-1 text-start text-truncate">{currentSelection}</span>
+          <span className="language-select-trigger__divider d-inline-block flex-shrink-0" aria-hidden="true" />
+          <Icon src={isOpen ? ExpandLess : ExpandMore} className="language-select-trigger__icon flex-shrink-0" />
+        </Button>
       </div>
       <ModalPopup
         placement="bottom-end"
@@ -70,24 +77,28 @@ const LanguageSelect = ({
         onClose={handleClose}
         onEscapeKey={handleClose}
       >
-        <div className="language-select">
-          <div className="language-select__search">
-            <div className="language-select__search-box">
-              <Icon src={Search} className="language-select__search-icon" />
-              <input
+        <Stack
+          className="language-select bg-white rounded overflow-hidden"
+          style={{ width: target ? target.offsetWidth : undefined }}
+        >
+          <Stack className="language-select__search sticky-top bg-white">
+            <Stack direction="horizontal" className="language-select__search-box align-items-center gap-2 rounded">
+              <Icon src={Search} className="language-select__search-icon flex-shrink-0" />
+              <Form.Control
                 type="text"
-                className="language-select__search-input"
-                placeholder="Search..."
+                controlClassName="language-select__search-input border-0 shadow-none w-100 p-0 bg-transparent"
+                aria-label={intl.formatMessage(messages.languageSearchLabel)}
+                placeholder={intl.formatMessage(messages.languageSearchPlaceholder)}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 ref={searchInputRef}
               />
-            </div>
-          </div>
-          <Menu className="language-select__list">
-            <div>
+            </Stack>
+          </Stack>
+          <Menu className="language-select__list m-0">
+            <Stack>
               {filteredEntries.length === 0 && (
-                <div className="language-select__no-results">No results</div>
+                <Stack className="language-select__no-results small text-muted">{intl.formatMessage(messages.noResults)}</Stack>
               )}
               {filteredEntries.map(([valueKey, text]) => {
                 if (valueKey === value) {
@@ -131,9 +142,9 @@ const LanguageSelect = ({
                   </MenuItem>
                 );
               })}
-            </div>
+            </Stack>
           </Menu>
-        </div>
+        </Stack>
       </ModalPopup>
     </>
   );
@@ -149,7 +160,7 @@ LanguageSelect.propTypes = {
 };
 
 LanguageSelect.defaultProps = {
-  wrapperClassName: 'col-9 p-0',
+  wrapperClassName: 'col p-0',
 };
 
 export default LanguageSelect;

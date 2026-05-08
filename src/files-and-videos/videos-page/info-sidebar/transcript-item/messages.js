@@ -31,6 +31,16 @@ const messages = defineMessages({
     defaultMessage: 'Select language',
     description: 'Placeholder For Dropdown, which allows users to set the language associtated with a transcript',
   },
+  languageSearchLabel: {
+    id: 'course-authoriong.video-uploads.file-info.transcripts.languageSearchLabel',
+    defaultMessage: 'Search languages',
+    description: 'Accessible label for the transcript language search input.',
+  },
+  languageSearchPlaceholder: {
+    id: 'course-authoriong.video-uploads.file-info.transcripts.languageSearchPlaceholder',
+    defaultMessage: 'Search languages',
+    description: 'Placeholder shown in the transcript language search input.',
+  },
   cancelDeleteLabel: {
     id: 'course-authoriong.video-uploads.file-info.transcripts.cancelDeleteLabel',
     defaultMessage: 'Cancel',
@@ -50,6 +60,11 @@ const messages = defineMessages({
     id: 'course-authoriong.video-uploads.file-info.transcripts.deleteConfirmationTitle',
     defaultMessage: 'Delete this transcript?',
     description: 'Title for Warning which allows users to select next step in the process of deleting a transcript',
+  },
+  noResults: {
+    id: 'course-authoriong.video-uploads.file-info.transcripts.noResults',
+    defaultMessage: 'No results',
+    description: 'Message presented to user when no options are available in a dropdown select',
   },
 });
 

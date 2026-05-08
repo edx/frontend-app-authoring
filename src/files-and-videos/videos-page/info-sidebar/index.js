@@ -1,3 +1,5 @@
-import TranscriptTab from './TranscriptTab';
+import VideoInfoModalSidebar from './VideoInfoModalSidebar';
 
-export default TranscriptTab;
+export { default as InfoTab } from './InfoTab';
+export { default as TranscriptTab } from './TranscriptTab';
+export default VideoInfoModalSidebar;

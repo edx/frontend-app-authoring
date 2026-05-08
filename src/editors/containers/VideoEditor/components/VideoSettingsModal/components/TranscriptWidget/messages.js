@@ -77,6 +77,16 @@ const messages = defineMessages({
     defaultMessage: 'Select Language',
     description: 'Placeholder For Dropdown, which allows users to set the language associtated with a transcript',
   },
+  languageSearchLabel: {
+    id: 'authoring.videoeditor.transcripts.languageSearchLabel',
+    defaultMessage: 'Search languages',
+    description: 'Accessible label for the transcript language search input.',
+  },
+  languageSearchPlaceholder: {
+    id: 'authoring.videoeditor.transcripts.languageSearchPlaceholder',
+    defaultMessage: 'Search languages',
+    description: 'Placeholder shown in the transcript language search input.',
+  },
   cancelDeleteLabel: {
     id: 'authoring.videoeditor.transcripts.cancelDeleteLabel',
     defaultMessage: 'Cancel',
@@ -131,6 +141,11 @@ const messages = defineMessages({
     id: 'authoring.videoeditor.transcript.error.invalidSrtError',
     defaultMessage: 'Invalid SRT file. Please upload a valid .srt file.',
     description: 'Message presented to user when uploaded transcript is not a valid SRT file',
+  },
+  noResults: {
+    id: 'authoring.videoeditor.transcript.noResults',
+    defaultMessage: 'No results',
+    description: 'Message presented to user when no languages are available to select for a transcript',
   },
 });
 

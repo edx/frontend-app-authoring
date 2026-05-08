@@ -34,8 +34,15 @@ const TranscriptForm = ({
     onAddFile: (files) => {
       const [picked] = files;
       validateSrtFile(picked, {
-        onEmptyFail: () => setLocalError('empty'),
-        onSizeFail: onFileTooLarge,
+        onEmptyFail: () => {
+          setLocalError('empty');
+          setFile(null);
+        },
+        onSizeFail: () => {
+          setLocalError(null);
+          setFile(null);
+          onFileTooLarge();
+        },
         onInvalidFail: () => { setLocalError('invalid'); setFile(null); },
         onValid: (f) => { setLocalError(null); setFile(f); },
       });
@@ -52,55 +59,55 @@ const TranscriptForm = ({
         variant="outline-primary"
         onClick={() => input.click()}
         iconBefore={FileUpload}
-        className="new-transcript-form__upload-button"
+        className="new-transcript-form__upload-button rounded-0 w-100 justify-content-center"
         block
       >
         <FormattedMessage {...messages.uploadFileButton} />
       </Button>
-      <div className="new-transcript-form__hint">
+      <Stack className="new-transcript-form__hint">
         <FormattedMessage {...messages.uploadFileHint} />
-      </div>
+      </Stack>
     </>
   );
 
   const renderUploadArea = () => {
     if (isUploading) {
       return (
-        <div className="new-transcript-form__file-row">
+        <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-center gap-2 py-2 px-1 small">
           <Spinner animation="border" size="sm" className="new-transcript-form__spinner" />
-          <span className="new-transcript-form__uploading-name">{file?.name}</span>
-        </div>
+          <span className="new-transcript-form__uploading-name flex-grow-1 text-truncate">{file?.name}</span>
+        </Stack>
       );
     }
     if (uploadFailed || localError) {
       return (
         <>
-          <div className="new-transcript-form__file-row new-transcript-form__file-row--error">
-            <Icon src={ErrorOutline} className="new-transcript-form__error-icon" />
-            <span className="new-transcript-form__error-text">
+          <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-center new-transcript-form__file-row--error gap-2 py-2 px-1 small text-danger">
+            <Icon src={ErrorOutline} className="new-transcript-form__error-icon flex-shrink-0" />
+            <span className="new-transcript-form__error-text flex-grow-1 small">
               {localError === 'empty' && <FormattedMessage {...messages.emptyFileError} />}
               {localError === 'invalid' && <FormattedMessage {...messages.invalidFileError} />}
               {uploadFailed && !localError && <FormattedMessage {...messages.uploadFailedError} />}
             </span>
-          </div>
+          </Stack>
           {uploadButton}
         </>
       );
     }
     if (file) {
       return (
-        <div className="new-transcript-form__file-row">
-          <Icon src={Article} className="new-transcript-form__file-icon" />
-          <span className="new-transcript-form__file-name">{file.name}</span>
+        <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-centergap-2 py-2 px-1 small">
+          <Icon src={Article} className="new-transcript-form__file-icon flex-shrink-0" />
+          <span className="new-transcript-form__file-name flex-grow-1 text-truncate">{file.name}</span>
           <IconButton
             src={DeleteOutline}
             iconAs={Icon}
             alt={intl.formatMessage(messages.clearFileLabel)}
             onClick={() => setFile(null)}
             size="sm"
-            className="new-transcript-form__file-delete"
+            className="new-transcript-form__file-delete flex-shrink-0"
           />
-        </div>
+        </Stack>
       );
     }
     return uploadButton;
@@ -114,12 +121,12 @@ const TranscriptForm = ({
   };
 
   return (
-    <div className="new-transcript-form">
-      <h4 className="new-transcript-form__heading">
+    <Stack className="new-transcript-form pt-1 pb-2">
+      <h4 className="new-transcript-form__heading mt-0 mb-3">
         <FormattedMessage {...messages.newTranscriptHeading} />
       </h4>
 
-      <div className="new-transcript-form__field">
+      <Stack className="new-transcript-form__field">
         <LanguageSelect
           options={languages}
           value={language}
@@ -128,11 +135,11 @@ const TranscriptForm = ({
           handleSelect={setLanguage}
           wrapperClassName="col-12 p-0"
         />
-      </div>
+      </Stack>
 
-      <div className="new-transcript-form__upload">
+      <Stack className="new-transcript-form__upload mb-1">
         {renderUploadArea()}
-      </div>
+      </Stack>
 
       <Stack direction="horizontal" gap={2} className="new-transcript-form__actions justify-content-end">
         <Button variant="tertiary" onClick={onCancel} disabled={isUploading}>
@@ -149,7 +156,7 @@ const TranscriptForm = ({
       </Stack>
 
       <FileInput key="new-transcript-input" fileInput={input} supportedFileFormats={['.srt']} />
-    </div>
+    </Stack>
   );
 };
 

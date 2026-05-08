@@ -5,7 +5,9 @@ import {
   ActionRow,
   Dropdown,
   Button,
+  Form,
   Icon,
+  Stack,
 } from '@openedx/paragon';
 
 import { Check, Search } from '@openedx/paragon/icons';
@@ -122,28 +124,29 @@ const LanguageSelector = ({
         >
           {getTitle()}
         </Dropdown.Toggle>
-        <Dropdown.Menu className="language-selector-menu">
-          <div
-            className="language-selector-search"
+        <Dropdown.Menu className="w-100 p-0 overflow-hidden">
+          <Stack
+            className="language-selector-search bg-white rounded overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="presentation"
           >
-            <div className="language-selector-search__box">
+            <Stack direction="horizontal" className="language-selector-search__box d-flex align-items-center gap-2 p-2">
               <Icon src={Search} className="language-selector-search__icon" />
-              <input
+              <Form.Control
                 type="text"
-                className="language-selector-search__input"
-                placeholder="Search..."
+                controlClassName="language-selector-search__input border-0 shadow-none w-100 p-0 bg-transparent"
+                aria-label={intl.formatMessage(messages.languageSearchLabel)}
+                placeholder={intl.formatMessage(messages.languageSearchPlaceholder)}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 ref={searchInputRef}
               />
-            </div>
-          </div>
-          <div className="language-selector-list">
+            </Stack>
+          </Stack>
+          <Stack className="language-selector-list">
             {filteredLanguages.length === 0 && (
-              <div className="language-selector-no-results">No results</div>
+              <Stack className="py-2 px-3 small text-muted">{intl.formatMessage(messages.noResults)}</Stack>
             )}
             {filteredLanguages.map(([lang, text]) => {
               if (language === lang) {
@@ -165,7 +168,7 @@ const LanguageSelector = ({
                 <Dropdown.Item key={lang} className="disabled">{text}</Dropdown.Item>
               );
             })}
-          </div>
+          </Stack>
         </Dropdown.Menu>
       </Dropdown>
       <FileInput fileInput={input} acceptedFiles=".srt" />

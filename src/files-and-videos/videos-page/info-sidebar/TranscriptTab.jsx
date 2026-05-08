@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useState, useRef, useContext,
+  useEffect, useState, useContext, useRef,
 } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,7 +30,6 @@ const TranscriptTab = ({
 }) => {
   const intl = useIntl();
   const dispatch = useDispatch();
-  const divRef = useRef(null);
   const { showToast } = useContext(ToastContext);
   const { courseId } = useContext(VideosPageContext);
   const waffleFlags = useWaffleFlags(courseId);
@@ -58,7 +57,7 @@ const TranscriptTab = ({
     dispatch(resetErrors({ errorType: 'transcript' }));
     sortedTranscripts = getSortedTranscripts(languages, transcripts);
     setPreviousSelection(sortedTranscripts);
-  }, [transcripts]);
+  }, [dispatch, languages, transcripts]);
 
   useEffect(() => {
     if (
@@ -149,13 +148,13 @@ const TranscriptTab = ({
         />
       ) : (
         <>
-          <h4 className="video-info-sidebar__heading">
+          <h4 className="video-info-sidebar__heading fw-medium mt-0 mb-2">
             {intl.formatMessage(messages.transcriptTabTitle, {
               transcriptCount: video.transcripts.length,
             })}
           </h4>
           <hr className="video-info-sidebar__divider m-0" />
-          <div ref={divRef} className="px-1 py-2 transcript-tab__list">
+          <Stack gap={2} className="px-1 py-2 transcript-tab__list">
             <ErrorAlert
               hideHeading={false}
               isError={transcriptStatus === RequestStatus.FAILED && !isEmpty(errors.transcript)}
@@ -184,8 +183,8 @@ const TranscriptTab = ({
                 }}
               />
             ))}
-          </div>
-          <div className="border-top border-light-400">
+          </Stack>
+          <Stack className="border-top border-light-400">
             <Button
               variant="link"
               iconBefore={Add}
@@ -195,7 +194,7 @@ const TranscriptTab = ({
             >
               {intl.formatMessage(messages.uploadButtonLabel)}
             </Button>
-          </div>
+          </Stack>
         </>
       )}
       {transcriptEditorEnabled && editorLanguage && (

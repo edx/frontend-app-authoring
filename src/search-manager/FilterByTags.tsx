@@ -55,7 +55,7 @@ const TagMenuItem: React.FC<{
 
   return (
     <label className="d-inline">
-      <div className="pgn__menu-item pgn__form-checkbox tag-toggle-item" role="group">
+      <div className="pgn__menu-item pgn__form-checkbox tag-toggle-item w-100" role="group">
         <input
           type="checkbox"
           id={checkboxId}

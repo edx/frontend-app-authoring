@@ -35,9 +35,9 @@ const InfoTab = ({ video, usagePathStatus, usageError }) => {
       {duration}
       {usagePathStatus && (
         <>
-          <div className="font-weight-bold mt-3">
+          <Stack className="font-weight-bold mt-3">
             <FormattedMessage {...genericMessages.usageTitle} />
-          </div>
+          </Stack>
           <UsageMetricsMessages
             usageLocations={video?.usageLocations}
             usagePathStatus={usagePathStatus}

@@ -63,7 +63,7 @@ export const TranscriptActionMenu = ({
       <Dropdown.Divider className="transcript-menu__divider" />
       <Dropdown.Item
         onClick={launchDeleteConfirmation}
-        className="transcript-menu__item transcript-menu__item--danger"
+        className="transcript-menu__item transcript-menu__item--danger text-danger"
       >
         <FormattedMessage {...messages.deleteTranscript} />
       </Dropdown.Item>

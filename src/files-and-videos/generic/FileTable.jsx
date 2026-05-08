@@ -9,6 +9,7 @@ import {
   CardView,
   DataTable,
   Dropzone,
+  Stack,
   TextFilter,
   useToggle,
 } from '@openedx/paragon';
@@ -266,7 +267,7 @@ const FileTable = ({
 
   return (
     <FileTableContext.Provider value={contextValue}>
-      <div className="files-table">
+      <Stack className="files-table">
         <DataTable
           isFilterable
           isLoading={loadingStatus === RequestStatus.IN_PROGRESS}
@@ -312,14 +313,14 @@ const FileTable = ({
               }}
             />
           ) : (
-            <div data-testid="files-data-table" className="bg-light-200">
+            <Stack data-testid="files-data-table" className="bg-light-200">
               <DataTable.TableControlBar />
               <hr className="mb-5 border-light-700" />
               { currentView === 'card' && <CardView CardComponent={GalleryCardCell} columnSizes={columnSizes} selectionPlacement="left" skeletonCardCount={6} /> }
               { currentView === 'list' && <DataTable.Table /> }
               <DataTable.EmptyTable content={intl.formatMessage(messages.noResultsFoundMessage)} />
               <Footer />
-            </div>
+            </Stack>
           )}
 
           <ApiStatusToast
@@ -373,7 +374,7 @@ const FileTable = ({
           renderContent={renderInfoModalContent}
         />
         )}
-      </div>
+      </Stack>
     </FileTableContext.Provider>
   );
 };

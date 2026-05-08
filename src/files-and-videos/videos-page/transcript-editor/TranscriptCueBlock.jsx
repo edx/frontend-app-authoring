@@ -1,7 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { Icon, IconButton } from '@openedx/paragon';
+import {
+  Button, Form, Icon, IconButton, Stack,
+} from '@openedx/paragon';
 import { PlayArrow, DeleteOutline, Add } from '@openedx/paragon/icons';
 
 import { formatBlockTimestamp, msToSrtTime, srtTimeToMs } from './srtUtils';
@@ -27,9 +29,10 @@ const TimeInput = ({ valueMs, onCommit, ariaLabel }) => {
   };
 
   return (
-    <input
+    <Form.Control
       type="text"
-      className={`transcript-cue-block__time-input${invalid ? ' is-invalid' : ''}`}
+      size="sm"
+      controlClassName={`transcript-cue-block__time-input${invalid ? ' is-invalid' : ''}`}
       value={draft}
       onChange={(e) => {
         const filtered = e.target.value.replace(/[^0-9:,.]/g, '');
@@ -90,13 +93,15 @@ const TranscriptCueBlock = React.forwardRef(({
   }, [text]);
 
   return (
-    <div className="transcript-cue-block-row">
-      <div
+    <Stack className="transcript-cue-block-row position-relative">
+      <Stack
+        direction="horizontal"
         ref={ref}
-        className={`transcript-cue-block${isActive ? ' transcript-cue-block--active' : ''}${errors && errors.length ? ' transcript-cue-block--invalid' : ''}`}
+        className={`transcript-cue-block position-relative mb-2 rounded-2 bg-transparent align-items-center${isActive ? ' transcript-cue-block--active' : ''}${errors && errors.length ? ' transcript-cue-block--invalid' : ''}`}
       >
-        <div className="transcript-cue-block__textarea-wrap">
-          <textarea
+        <Stack className="transcript-cue-block__textarea-wrap pe-3 align-self-center">
+          <Form.Control
+            as="textarea"
             ref={textareaRef}
             value={text}
             onChange={(e) => onChange(e.target.value)}
@@ -104,7 +109,7 @@ const TranscriptCueBlock = React.forwardRef(({
             aria-label={intl.formatMessage(messages.cueAriaLabel, { timestamp })}
             aria-invalid={errors && errors.length > 0 ? 'true' : 'false'}
             rows={1}
-            className={`transcript-cue-block__textarea${errors && errors.length ? ' transcript-cue-block__textarea--invalid' : ''}`}
+            controlClassName={`transcript-cue-block__textarea${errors && errors.length ? ' transcript-cue-block__textarea--invalid' : ''}`}
             spellCheck
           />
           {errors && errors.length > 0 && (
@@ -114,9 +119,9 @@ const TranscriptCueBlock = React.forwardRef(({
               ))}
             </ul>
           )}
-        </div>
-        <div className="transcript-cue-block__controls">
-          <div className="transcript-cue-block__times">
+        </Stack>
+        <Stack direction="horizontal" className="transcript-cue-block__controls align-items-center flex-shrink-0 flex-nowrap gap-2">
+          <Stack direction="horizontal" className="transcript-cue-block__times align-items-center flex-nowrap gap-1">
             <TimeInput
               valueMs={startMs}
               onCommit={onChangeStart}
@@ -128,8 +133,8 @@ const TranscriptCueBlock = React.forwardRef(({
               onCommit={onChangeEnd}
               ariaLabel={intl.formatMessage(messages.endTimeLabel)}
             />
-          </div>
-          <div className="transcript-cue-block__actions">
+          </Stack>
+          <Stack direction="horizontal" className="transcript-cue-block__actions align-items-center gap-1">
             <IconButton
               src={PlayArrow}
               iconAs={Icon}
@@ -145,21 +150,22 @@ const TranscriptCueBlock = React.forwardRef(({
               alt={intl.formatMessage(messages.deleteCueLabel)}
               onClick={onDelete}
             />
-          </div>
-        </div>
-      </div>
-      <div className="transcript-cue-block__insert">
-        <button
-          type="button"
+          </Stack>
+        </Stack>
+      </Stack>
+      <Stack className="transcript-cue-block__insert justify-content-center align-items-center position-relative">
+        <Button
+          variant="outline-primary"
+          size="sm"
           className="transcript-cue-block__insert-btn"
           onClick={onInsertAfter}
           title={intl.formatMessage(messages.insertCueLabel)}
+          iconBefore={Add}
         >
-          <Icon src={Add} size="inline" className="mr-1" />
-          <span>{intl.formatMessage(messages.insertCueLabel)}</span>
-        </button>
-      </div>
-    </div>
+          {intl.formatMessage(messages.insertCueLabel)}
+        </Button>
+      </Stack>
+    </Stack>
   );
 });
 

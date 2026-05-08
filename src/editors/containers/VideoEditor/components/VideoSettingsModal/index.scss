@@ -14,55 +14,40 @@
   height: 13px;
 }
 
-.language-selector-menu {
-  width: 100%;
-  padding: 0;
-  overflow: hidden;
-}
-
 .language-selector-search {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #ffffff;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  padding: .625rem .75rem;
+  border-bottom: 1px solid var(--pgn-color-light-400);
+  
 
   &__box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
-    border: 1.5px solid #c0c0c0;
-    border-radius: 4px;
-    background: #f9f9f9;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    gap: .5rem;
+    padding: .375rem .625rem;
+    border: 1.5px solid var(--pgn-color-gray-300);
+    border-radius: .25rem;
+    background: var(--pgn-color-light-200);
+    transition: border-color .15s, box-shadow .15s;
 
     &:focus-within {
-      border-color: #0075b4;
-      background: #ffffff;
-      box-shadow: 0 0 0 2px rgb(0 117 180 / 0.15);
+      border-color: var(--pgn-color-primary-500);
+      background: var(--pgn-color-white);
+      box-shadow: 0 0 0 2px var(--pgn-color-primary-200);
     }
-
+    
     .pgn__icon {
-      color: #707070;
-      flex-shrink: 0;
-      width: 16px;
-      height: 16px;
+      color: var(--pgn-color-gray-500);
+      width: 1rem;
+      height: 1rem;
     }
   }
 
-  &__input {
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 0.875rem;
-    color: #2d323e;
+  &__input.form-control {
+    border: 0;
+    height: auto;
+    font-size: .875rem;
+    color: var(--pgn-color-gray-700);
     background: transparent;
 
-    &::placeholder {
-      color: #aaaaaa;
-    }
+    &::placeholder { color: var(--pgn-color-gray-500); }
   }
 }
 
@@ -70,28 +55,15 @@
   max-height: 240px;
   overflow: hidden scroll;
   scrollbar-width: thin;
-  scrollbar-color: #c0c0c0 transparent;
+  scrollbar-color: var(--pgn-color-gray-300) transparent;
 
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
 
   &::-webkit-scrollbar-thumb {
-    background-color: #c0c0c0;
+    background-color: var(--pgn-color-gray-300);
     border-radius: 3px;
-
-    &:hover {
-      background-color: #999999;
-    }
+    &:hover { background-color: var(--pgn-color-gray-500); }
   }
 }
 
-.language-selector-no-results {
-  padding: 10px 16px;
-  font-size: 0.875rem;
-  color: #707070;
-}

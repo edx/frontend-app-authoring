@@ -6,6 +6,7 @@ import {
   Button,
   Icon,
   IconButton,
+  Row,
   useToggle,
 } from '@openedx/paragon';
 import { DeleteOutline } from '@openedx/paragon/icons';
@@ -41,11 +42,28 @@ const Transcript = ({
   const input = useFileInput({
     onAddFile: (files) => {
       const [file] = files;
+      const clearPendingFileSelection = () => {
+        if (input.ref.current) {
+          input.ref.current.value = '';
+        }
+      };
       validateSrtFile(file, {
-        onEmptyFail: onEmptyFile,
-        onSizeFail,
-        onInvalidFail: onInvalidFile,
-        onValid: (f) => handleTranscript({ file: f, language, newLanguage }, 'upload'),
+        onEmptyFail: () => {
+          clearPendingFileSelection();
+          onEmptyFile();
+        },
+        onSizeFail: () => {
+          clearPendingFileSelection();
+          onSizeFail();
+        },
+        onInvalidFail: () => {
+          clearPendingFileSelection();
+          onInvalidFile();
+        },
+        onValid: (f) => {
+          clearPendingFileSelection();
+          handleTranscript({ file: f, language, newLanguage }, 'upload');
+        },
       });
     },
     setSelectedRows: () => {},
@@ -85,7 +103,7 @@ const Transcript = ({
       >
         <p><FormattedMessage {...messages.deleteConfirmationMessage} /></p>
       </AlertModal>
-      <div
+      <Row
         className="row m-0 align-items-center justify-content-between"
         key={`transcript-${language}`}
         data-testid={`transcript-${language}`}
@@ -118,7 +136,7 @@ const Transcript = ({
             }}
           />
         )}
-      </div>
+      </Row>
       <FileInput key="transcript-input" fileInput={input} supportedFileFormats={['.srt']} />
     </>
   );

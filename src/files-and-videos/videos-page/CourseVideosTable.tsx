@@ -1,6 +1,6 @@
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  ActionRow, Button, CheckboxFilter, useToggle,
+  ActionRow, Button, CheckboxFilter, Stack, useToggle,
 } from '@openedx/paragon';
 import { RequestStatus } from '@src/data/constants';
 import {
@@ -154,14 +154,14 @@ export const CourseVideosTable = () => {
   });
   const renderInfoModalContent = useCallback((video) => ({
     details: (
-      <div className="video-info-details">
+      <Stack className="video-info-details small">
         <InfoTab video={video} />
-      </div>
+      </Stack>
     ),
     sidebar: (
-      <div className="video-info-sidebar">
+      <Stack className="video-info-sidebar pt-2">
         <TranscriptTab video={video} />
-      </div>
+      </Stack>
     ),
   }), []);
   const maxFileSize = videoUploadMaxFileSize * 1073741824;
