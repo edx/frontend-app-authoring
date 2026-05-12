@@ -14,17 +14,17 @@ const messages = defineMessages({
   statusSaving: {
     id: 'course-authoring.video-uploads.transcript-editor.statusSaving',
     defaultMessage: 'Saving…',
-    description: 'Header status shown while autosave is in flight.',
+    description: 'Status / button label shown while a save request is in flight.',
   },
   statusSaved: {
     id: 'course-authoring.video-uploads.transcript-editor.statusSaved',
     defaultMessage: 'Saved',
-    description: 'Header status shown when autosave succeeds.',
+    description: 'Header status shown when a save succeeds.',
   },
   statusError: {
     id: 'course-authoring.video-uploads.transcript-editor.statusError',
     defaultMessage: '⚠ Save failed: {detail}',
-    description: 'Header status shown when autosave fails.',
+    description: 'Header status shown when a save fails.',
   },
   loading: {
     id: 'course-authoring.video-uploads.transcript-editor.loading',
@@ -76,6 +76,16 @@ const messages = defineMessages({
     defaultMessage: 'Add new cue',
     description: 'Label for the button at the end of the cue list that appends a new cue.',
   },
+  emptyStateTitle: {
+    id: 'course-authoring.video-uploads.transcript-editor.emptyStateTitle',
+    defaultMessage: 'No transcript cues yet',
+    description: 'Empty-state heading shown when the transcript file has no cues.',
+  },
+  emptyStateDescription: {
+    id: 'course-authoring.video-uploads.transcript-editor.emptyStateDescription',
+    defaultMessage: 'Click “Add new cue” below to create your first transcript line.',
+    description: 'Empty-state help text shown when the transcript file has no cues.',
+  },
   cueErrorEmpty: {
     id: 'course-authoring.video-uploads.transcript-editor.cueErrorEmpty',
     defaultMessage: 'Cue text cannot be empty.',
@@ -83,12 +93,12 @@ const messages = defineMessages({
   },
   cueErrorBlankLine: {
     id: 'course-authoring.video-uploads.transcript-editor.cueErrorBlankLine',
-    defaultMessage: 'Cue text cannot contain a blank line — empty lines split the SRT file into separate cues.',
+    defaultMessage: 'Cue text cannot contain a blank line - empty lines split the SRT file into separate cues.',
     description: 'Inline cue error: the cue text contains a blank line.',
   },
   cueErrorLooksLikeIndex: {
     id: 'course-authoring.video-uploads.transcript-editor.cueErrorLooksLikeIndex',
-    defaultMessage: 'Cue text cannot contain a line that is only a number — SRT uses bare numbers as cue indexes.',
+    defaultMessage: 'Cue text cannot contain a line that is only a number - SRT uses bare numbers as cue indexes.',
     description: 'Inline cue error: the cue text contains a line that is just an integer.',
   },
   cueErrorLooksLikeTimestamp: {
@@ -100,6 +110,36 @@ const messages = defineMessages({
     id: 'course-authoring.video-uploads.transcript-editor.cueErrorEndBeforeStart',
     defaultMessage: 'End time must be after the start time.',
     description: 'Inline cue error: the cue end time is not after the start time.',
+  },
+  saveFailed: {
+    id: 'course-authoring.video-uploads.transcript-editor.saveFailed',
+    defaultMessage: 'Save failed',
+    description: 'Generic fallback error shown when a save request fails without a specific message.',
+  },
+  cancelLabel: {
+    id: 'course-authoring.video-uploads.transcript-editor.cancelLabel',
+    defaultMessage: 'Cancel',
+    description: 'Label for the Cancel button in the transcript editor modal footer.',
+  },
+  saveLabel: {
+    id: 'course-authoring.video-uploads.transcript-editor.saveLabel',
+    defaultMessage: 'Save',
+    description: 'Label for the Save button in the transcript editor modal footer.',
+  },
+  confirmDiscardChanges: {
+    id: 'course-authoring.video-uploads.transcript-editor.confirmDiscardChanges',
+    defaultMessage: 'You have unsaved transcript changes. Discard them and close the editor?',
+    description: 'Confirmation body text shown when the user tries to close the transcript editor with unsaved edits.',
+  },
+  confirmDiscardTitle: {
+    id: 'course-authoring.video-uploads.transcript-editor.confirmDiscardTitle',
+    defaultMessage: 'Discard unsaved changes?',
+    description: 'Title of the discard-changes confirmation dialog.',
+  },
+  confirmDiscardLabel: {
+    id: 'course-authoring.video-uploads.transcript-editor.confirmDiscardLabel',
+    defaultMessage: 'Discard changes',
+    description: 'Confirm button label in the discard-changes dialog.',
   },
 });
 

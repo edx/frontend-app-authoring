@@ -61,8 +61,16 @@
   }
 
   .transcript-editor-modal__video {
-    max-height: 280px;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
     background: var(--pgn-color-black);
+    object-fit: contain;
+  }
+
+  .transcript-editor-modal__empty-state {
+    color: var(--pgn-color-gray-500);
+    &-title { font-size: 1rem; }
   }
 
   .transcript-editor-modal__cue-list-wrapper {
@@ -96,10 +104,14 @@
     padding: 2rem 1.5rem 1.5rem;
   }
 
+  .transcript-cue-block-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 88px;
+  }
+
   .transcript-cue-block {
     padding: .5rem .75rem .5rem 1rem;
     border-left: 3px solid transparent;
-    transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 
     &--active {
       border-left-color: var(--pgn-color-info-500);
@@ -157,17 +169,8 @@
     }
 
     &__errors {
-      list-style: none;
-      margin: .25rem 0 .5rem;
-      padding: .4rem .6rem;
-      background: var(--pgn-color-danger-100);
-      border: 1px solid var(--pgn-color-danger-200);
-      border-radius: .25rem;
-      color: var(--pgn-color-danger-500);
-      font-size: .75rem;
-      line-height: 1.35;
-
-      li + li { margin-top: .2rem; }
+      margin: .125rem 0 .25rem;
+      gap: .125rem;
     }
 
     &__textarea-wrap {
@@ -270,18 +273,14 @@
     z-index: 1;
     background: var(--pgn-color-white);
     border-style: dashed;
-    border-color: var(--pgn-color-info-500);
-    color: var(--pgn-color-info-500);
+    border-color: var(--pgn-color-black);
+    color: var(--pgn-color-black);
     font-size: .75rem;
     padding: .15rem .6rem;
     border-radius: 999px;
     opacity: 0;
     transition: opacity .15s ease, background-color .15s ease;
 
-    &:hover {
-      background: var(--pgn-color-info-100);
-      color: var(--pgn-color-info-500);
-    }
   }
 
   .transcript-cue-block-row:hover .transcript-cue-block__insert-btn.btn {
@@ -291,14 +290,9 @@
   .transcript-editor-modal__append-btn.btn {
     background: var(--pgn-color-white);
     border-style: dashed;
-    border-color: var(--pgn-color-info-500);
-    color: var(--pgn-color-info-500);
+    border-color: var(--pgn-color-black);
+    color: var(--pgn-color-black);
     font-size: .875rem;
-
-    &:hover {
-      background: var(--pgn-color-info-100);
-      color: var(--pgn-color-info-500);
-    }
   }
 }
 

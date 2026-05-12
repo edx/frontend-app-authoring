@@ -69,26 +69,28 @@ describe('srtUtils', () => {
   it('checks whole-file SRT validity', () => {
     expect(isValidSrt('1\n00:00:00,000 --> 00:00:01,000\nHello')).toBe(true);
     expect(isValidSrt('not an srt file')).toBe(false);
+    expect(isValidSrt('')).toBe(true);
+    expect(isValidSrt('   \n\n')).toBe(true);
   });
 
-  it('rejects empty and oversize files before reading them', () => {
-    const onEmptyFail = jest.fn();
+  it('accepts empty files and rejects oversize files before reading them', () => {
+    const onValid = jest.fn();
     const onSizeFail = jest.fn();
 
-    validateSrtFile(new File([], 'empty.srt'), {
-      onEmptyFail,
+    const emptyFile = new File([], 'empty.srt');
+    validateSrtFile(emptyFile, {
       onSizeFail,
       onInvalidFail: jest.fn(),
-      onValid: jest.fn(),
+      onValid,
     });
 
-    expect(onEmptyFail).toHaveBeenCalled();
+    expect(onValid).toHaveBeenCalledWith(emptyFile);
+    expect(onSizeFail).not.toHaveBeenCalled();
 
     const oversizedFile = new File(['content'], 'big.srt');
     Object.defineProperty(oversizedFile, 'size', { value: MAX_TRANSCRIPT_BYTES + 1 });
 
     validateSrtFile(oversizedFile, {
-      onEmptyFail: jest.fn(),
       onSizeFail,
       onInvalidFail: jest.fn(),
       onValid: jest.fn(),
@@ -116,13 +118,11 @@ describe('srtUtils', () => {
     };
 
     validateSrtFile(validFile, {
-      onEmptyFail: jest.fn(),
       onSizeFail: jest.fn(),
       onInvalidFail,
       onValid,
     });
     validateSrtFile(invalidFile, {
-      onEmptyFail: jest.fn(),
       onSizeFail: jest.fn(),
       onInvalidFail,
       onValid,

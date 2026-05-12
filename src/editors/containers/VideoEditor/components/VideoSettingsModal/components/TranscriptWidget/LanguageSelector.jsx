@@ -38,9 +38,8 @@ export const hooks = {
   },
 
   addFileCallback: ({
-    dispatch, localLang, onEmptyFail, onSizeFail, onInvalidFail,
+    dispatch, localLang, onSizeFail, onInvalidFail,
   }) => (file) => validateSrtFile(file, {
-    onEmptyFail,
     onSizeFail,
     onInvalidFail,
     onValid: (f) => dispatch(thunkActions.video.uploadTranscript({
@@ -55,7 +54,6 @@ const LanguageSelector = ({
   language,
   // Redux
   openLanguages, // Only allow those languages not already associated with a transcript to be selected
-  onEmptyFail,
   onSizeFail,
   onInvalidFail,
 }) => {
@@ -69,7 +67,6 @@ const LanguageSelector = ({
     onAddFile: hooks.addFileCallback({
       dispatch: useDispatch(),
       localLang,
-      onEmptyFail: () => { setLocalLang(language); onEmptyFail(); },
       onSizeFail: () => { setLocalLang(language); onSizeFail(); },
       onInvalidFail: () => { setLocalLang(language); onInvalidFail(); },
     }),
@@ -178,7 +175,6 @@ const LanguageSelector = ({
 
 LanguageSelector.defaultProps = {
   openLanguages: [],
-  onEmptyFail: () => {},
   onSizeFail: () => {},
   onInvalidFail: () => {},
 };
@@ -187,7 +183,6 @@ LanguageSelector.propTypes = {
   openLanguages: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
   language: PropTypes.string.isRequired,
-  onEmptyFail: PropTypes.func,
   onSizeFail: PropTypes.func,
   onInvalidFail: PropTypes.func,
 };

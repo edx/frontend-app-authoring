@@ -1,5 +1,11 @@
 .processing-notification-icon {
-  animation: rotate 1s linear infinite;
+  &--spin { animation: rotate 1s linear infinite; }
+}
+
+.processing-notification {
+  &--error .toast { background-color: var(--pgn-color-danger-500); }
+
+  &--success .toast { background-color: var(--pgn-color-success-500); }
 }
 
 .processing-notification-hide-close-button {

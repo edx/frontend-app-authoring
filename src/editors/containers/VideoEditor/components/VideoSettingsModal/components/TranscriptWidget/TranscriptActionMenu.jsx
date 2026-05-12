@@ -19,9 +19,8 @@ import messages from './messages';
 
 export const hooks = {
   replaceFileCallback: ({
-    language, dispatch, onEmptyFail, onSizeFail, onInvalidFail,
+    language, dispatch, onSizeFail, onInvalidFail,
   }) => (file) => validateSrtFile(file, {
-    onEmptyFail,
     onSizeFail,
     onInvalidFail,
     onValid: (f) => dispatch(thunkActions.video.replaceTranscript({
@@ -35,7 +34,6 @@ const TranscriptActionMenu = ({
   language,
   transcriptUrl,
   launchDeleteConfirmation,
-  onEmptyFail,
   onSizeFail,
   onInvalidFail,
   // redux
@@ -46,9 +44,14 @@ const TranscriptActionMenu = ({
     onAddFile: module.hooks.replaceFileCallback({
       language,
       dispatch: useDispatch(),
-      onEmptyFail,
-      onSizeFail,
-      onInvalidFail,
+      onSizeFail: (...args) => {
+        if (input?.ref?.current) { input.ref.current.value = ''; }
+        return onSizeFail(...args);
+      },
+      onInvalidFail: (...args) => {
+        if (input?.ref?.current) { input.ref.current.value = ''; }
+        return onInvalidFail(...args);
+      },
     }),
   });
   const downloadLink = transcriptUrl ? buildTranscriptUrl({ transcriptUrl }) : getTranscriptDownloadUrl({ language });
@@ -83,7 +86,6 @@ const TranscriptActionMenu = ({
 
 TranscriptActionMenu.defaultProps = {
   transcriptUrl: undefined,
-  onEmptyFail: () => {},
   onSizeFail: () => {},
   onInvalidFail: () => {},
 };
@@ -93,7 +95,6 @@ TranscriptActionMenu.propTypes = {
   language: PropTypes.string.isRequired,
   transcriptUrl: PropTypes.string,
   launchDeleteConfirmation: PropTypes.func.isRequired,
-  onEmptyFail: PropTypes.func,
   onSizeFail: PropTypes.func,
   onInvalidFail: PropTypes.func,
   // redux

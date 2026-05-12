@@ -10,6 +10,7 @@ import { IntlProvider } from '@edx/frontend-platform/i18n';
 import TranscriptCueBlock from './TranscriptCueBlock';
 
 const defaultProps = {
+  index: 0,
   startMs: 0,
   endMs: 1500,
   text: 'Hello world',
@@ -45,7 +46,7 @@ describe('TranscriptCueBlock', () => {
     fireEvent.change(screen.getByRole('textbox', { name: /Transcript cue at/i }), {
       target: { value: 'Updated text' },
     });
-    expect(onChange).toHaveBeenCalledWith('Updated text');
+    expect(onChange).toHaveBeenCalledWith(0, 'Updated text');
   });
 
   it('applies active class when isActive is true', () => {
@@ -91,6 +92,7 @@ describe('TranscriptCueBlock', () => {
     renderComponent({ onDelete });
     fireEvent.click(screen.getByRole('button', { name: 'Delete cue' }));
     expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledWith(0);
   });
 
   it('calls onSeek with startMs when seek button clicked', () => {
@@ -111,6 +113,7 @@ describe('TranscriptCueBlock', () => {
     renderComponent({ onInsertAfter });
     fireEvent.click(screen.getByTitle('Insert cue here'));
     expect(onInsertAfter).toHaveBeenCalledTimes(1);
+    expect(onInsertAfter).toHaveBeenCalledWith(0);
   });
 
   it('renders start time input with formatted value', () => {
@@ -129,7 +132,7 @@ describe('TranscriptCueBlock', () => {
     const startInput = screen.getByLabelText('Start time');
     fireEvent.change(startInput, { target: { value: '00:00:05,000' } });
     fireEvent.blur(startInput);
-    expect(onChangeStart).toHaveBeenCalledWith(5000);
+    expect(onChangeStart).toHaveBeenCalledWith(0, 5000);
   });
 
   it('calls onChangeEnd with parsed ms on blur of end time input', () => {
@@ -138,7 +141,7 @@ describe('TranscriptCueBlock', () => {
     const endInput = screen.getByLabelText('End time');
     fireEvent.change(endInput, { target: { value: '00:00:03,000' } });
     fireEvent.blur(endInput);
-    expect(onChangeEnd).toHaveBeenCalledWith(3000);
+    expect(onChangeEnd).toHaveBeenCalledWith(0, 3000);
   });
 
   it('marks time input as invalid when invalid timestamp is entered', () => {
@@ -158,7 +161,7 @@ describe('TranscriptCueBlock', () => {
     fireEvent.change(startInput, { target: { value: '00:00:10,000' } });
     fireEvent.keyDown(startInput, { key: 'Enter' });
     fireEvent.blur(startInput);
-    expect(onChangeStart).toHaveBeenCalledWith(10000);
+    expect(onChangeStart).toHaveBeenCalledWith(0, 10000);
   });
 
   it('prevents non-numeric/non-separator characters in time input', () => {

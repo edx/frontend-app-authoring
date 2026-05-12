@@ -34,10 +34,6 @@ const TranscriptForm = ({
     onAddFile: (files) => {
       const [picked] = files;
       validateSrtFile(picked, {
-        onEmptyFail: () => {
-          setLocalError('empty');
-          setFile(null);
-        },
         onSizeFail: () => {
           setLocalError(null);
           setFile(null);
@@ -85,7 +81,6 @@ const TranscriptForm = ({
           <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-center new-transcript-form__file-row--error gap-2 py-2 px-1 small text-danger">
             <Icon src={ErrorOutline} className="new-transcript-form__error-icon flex-shrink-0" />
             <span className="new-transcript-form__error-text flex-grow-1 small">
-              {localError === 'empty' && <FormattedMessage {...messages.emptyFileError} />}
               {localError === 'invalid' && <FormattedMessage {...messages.invalidFileError} />}
               {uploadFailed && !localError && <FormattedMessage {...messages.uploadFailedError} />}
             </span>
@@ -96,7 +91,7 @@ const TranscriptForm = ({
     }
     if (file) {
       return (
-        <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-centergap-2 py-2 px-1 small">
+        <Stack direction="horizontal" className="new-transcript-form__file-row d-flex align-items-center gap-2 py-2 px-1 small">
           <Icon src={Article} className="new-transcript-form__file-icon flex-shrink-0" />
           <span className="new-transcript-form__file-name flex-grow-1 text-truncate">{file.name}</span>
           <IconButton

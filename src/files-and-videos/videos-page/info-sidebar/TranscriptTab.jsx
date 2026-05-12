@@ -69,11 +69,12 @@ const TranscriptTab = ({
     ) {
       if (lastActionRef.current === 'delete') {
         showToast(intl.formatMessage(messages.transcriptDeletedToast));
-      } else {
+        lastActionRef.current = null;
+      } else if (lastActionRef.current === 'upload') {
         showToast(intl.formatMessage(messages.transcriptUploadedToast));
         setIsAddingNew(false);
+        lastActionRef.current = null;
       }
-      lastActionRef.current = null;
     }
     prevTranscriptStatusRef.current = transcriptStatus;
   }, [transcriptStatus, showToast, intl]);
@@ -92,9 +93,7 @@ const TranscriptTab = ({
     switch (actionType) {
       case 'delete':
         if (isEmpty(language)) {
-          const updatedSelection = previousSelection;
-          updatedSelection.shift();
-          setPreviousSelection(updatedSelection);
+          setPreviousSelection((prev) => prev.slice(1));
         } else {
           lastActionRef.current = 'delete';
           dispatch(deleteVideoTranscript({
@@ -145,7 +144,7 @@ const TranscriptTab = ({
           previousSelection={previousSelection}
           onCancel={() => setIsAddingNew(false)}
           onSubmit={handleNewTranscriptSubmit}
-          onFileTooLarge={() => showToast(intl.formatMessage(messages.transcriptFileTooLarge))}
+          onFileTooLarge={() => showToast(intl.formatMessage(messages.transcriptFileTooLarge), undefined, { variant: 'error' })}
           isUploading={transcriptStatus === RequestStatus.IN_PROGRESS}
           uploadFailed={lastActionRef.current === 'upload' && transcriptStatus === RequestStatus.FAILED}
         />
@@ -180,9 +179,8 @@ const TranscriptTab = ({
                   handleTranscript,
                   editEnabled: transcriptEditorEnabled && !isEmpty(transcript),
                   onEdit: (lang) => setEditorLanguage(lang),
-                  onEmptyFile: () => showToast(intl.formatMessage(messages.emptyFileError)),
-                  onSizeFail: () => showToast(intl.formatMessage(messages.transcriptFileTooLarge)),
-                  onInvalidFile: () => showToast(intl.formatMessage(messages.invalidFileError)),
+                  onSizeFail: () => showToast(intl.formatMessage(messages.transcriptFileTooLarge), undefined, { variant: 'error' }),
+                  onInvalidFile: () => showToast(intl.formatMessage(messages.invalidFileError), undefined, { variant: 'error' }),
                 }}
               />
             ))}

@@ -101,11 +101,14 @@ describe('TranscriptForm', () => {
     expect(screen.getByText('Invalid subtitle file')).toBeInTheDocument();
   });
 
-  it('shows empty file error when validateSrtFile calls onEmptyFail', async () => {
-    validateSrtFile.mockImplementationOnce((f, cbs) => cbs.onEmptyFail());
-    renderComponent();
+  it('treats an empty file as valid and lets the user submit it', async () => {
+    const onSubmit = jest.fn();
+    const emptyFile = new File([], 'empty.srt', { type: 'text/plain' });
+    validateSrtFile.mockImplementationOnce((_f, cbs) => cbs.onValid(emptyFile));
+    renderComponent({ onSubmit });
     await user.click(screen.getByText('Upload file'));
-    expect(screen.getByText('File is empty, please select a valid SRT file')).toBeInTheDocument();
+    expect(screen.getByText('empty.srt')).toBeInTheDocument();
+    expect(screen.queryByText('File is empty, please select a valid SRT file')).not.toBeInTheDocument();
   });
 
   it('calls onFileTooLarge when validateSrtFile calls onSizeFail', async () => {

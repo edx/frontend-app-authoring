@@ -50,7 +50,6 @@ const Transcript = ({
   deleteTranscript,
 }) => {
   const { inDeleteConfirmation, launchDeleteConfirmation, cancelDelete } = module.hooks.setUpDeleteConfirmation();
-  const emptyFileError = useErrorToggle();
   const fileSizeError = useErrorToggle();
   const invalidSrtError = useErrorToggle();
   return (
@@ -89,7 +88,6 @@ const Transcript = ({
               <LanguageSelector
                 title={index}
                 language={language}
-                onEmptyFail={emptyFileError.set}
                 onSizeFail={fileSizeError.set}
                 onInvalidFail={invalidSrtError.set}
               />
@@ -106,15 +104,11 @@ const Transcript = ({
                   language={language}
                   transcriptUrl={transcriptUrl}
                   launchDeleteConfirmation={launchDeleteConfirmation}
-                  onEmptyFail={emptyFileError.set}
                   onSizeFail={fileSizeError.set}
                   onInvalidFail={invalidSrtError.set}
                 />
               )}
             </ActionRow>
-            <ErrorAlert dismissError={emptyFileError.dismiss} hideHeading isError={emptyFileError.show}>
-              <FormattedMessage {...messages.emptyTranscriptError} />
-            </ErrorAlert>
             <ErrorAlert dismissError={fileSizeError.dismiss} hideHeading isError={fileSizeError.show}>
               <FormattedMessage {...messages.fileSizeError} />
             </ErrorAlert>

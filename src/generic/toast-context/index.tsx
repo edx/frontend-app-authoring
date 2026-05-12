@@ -7,10 +7,17 @@ export interface ToastActionData {
   onClick: () => void;
 }
 
+export type ToastVariant = 'default' | 'error' | 'success';
+
+export interface ToastOptions {
+  variant?: ToastVariant;
+}
+
 export interface ToastContextData {
   toastMessage: string | null;
   toastAction?: ToastActionData;
-  showToast: (message: string, action?: ToastActionData) => void;
+  toastVariant: ToastVariant;
+  showToast: (message: string, action?: ToastActionData, options?: ToastOptions) => void;
   closeToast: () => void;
 }
 
@@ -25,6 +32,7 @@ export interface ToastProviderProps {
 export const ToastContext = React.createContext<ToastContextData>({
   toastMessage: null,
   toastAction: undefined,
+  toastVariant: 'default',
   showToast: () => {},
   closeToast: () => {},
 });
@@ -38,10 +46,12 @@ export const ToastProvider = (props: ToastProviderProps) => {
 
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [toastAction, setToastAction] = React.useState<ToastActionData | undefined>(undefined);
+  const [toastVariant, setToastVariant] = React.useState<ToastVariant>('default');
 
   const resetState = React.useCallback(() => {
     setToastMessage(null);
     setToastAction(undefined);
+    setToastVariant('default');
   }, []);
 
   React.useEffect(() => () => {
@@ -49,18 +59,20 @@ export const ToastProvider = (props: ToastProviderProps) => {
     resetState();
   }, []);
 
-  const showToast = React.useCallback((message, action?: ToastActionData) => {
+  const showToast = React.useCallback((message, action?: ToastActionData, options?: ToastOptions) => {
     setToastMessage(message);
     setToastAction(action);
-  }, [setToastMessage, setToastAction]);
-  const closeToast = React.useCallback(() => resetState(), [setToastMessage, setToastAction]);
+    setToastVariant(options?.variant ?? 'default');
+  }, [setToastMessage, setToastAction, setToastVariant]);
+  const closeToast = React.useCallback(() => resetState(), [resetState]);
 
   const context = React.useMemo(() => ({
     toastMessage,
     toastAction,
+    toastVariant,
     showToast,
     closeToast,
-  }), [toastMessage, toastAction, showToast, closeToast]);
+  }), [toastMessage, toastAction, toastVariant, showToast, closeToast]);
 
   return (
     <ToastContext.Provider value={context}>
@@ -71,6 +83,7 @@ export const ToastProvider = (props: ToastProviderProps) => {
           title={toastMessage}
           action={toastAction}
           close={closeToast}
+          variant={toastVariant}
         />
       )}
     </ToastContext.Provider>

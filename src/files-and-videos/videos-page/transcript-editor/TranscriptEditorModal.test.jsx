@@ -75,7 +75,7 @@ describe('TranscriptEditorModal', () => {
   it('shows loading state while fetching transcript', async () => {
     fetchTranscriptText.mockReturnValueOnce(new Promise(() => {}));
     renderComponent();
-    expect(screen.getByText('Loading transcript…')).toBeInTheDocument();
+    expect(screen.getAllByText('Loading transcript…').length).toBeGreaterThan(0);
   });
 
   it('shows error state when transcript fetch fails', async () => {

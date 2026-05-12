@@ -26,7 +26,6 @@ const defaultProps = {
   handleTranscript: jest.fn(),
   editEnabled: false,
   onEdit: jest.fn(),
-  onEmptyFile: jest.fn(),
   onSizeFail: jest.fn(),
   onInvalidFile: jest.fn(),
 };
@@ -94,22 +93,11 @@ describe('Transcript', () => {
     expect(mockValidateSrtFile).toHaveBeenCalledWith(
       testFile,
       expect.objectContaining({
-        onEmptyFail: expect.any(Function),
         onSizeFail: expect.any(Function),
         onInvalidFail: expect.any(Function),
         onValid: expect.any(Function),
       }),
     );
-  });
-
-  it('calls onEmptyFile callback when validateSrtFile triggers onEmptyFail', () => {
-    const onEmptyFile = jest.fn();
-    mockValidateSrtFile.mockImplementation((_f, cbs) => cbs.onEmptyFail());
-    renderComponent({ onEmptyFile });
-    const fileInput = document.querySelector('input[type="file"]');
-    const testFile = new File([''], 'test.srt', { type: 'text/plain' });
-    fireEvent.change(fileInput, { target: { files: [testFile] } });
-    expect(onEmptyFile).toHaveBeenCalled();
   });
 
   it('calls onSizeFail callback when validateSrtFile triggers onSizeFail', () => {

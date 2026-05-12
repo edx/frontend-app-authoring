@@ -95,7 +95,6 @@ describe('LanguageSelector', () => {
     const callback = hooks.addFileCallback({
       dispatch,
       localLang: lang2Code,
-      onEmptyFail: jest.fn(),
       onSizeFail: jest.fn(),
       onInvalidFail: jest.fn(),
     });
@@ -103,7 +102,6 @@ describe('LanguageSelector', () => {
     callback(file);
 
     expect(mockValidateSrtFile).toHaveBeenCalledWith(file, expect.objectContaining({
-      onEmptyFail: expect.any(Function),
       onSizeFail: expect.any(Function),
       onInvalidFail: expect.any(Function),
       onValid: expect.any(Function),
@@ -125,7 +123,6 @@ describe('LanguageSelector', () => {
     const callback = hooks.addFileCallback({
       dispatch,
       localLang: lang2Code,
-      onEmptyFail: jest.fn(),
       onSizeFail: jest.fn(),
       onInvalidFail,
     });

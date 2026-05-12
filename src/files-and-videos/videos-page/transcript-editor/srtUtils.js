@@ -113,7 +113,8 @@ export function validateCueText(text) {
 }
 
 export function isValidSrt(srt) {
-  if (!srt || typeof srt !== 'string') { return false; }
+  if (typeof srt !== 'string') { return false; }
+  if (srt.trim() === '') { return true; }
   const blocks = srt.replace(/\r\n/g, '\n').trim().split(/\n\s*\n/);
   let hasAnyCue = false;
   for (let i = 0; i < blocks.length; i += 1) {
@@ -139,10 +140,11 @@ export function isValidSrt(srt) {
 }
 
 export function validateSrtFile(file, {
-  onEmptyFail, onSizeFail, onInvalidFail, onValid,
+  onSizeFail, onInvalidFail, onValid,
 }) {
-  if (!file || file.size === 0) { onEmptyFail(); return; }
+  if (!file) { onInvalidFail(); return; }
   if (file.size > MAX_TRANSCRIPT_BYTES) { onSizeFail(); return; }
+  if (file.size === 0) { onValid(file); return; }
   const reader = new FileReader();
   reader.onload = (e) => {
     if (!isValidSrt(e.target.result)) { onInvalidFail(); return; }

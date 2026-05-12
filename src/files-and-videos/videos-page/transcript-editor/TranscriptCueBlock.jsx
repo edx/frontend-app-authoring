@@ -65,6 +65,7 @@ TimeInput.propTypes = {
 };
 
 const TranscriptCueBlock = React.forwardRef(({
+  index,
   startMs,
   endMs,
   text,
@@ -75,11 +76,19 @@ const TranscriptCueBlock = React.forwardRef(({
   onDelete,
   onInsertAfter,
   isActive,
+  isLast,
   errors,
 }, ref) => {
   const intl = useIntl();
   const textareaRef = useRef(null);
   const timestamp = formatBlockTimestamp(startMs);
+
+  const handleTextChange = React.useCallback((e) => onChange(index, e.target.value), [index, onChange]);
+  const handleStartCommit = React.useCallback((ms) => onChangeStart(index, ms), [index, onChangeStart]);
+  const handleEndCommit = React.useCallback((ms) => onChangeEnd(index, ms), [index, onChangeEnd]);
+  const handleSeekClick = React.useCallback(() => { if (onSeek) { onSeek(startMs); } }, [onSeek, startMs]);
+  const handleDeleteClick = React.useCallback(() => onDelete(index), [index, onDelete]);
+  const handleInsertClick = React.useCallback(() => onInsertAfter(index), [index, onInsertAfter]);
 
   const autoGrow = () => {
     const el = textareaRef.current;
@@ -104,7 +113,7 @@ const TranscriptCueBlock = React.forwardRef(({
             as="textarea"
             ref={textareaRef}
             value={text}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={handleTextChange}
             onInput={autoGrow}
             aria-label={intl.formatMessage(messages.cueAriaLabel, { timestamp })}
             aria-invalid={errors && errors.length > 0 ? 'true' : 'false'}
@@ -113,24 +122,30 @@ const TranscriptCueBlock = React.forwardRef(({
             spellCheck
           />
           {errors && errors.length > 0 && (
-            <ul className="transcript-cue-block__errors" role="alert">
+            <Stack className="transcript-cue-block__errors" role="alert">
               {errors.map((msg) => (
-                <li key={msg}>{msg}</li>
+                <Form.Control.Feedback
+                  key={msg}
+                  type="invalid"
+                  className="transcript-cue-block__error-row"
+                >
+                  {msg}
+                </Form.Control.Feedback>
               ))}
-            </ul>
+            </Stack>
           )}
         </Stack>
         <Stack direction="horizontal" className="transcript-cue-block__controls align-items-center flex-shrink-0 flex-nowrap gap-2">
           <Stack direction="horizontal" className="transcript-cue-block__times align-items-center flex-nowrap gap-1">
             <TimeInput
               valueMs={startMs}
-              onCommit={onChangeStart}
+              onCommit={handleStartCommit}
               ariaLabel={intl.formatMessage(messages.startTimeLabel)}
             />
-            <span className="transcript-cue-block__time-separator">→</span>
+            <span className="transcript-cue-block__time-separator mr-2">→</span>
             <TimeInput
               valueMs={endMs}
-              onCommit={onChangeEnd}
+              onCommit={handleEndCommit}
               ariaLabel={intl.formatMessage(messages.endTimeLabel)}
             />
           </Stack>
@@ -140,31 +155,32 @@ const TranscriptCueBlock = React.forwardRef(({
               iconAs={Icon}
               size="sm"
               alt={intl.formatMessage(messages.seekTooltip, { timestamp })}
-              onClick={() => onSeek && onSeek(startMs)}
+              onClick={handleSeekClick}
             />
             <IconButton
               src={DeleteOutline}
               iconAs={Icon}
               size="sm"
-              variant="danger"
               alt={intl.formatMessage(messages.deleteCueLabel)}
-              onClick={onDelete}
+              onClick={handleDeleteClick}
             />
           </Stack>
         </Stack>
       </Stack>
-      <Stack className="transcript-cue-block__insert justify-content-center align-items-center position-relative">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          className="transcript-cue-block__insert-btn"
-          onClick={onInsertAfter}
-          title={intl.formatMessage(messages.insertCueLabel)}
-          iconBefore={Add}
-        >
-          {intl.formatMessage(messages.insertCueLabel)}
-        </Button>
-      </Stack>
+      {!isLast && (
+        <Stack className="transcript-cue-block__insert justify-content-center align-items-center position-relative">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="transcript-cue-block__insert-btn"
+            onClick={handleInsertClick}
+            title={intl.formatMessage(messages.insertCueLabel)}
+            iconBefore={Add}
+          >
+            {intl.formatMessage(messages.insertCueLabel)}
+          </Button>
+        </Stack>
+      )}
     </Stack>
   );
 });
@@ -172,6 +188,7 @@ const TranscriptCueBlock = React.forwardRef(({
 TranscriptCueBlock.displayName = 'TranscriptCueBlock';
 
 TranscriptCueBlock.propTypes = {
+  index: PropTypes.number.isRequired,
   startMs: PropTypes.number.isRequired,
   endMs: PropTypes.number.isRequired,
   text: PropTypes.string.isRequired,
@@ -182,13 +199,31 @@ TranscriptCueBlock.propTypes = {
   onDelete: PropTypes.func.isRequired,
   onInsertAfter: PropTypes.func.isRequired,
   isActive: PropTypes.bool,
+  isLast: PropTypes.bool,
   errors: PropTypes.arrayOf(PropTypes.string),
 };
 
 TranscriptCueBlock.defaultProps = {
   onSeek: null,
   isActive: false,
+  isLast: false,
   errors: [],
 };
 
-export default TranscriptCueBlock;
+const arePropsEqual = (a, b) => (
+  a.index === b.index
+  && a.startMs === b.startMs
+  && a.endMs === b.endMs
+  && a.text === b.text
+  && a.isActive === b.isActive
+  && a.isLast === b.isLast
+  && a.errors === b.errors
+  && a.onChange === b.onChange
+  && a.onChangeStart === b.onChangeStart
+  && a.onChangeEnd === b.onChangeEnd
+  && a.onSeek === b.onSeek
+  && a.onDelete === b.onDelete
+  && a.onInsertAfter === b.onInsertAfter
+);
+
+export default React.memo(TranscriptCueBlock, arePropsEqual);

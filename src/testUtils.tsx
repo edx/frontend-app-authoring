@@ -40,6 +40,7 @@ let mockToastContext: ToastContextData = {
   closeToast: jest.fn(),
   toastAction: undefined,
   toastMessage: null,
+  toastVariant: 'default',
 };
 
 export interface RouteOptions {
@@ -189,6 +190,7 @@ export function initializeMocks({ user = defaultUser, initialState = undefined }
     closeToast: jest.fn(),
     toastMessage: null,
     toastAction: undefined,
+    toastVariant: 'default',
   };
 
   // Clear the call counts etc. of all mocks. This doesn't remove the mock's effects; just clears their history.

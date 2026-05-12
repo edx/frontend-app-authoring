@@ -25,7 +25,6 @@ const Transcript = ({
   handleTranscript,
   editEnabled,
   onEdit,
-  onEmptyFile,
   onSizeFail,
   onInvalidFile,
   // injected
@@ -48,10 +47,6 @@ const Transcript = ({
         }
       };
       validateSrtFile(file, {
-        onEmptyFail: () => {
-          clearPendingFileSelection();
-          onEmptyFile();
-        },
         onSizeFail: () => {
           clearPendingFileSelection();
           onSizeFail();
@@ -149,7 +144,6 @@ Transcript.propTypes = {
   handleTranscript: PropTypes.func.isRequired,
   editEnabled: PropTypes.bool,
   onEdit: PropTypes.func,
-  onEmptyFile: PropTypes.func,
   onSizeFail: PropTypes.func,
   onInvalidFile: PropTypes.func,
   // injected
@@ -159,7 +153,6 @@ Transcript.propTypes = {
 Transcript.defaultProps = {
   editEnabled: false,
   onEdit: () => {},
-  onEmptyFile: () => {},
   onSizeFail: () => {},
   onInvalidFile: () => {},
 };
