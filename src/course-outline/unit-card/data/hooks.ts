@@ -4,6 +4,7 @@ import {
   createCourseXblock,
   deleteUnitItem,
   duplicateUnitItem,
+  editUnitDisplayName,
 } from '@src/course-unit/data/api';
 import { getUnitHandler, getComponentTemplates } from './api';
 
@@ -75,3 +76,15 @@ export const useDeleteUnitComponent = (unitId: string) => (
 export const useDuplicateUnitComponent = (unitId: string) => (
   useUnitComponentMutation(unitId, (blockId) => duplicateUnitItem(unitId, blockId))
 );
+
+export const useRenameUnitComponent = (unitId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ blockId, displayName }: { blockId: string; displayName: string }) => (
+      editUnitDisplayName(blockId, displayName)
+    ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: unitHandlerQueryKey(unitId) });
+    },
+  });
+};

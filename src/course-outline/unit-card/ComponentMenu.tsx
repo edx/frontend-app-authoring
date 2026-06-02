@@ -39,6 +39,8 @@ interface ComponentMenuProps {
   userPartitions?: XBlockTypes['userPartitions'];
   actions: UnitComponentActions;
   onActionComplete: (targetUnitId?: string) => void;
+  isMenuOpen: boolean;
+  onMenuToggle: (blockId: string | null) => void;
 }
 
 const stopMenuEvent = (event: React.SyntheticEvent) => {
@@ -54,6 +56,8 @@ const ComponentMenu = ({
   userPartitions,
   actions,
   onActionComplete,
+  isMenuOpen,
+  onMenuToggle,
 }: ComponentMenuProps) => {
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -171,8 +175,13 @@ const ComponentMenu = ({
       >
         <Dropdown
           id={`component-menu-${blockId}`}
+          key={`${blockId}-${isMenuOpen}`}
           data-testid="component-menu"
-          onToggle={(_isOpen, event) => event?.stopPropagation()}
+          show={isMenuOpen}
+          onToggle={(isOpen, event) => {
+            event?.stopPropagation();
+            onMenuToggle(isOpen ? blockId : null);
+          }}
         >
           <Dropdown.Toggle
             id={`component-menu-toggle-${blockId}`}
