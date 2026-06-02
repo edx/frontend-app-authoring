@@ -139,7 +139,7 @@ const UnitCard = ({
     upstreamInfo,
   } = unit;
 
-  const { mutateAsync: renameComponent, isPending: isRenamePending } = useRenameUnitComponent(id);
+  const { mutateAsync: renameComponent, isPending: isRenamePending } = useRenameUnitComponent();
 
   // Fetch unit components when expanded (only if flag is enabled)
   const {

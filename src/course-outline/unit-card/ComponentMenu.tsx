@@ -69,7 +69,7 @@ const ComponentMenu = ({
   const [isMoveModalOpen, openMoveModal, closeMoveModal] = useToggle(false);
   const [moveRequest, setMoveRequest] = useState<IMoveRequestPayload | null>(null);
   const [configureItemData, setConfigureItemData] = useState<FormattedAccessManagedXBlockDataTypes | null>(null);
-  const { mutateAsync: deleteComponent } = useDeleteUnitComponent(unitId);
+  const { mutateAsync: deleteComponent } = useDeleteUnitComponent();
   const { mutateAsync: duplicateComponent } = useDuplicateUnitComponent(unitId);
 
   const handleManageAccess = useCallback((event: React.MouseEvent) => {
