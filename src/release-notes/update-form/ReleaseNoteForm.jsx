@@ -25,6 +25,7 @@ const ReleaseNoteForm = ({
   initialValues,
   close,
   onSubmit,
+  canSendReleaseNoteEmails,
   savingStatuses,
   isDirtyCheckRef,
   showUnsavedModalRef,
@@ -205,6 +206,7 @@ const ReleaseNoteForm = ({
           description: initialValues.description || '',
           publishDate: initialValues.published_at ? moment(convertToDateFromString(initialValues.published_at)).format('YYYY-MM-DD') : '',
           publishTime: initialValues.published_at ? moment(initialValues.published_at).format(TIME_FORMAT) : '',
+          sendEmail: false,
         }}
         validationSchema={validationSchema}
         validateOnMount
@@ -222,6 +224,7 @@ const ReleaseNoteForm = ({
             title: values.title,
             description: values.description,
             published_at: composed,
+            sendEmail: values.sendEmail,
           };
           onSubmit(payload);
         }}
@@ -332,6 +335,21 @@ const ReleaseNoteForm = ({
                 )}
               </Form.Group>
 
+              {canSendReleaseNoteEmails && (
+                <Form.Group className="mb-3">
+                  <Form.Checkbox
+                    checked={values.sendEmail || false}
+                    onChange={(e) => setFieldValue('sendEmail', e.target.checked)}
+                    data-testid="send-email-checkbox"
+                  >
+                    {intl.formatMessage(messages.sendEmailCheckboxLabel)}
+                  </Form.Checkbox>
+                  <Form.Text muted>
+                    {intl.formatMessage(messages.sendEmailCheckboxHelp)}
+                  </Form.Text>
+                </Form.Group>
+              )}
+
               <ActionRow>
                 <Button variant="tertiary" type="button" onClick={(e) => handleCancel(e, dirty)}>
                   {intl.formatMessage(messages.cancelButton)}
@@ -361,6 +379,7 @@ ReleaseNoteForm.propTypes = {
   }).isRequired,
   close: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  canSendReleaseNoteEmails: PropTypes.bool,
   savingStatuses: PropTypes.shape({
     createReleaseNoteQuery: PropTypes.string,
     editReleaseNoteQuery: PropTypes.string,
@@ -372,6 +391,7 @@ ReleaseNoteForm.propTypes = {
 };
 
 ReleaseNoteForm.defaultProps = {
+  canSendReleaseNoteEmails: false,
   savingStatuses: {},
   isDirtyCheckRef: null,
   showUnsavedModalRef: null,

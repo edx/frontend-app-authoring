@@ -43,9 +43,28 @@ describe('release-notes thunks', () => {
     expect(success.payload.notes[0].id).toBe(2);
     expect(success.payload.notes[0]).toEqual(expect.objectContaining({ description: '<p>b</p>', published_at: expect.any(String), created_by: 'b@x' }));
     expect(success.payload.hasAccess).toBe(false);
+    expect(success.payload.canSendReleaseNoteEmails).toBe(false);
     const last = actions[actions.length - 1];
     expect(last.type).toBe(updateLoadingStatuses.type);
     expect(last.payload.status.fetchReleaseNotesQuery).toBe(RequestStatus.SUCCESSFUL);
+  });
+
+  test('fetchReleaseNotesQuery reads hasAccess and canSendReleaseNoteEmails from paginated response', async () => {
+    jest.spyOn(api, 'getReleaseNotes').mockResolvedValue({
+      results: [{
+        id: 1, title: 'a', rawHtmlContent: '<p>a</p>', publishedAt: '2025-01-01T00:00:00Z', createdBy: 'a@x',
+      }],
+      hasAccess: true,
+      canSendReleaseNoteEmails: true,
+    });
+    const { actions, dispatch } = collectActions();
+
+    await fetchReleaseNotesQuery()(dispatch);
+
+    const success = actions.find(a => a.type === fetchReleaseNotesSuccess.type);
+    expect(success.payload.hasAccess).toBe(true);
+    expect(success.payload.canSendReleaseNoteEmails).toBe(true);
+    expect(success.payload.notes).toHaveLength(1);
   });
 
   test('fetchReleaseNotesQuery failure sets FAILED', async () => {
@@ -156,5 +175,39 @@ describe('release-notes thunks', () => {
     await editReleaseNoteQuery({ id: 2, title: 't2', description: '<p>y</p>' })(dispatch);
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({ raw_html_content: '<p>y</p>' }));
     expect(spy).toHaveBeenCalledWith(expect.not.objectContaining({ description: expect.anything() }));
+  });
+
+  test('createReleaseNoteQuery maps sendEmail to send_email_on_publish (true)', async () => {
+    const spy = jest.spyOn(api, 'createReleaseNote').mockResolvedValue({ id: 1, title: 't', rawHtmlContent: '<p>x</p>' });
+    const { dispatch } = collectActions();
+    await createReleaseNoteQuery({
+      id: 1, title: 't', description: '<p>x</p>', sendEmail: true,
+    })(dispatch);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ send_email_on_publish: true }));
+    expect(spy).toHaveBeenCalledWith(expect.not.objectContaining({ sendEmail: expect.anything() }));
+  });
+
+  test('createReleaseNoteQuery defaults send_email_on_publish to false when sendEmail absent', async () => {
+    const spy = jest.spyOn(api, 'createReleaseNote').mockResolvedValue({ id: 1, title: 't', rawHtmlContent: '<p>x</p>' });
+    const { dispatch } = collectActions();
+    await createReleaseNoteQuery({ id: 1, title: 't', description: '<p>x</p>' })(dispatch);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ send_email_on_publish: false }));
+  });
+
+  test('editReleaseNoteQuery maps sendEmail to send_email_on_publish (true)', async () => {
+    const spy = jest.spyOn(api, 'editReleaseNote').mockResolvedValue({ id: 2, title: 't2', rawHtmlContent: '<p>y</p>' });
+    const { dispatch } = collectActions();
+    await editReleaseNoteQuery({
+      id: 2, title: 't2', description: '<p>y</p>', sendEmail: true,
+    })(dispatch);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ send_email_on_publish: true }));
+    expect(spy).toHaveBeenCalledWith(expect.not.objectContaining({ sendEmail: expect.anything() }));
+  });
+
+  test('editReleaseNoteQuery defaults send_email_on_publish to false when sendEmail absent', async () => {
+    const spy = jest.spyOn(api, 'editReleaseNote').mockResolvedValue({ id: 2, title: 't2', rawHtmlContent: '<p>y</p>' });
+    const { dispatch } = collectActions();
+    await editReleaseNoteQuery({ id: 2, title: 't2', description: '<p>y</p>' })(dispatch);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ send_email_on_publish: false }));
   });
 });

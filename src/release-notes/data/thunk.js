@@ -23,6 +23,7 @@ export function fetchReleaseNotesQuery() {
       const response = await getReleaseNotes();
       const notesList = Array.isArray(response) ? response : (response.results || []);
       const hasAccess = response.hasAccess || false;
+      const canSendReleaseNoteEmails = response.canSendReleaseNoteEmails || false;
       const normalized = (notesList || []).map((n) => ({
         id: n.id,
         title: n.title,
@@ -35,7 +36,9 @@ export function fetchReleaseNotesQuery() {
           const tb = b.published_at ? Date.parse(b.published_at) : -Infinity;
           return tb - ta;
         });
-      dispatch(fetchReleaseNotesSuccess({ notes: normalized, hasAccess }));
+      dispatch(fetchReleaseNotesSuccess({
+        notes: normalized, hasAccess, canSendReleaseNoteEmails,
+      }));
       dispatch(updateLoadingStatuses({
         status: { fetchReleaseNotesQuery: RequestStatus.SUCCESSFUL },
         error: { loadingNotes: false },
@@ -57,9 +60,11 @@ export function createReleaseNoteQuery(data) {
         error: {},
       }));
       dispatch(showProcessingNotification(NOTIFICATION_MESSAGES.saving));
+      const { sendEmail, ...noteData } = data;
       const payload = {
-        ...data,
-        raw_html_content: data.description,
+        ...noteData,
+        raw_html_content: noteData.description,
+        send_email_on_publish: sendEmail || false,
       };
       delete payload.description;
       const note = await createReleaseNote(payload);
@@ -96,9 +101,11 @@ export function editReleaseNoteQuery(data) {
         error: {},
       }));
       dispatch(showProcessingNotification(NOTIFICATION_MESSAGES.saving));
+      const { sendEmail, ...noteData } = data;
       const payload = {
-        ...data,
-        raw_html_content: data.description,
+        ...noteData,
+        raw_html_content: noteData.description,
+        send_email_on_publish: sendEmail || false,
       };
       delete payload.description;
       const note = await editReleaseNote(payload);

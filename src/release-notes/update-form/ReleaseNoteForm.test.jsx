@@ -300,6 +300,83 @@ describe('ReleaseNoteForm', () => {
     });
   });
 
+  describe('Send email notification checkbox', () => {
+    test('does not render the send-email checkbox when canSendReleaseNoteEmails is false', () => {
+      renderForm({ canSendReleaseNoteEmails: false });
+      expect(screen.queryByTestId('send-email-checkbox')).not.toBeInTheDocument();
+    });
+
+    test('renders the send-email checkbox unchecked by default', () => {
+      renderForm({ canSendReleaseNoteEmails: true });
+      const checkbox = screen.getByTestId('send-email-checkbox');
+      expect(checkbox).toBeInTheDocument();
+      expect(checkbox).not.toBeChecked();
+      expect(screen.getByText(messages.sendEmailCheckboxHelp.defaultMessage)).toBeInTheDocument();
+    });
+
+    test('toggles the checkbox on click', () => {
+      renderForm({ canSendReleaseNoteEmails: true });
+      const checkbox = screen.getByTestId('send-email-checkbox');
+      fireEvent.click(checkbox);
+      expect(checkbox).toBeChecked();
+    });
+
+    test('includes sendEmail=true in onSubmit payload when checked', async () => {
+      const onSubmit = jest.fn();
+      renderForm({
+        canSendReleaseNoteEmails: true,
+        onSubmit,
+        initialValues: {
+          ...mockFormInitialValues,
+          title: 'Test',
+          description: '<p>Test</p>',
+        },
+      });
+
+      fireEvent.change(screen.getByLabelText(messages.publishDateLabel.defaultMessage), {
+        target: { value: '2025-01-20' },
+      });
+      fireEvent.change(screen.getByLabelText(/publish time/i), {
+        target: { value: '14:30' },
+      });
+      fireEvent.click(screen.getByTestId('send-email-checkbox'));
+
+      fireEvent.click(screen.getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalled();
+        expect(onSubmit.mock.calls[0][0].sendEmail).toBe(true);
+      });
+    });
+
+    test('includes sendEmail=false in onSubmit payload when left unchecked', async () => {
+      const onSubmit = jest.fn();
+      renderForm({
+        canSendReleaseNoteEmails: true,
+        onSubmit,
+        initialValues: {
+          ...mockFormInitialValues,
+          title: 'Test',
+          description: '<p>Test</p>',
+        },
+      });
+
+      fireEvent.change(screen.getByLabelText(messages.publishDateLabel.defaultMessage), {
+        target: { value: '2025-01-20' },
+      });
+      fireEvent.change(screen.getByLabelText(/publish time/i), {
+        target: { value: '14:30' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: messages.saveButton.defaultMessage }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalled();
+        expect(onSubmit.mock.calls[0][0].sendEmail).toBe(false);
+      });
+    });
+  });
+
   describe('onInterceptClose', () => {
     test('does not error when onInterceptClose is not provided', () => {
       expect(() => renderForm()).not.toThrow();
