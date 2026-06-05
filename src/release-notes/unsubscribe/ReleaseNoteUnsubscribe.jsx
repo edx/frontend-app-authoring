@@ -5,7 +5,7 @@ import {
 } from '@openedx/paragon';
 import { Info, CheckCircle, Email } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { unsubscribeWithToken } from '../data/api';
+import { unsubscribeFromReleaseNoteEmails } from '../data/api';
 import messages from './messages';
 
 const ReleaseNoteUnsubscribe = () => {
@@ -24,7 +24,7 @@ const ReleaseNoteUnsubscribe = () => {
 
     setStatus('loading');
 
-    unsubscribeWithToken(token)
+    unsubscribeFromReleaseNoteEmails(token)
       .then(() => {
         setStatus('success');
       })
@@ -82,7 +82,7 @@ const ReleaseNoteUnsubscribe = () => {
           variant="danger"
           icon={Info}
           actions={[
-            <Button variant="outline-primary" onClick={handleUnsubscribe}>
+            <Button key="unsubscribe-retry" type="button" variant="outline-primary" onClick={handleUnsubscribe}>
               {intl.formatMessage(messages.unsubscribeRetry)}
             </Button>,
           ]}

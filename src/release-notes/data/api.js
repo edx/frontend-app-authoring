@@ -27,7 +27,7 @@ export async function deleteReleaseNote(id) {
   return camelCaseObject(data);
 }
 
-export async function unsubscribeWithToken(token) {
+export async function unsubscribeFromReleaseNoteEmails(token) {
   const url = `${getUnsubscribeApiUrl()}?token=${encodeURIComponent(token)}`;
   const { data } = await getAuthenticatedHttpClient().get(url);
   return camelCaseObject(data);

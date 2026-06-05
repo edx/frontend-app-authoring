@@ -172,6 +172,8 @@ const ReleaseNoteForm = ({
     const initialDesc = normalizeHtml(initialVals.description);
     if (currentDesc !== initialDesc) { return true; }
 
+    if (values.sendEmail !== initialVals.sendEmail) { return true; }
+
     return false;
   }, []);
 
@@ -187,6 +189,7 @@ const ReleaseNoteForm = ({
         publishTime: initialValues.published_at
           ? moment(initialValues.published_at).format(TIME_FORMAT)
           : '',
+        sendEmail: false,
       };
       const customDirty = isFormDirty(currentValuesRef.current, formInitialValues);
       isDirtyRef.current = customDirty;

@@ -24,7 +24,6 @@ describe('ReleaseNoteUnsubscribe', () => {
   test('shows error alert when no token is present', () => {
     renderWithToken(undefined);
     expect(screen.getByText(messages.unsubscribeError.defaultMessage)).toBeInTheDocument();
-    // The confirmation CTA should not be rendered without a token
     expect(
       screen.queryByRole('button', { name: messages.unsubscribeButton.defaultMessage }),
     ).not.toBeInTheDocument();
@@ -39,8 +38,8 @@ describe('ReleaseNoteUnsubscribe', () => {
     ).toBeInTheDocument();
   });
 
-  test('calls unsubscribeWithToken and shows success state on success', async () => {
-    const spy = jest.spyOn(api, 'unsubscribeWithToken').mockResolvedValue({ resultStatus: 'unsubscribed' });
+  test('calls unsubscribeFromReleaseNoteEmails and shows success state on success', async () => {
+    const spy = jest.spyOn(api, 'unsubscribeFromReleaseNoteEmails').mockResolvedValue({ message: 'ok' });
     renderWithToken('valid-token');
 
     fireEvent.click(screen.getByRole('button', { name: messages.unsubscribeButton.defaultMessage }));
@@ -52,7 +51,7 @@ describe('ReleaseNoteUnsubscribe', () => {
   });
 
   test('shows error state and allows retry on failure', async () => {
-    const spy = jest.spyOn(api, 'unsubscribeWithToken').mockRejectedValue(new Error('boom'));
+    const spy = jest.spyOn(api, 'unsubscribeFromReleaseNoteEmails').mockRejectedValue(new Error('boom'));
     renderWithToken('valid-token');
 
     fireEvent.click(screen.getByRole('button', { name: messages.unsubscribeButton.defaultMessage }));
@@ -62,8 +61,7 @@ describe('ReleaseNoteUnsubscribe', () => {
     });
     expect(spy).toHaveBeenCalledTimes(1);
 
-    // Retry button should re-trigger the request
-    spy.mockResolvedValueOnce({ resultStatus: 'unsubscribed' });
+    spy.mockResolvedValueOnce({ message: 'ok' });
     fireEvent.click(screen.getByRole('button', { name: messages.unsubscribeRetry.defaultMessage }));
 
     await waitFor(() => {

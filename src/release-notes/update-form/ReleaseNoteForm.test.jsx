@@ -321,6 +321,23 @@ describe('ReleaseNoteForm', () => {
       expect(checkbox).toBeChecked();
     });
 
+    test('marks form dirty when send email checkbox is toggled', async () => {
+      const isDirtyCheckRef = { current: null };
+      renderForm({ isDirtyCheckRef, canSendReleaseNoteEmails: true });
+
+      await waitFor(() => {
+        expect(isDirtyCheckRef.current).toBeInstanceOf(Function);
+      });
+
+      expect(isDirtyCheckRef.current()).toBe(false);
+
+      fireEvent.click(screen.getByTestId('send-email-checkbox'));
+
+      await waitFor(() => {
+        expect(isDirtyCheckRef.current()).toBe(true);
+      });
+    });
+
     test('includes sendEmail=true in onSubmit payload when checked', async () => {
       const onSubmit = jest.fn();
       renderForm({
