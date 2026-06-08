@@ -16,6 +16,17 @@ import {
   updateSavingStatuses,
 } from './slice';
 
+function normalizeReleaseNote(note) {
+  return {
+    id: note.id,
+    title: note.title,
+    description: note.rawHtmlContent,
+    published_at: note.publishedAt,
+    created_by: note.createdBy,
+    sendEmail: Boolean(note.sendEmailOnPublish),
+  };
+}
+
 export function fetchReleaseNotesQuery() {
   return async (dispatch) => {
     try {
@@ -24,13 +35,7 @@ export function fetchReleaseNotesQuery() {
       const notesList = Array.isArray(response) ? response : (response.results || []);
       const hasAccess = response.hasAccess || false;
       const canSendReleaseNoteEmails = response.canSendReleaseNoteEmails || false;
-      const normalized = (notesList || []).map((n) => ({
-        id: n.id,
-        title: n.title,
-        description: n.rawHtmlContent,
-        published_at: n.publishedAt,
-        created_by: n.createdBy,
-      }))
+      const normalized = (notesList || []).map(normalizeReleaseNote)
         .sort((a, b) => {
           const ta = a.published_at ? Date.parse(a.published_at) : -Infinity;
           const tb = b.published_at ? Date.parse(b.published_at) : -Infinity;
@@ -68,14 +73,7 @@ export function createReleaseNoteQuery(data) {
       };
       delete payload.description;
       const note = await createReleaseNote(payload);
-      const normalized = {
-        id: note.id,
-        title: note.title,
-        description: note.rawHtmlContent,
-        published_at: note.publishedAt,
-        created_by: note.createdBy,
-      };
-      dispatch(createReleaseNoteAction(normalized));
+      dispatch(createReleaseNoteAction(normalizeReleaseNote(note)));
       dispatch(hideProcessingNotification());
       dispatch(updateSavingStatuses({
         status: { createReleaseNoteQuery: RequestStatus.SUCCESSFUL },
@@ -109,14 +107,7 @@ export function editReleaseNoteQuery(data) {
       };
       delete payload.description;
       const note = await editReleaseNote(payload);
-      const normalized = {
-        id: note.id,
-        title: note.title,
-        description: note.rawHtmlContent,
-        published_at: note.publishedAt,
-        created_by: note.createdBy,
-      };
-      dispatch(editReleaseNoteAction(normalized));
+      dispatch(editReleaseNoteAction(normalizeReleaseNote(note)));
       dispatch(hideProcessingNotification());
       dispatch(updateSavingStatuses({
         status: { editReleaseNoteQuery: RequestStatus.SUCCESSFUL },

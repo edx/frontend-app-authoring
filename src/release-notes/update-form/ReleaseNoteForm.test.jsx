@@ -314,6 +314,17 @@ describe('ReleaseNoteForm', () => {
       expect(screen.getByText(messages.sendEmailCheckboxHelp.defaultMessage)).toBeInTheDocument();
     });
 
+    test('renders the send-email checkbox checked when editing a note with sendEmail enabled', () => {
+      renderForm({
+        canSendReleaseNoteEmails: true,
+        initialValues: {
+          ...mockFormFilledValues,
+          sendEmail: true,
+        },
+      });
+      expect(screen.getByTestId('send-email-checkbox')).toBeChecked();
+    });
+
     test('toggles the checkbox on click', () => {
       renderForm({ canSendReleaseNoteEmails: true });
       const checkbox = screen.getByTestId('send-email-checkbox');

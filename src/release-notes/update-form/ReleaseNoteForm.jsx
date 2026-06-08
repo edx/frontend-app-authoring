@@ -189,7 +189,7 @@ const ReleaseNoteForm = ({
         publishTime: initialValues.published_at
           ? moment(initialValues.published_at).format(TIME_FORMAT)
           : '',
-        sendEmail: false,
+        sendEmail: Boolean(initialValues.sendEmail),
       };
       const customDirty = isFormDirty(currentValuesRef.current, formInitialValues);
       isDirtyRef.current = customDirty;
@@ -209,7 +209,7 @@ const ReleaseNoteForm = ({
           description: initialValues.description || '',
           publishDate: initialValues.published_at ? moment(convertToDateFromString(initialValues.published_at)).format('YYYY-MM-DD') : '',
           publishTime: initialValues.published_at ? moment(initialValues.published_at).format(TIME_FORMAT) : '',
-          sendEmail: false,
+          sendEmail: Boolean(initialValues.sendEmail),
         }}
         validationSchema={validationSchema}
         validateOnMount
