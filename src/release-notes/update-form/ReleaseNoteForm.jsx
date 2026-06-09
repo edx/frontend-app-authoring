@@ -379,6 +379,7 @@ ReleaseNoteForm.propTypes = {
     title: PropTypes.string,
     description: PropTypes.string,
     published_at: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+    sendEmail: PropTypes.bool,
   }).isRequired,
   close: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
