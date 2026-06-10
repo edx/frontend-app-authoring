@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import {
   Alert, Button, Card, Container, Spinner,
 } from '@openedx/paragon';
@@ -10,21 +9,12 @@ import messages from './messages';
 
 const ReleaseNoteUnsubscribe = () => {
   const intl = useIntl();
-  const location = useLocation();
   const [status, setStatus] = useState('idle'); // idle, loading, success, error
 
-  const params = new URLSearchParams(location.search);
-  const token = params.get('token');
-
   const handleUnsubscribe = () => {
-    if (!token) {
-      setStatus('error');
-      return;
-    }
-
     setStatus('loading');
 
-    unsubscribeFromReleaseNoteEmails(token)
+    unsubscribeFromReleaseNoteEmails()
       .then(() => {
         setStatus('success');
       })
@@ -32,16 +22,6 @@ const ReleaseNoteUnsubscribe = () => {
         setStatus('error');
       });
   };
-
-  if (!token) {
-    return (
-      <Container size="sm" className="py-5">
-        <Alert variant="danger" icon={Info}>
-          {intl.formatMessage(messages.unsubscribeError)}
-        </Alert>
-      </Container>
-    );
-  }
 
   return (
     <Container size="sm" className="d-flex align-items-center justify-content-center py-5">

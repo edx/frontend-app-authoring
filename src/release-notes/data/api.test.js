@@ -58,12 +58,10 @@ describe('release-notes api', () => {
     await expect(getReleaseNotes()).rejects.toBeTruthy();
   });
 
-  test('unsubscribeFromReleaseNoteEmails issues authenticated GET with token', async () => {
-    const token = 'abc 123/=';
-    const baseUrl = new URL('/api/release_notes/v1/email/unsubscribe/', getConfig().STUDIO_BASE_URL).href;
-    const expectedUrl = `${baseUrl}?token=${encodeURIComponent(token)}`;
+  test('unsubscribeFromReleaseNoteEmails issues authenticated GET', async () => {
+    const expectedUrl = new URL('/api/release_notes/v1/email/unsubscribe/', getConfig().STUDIO_BASE_URL).href;
     mock.onGet(expectedUrl).reply(200, { message: 'unsubscribed' });
-    const res = await unsubscribeFromReleaseNoteEmails(token);
+    const res = await unsubscribeFromReleaseNoteEmails();
     expect(res.message).toBe('unsubscribed');
     expect(mock.history.get[0].url).toBe(expectedUrl);
   });

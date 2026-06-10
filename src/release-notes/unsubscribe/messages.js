@@ -35,7 +35,7 @@ const messages = defineMessages({
   },
   unsubscribeError: {
     id: 'release-notes.unsubscribe.error',
-    defaultMessage: 'We were unable to process your unsubscribe request. The link may have expired or is invalid. Please sign in with the account that received the email and try again.',
+    defaultMessage: 'We were unable to process your unsubscribe request. Please sign in with the account that received the email and try again.',
   },
   unsubscribeRetry: {
     id: 'release-notes.unsubscribe.retry',
