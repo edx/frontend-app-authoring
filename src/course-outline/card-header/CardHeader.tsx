@@ -11,6 +11,7 @@ import {
   Icon,
   IconButton,
   IconButtonWithTooltip,
+  Stack,
   useToggle,
 } from '@openedx/paragon';
 import {
@@ -180,7 +181,12 @@ const CardHeader = ({
             />
           </Form.Group>
         ) : (
-          <>
+          <Stack
+            direction="horizontal"
+            gap={0}
+            className="component-title-group flex-grow-1 min-width-0 align-items-center"
+            role="presentation"
+          >
             {titleComponent}
             <IconButtonWithTooltip
               className="item-card-button-icon"
@@ -192,7 +198,7 @@ const CardHeader = ({
               // @ts-ignore
               disabled={isSaving}
             />
-          </>
+          </Stack>
         )}
         <div className="ml-auto d-flex">
           {(isVertical || isSequential) && (
