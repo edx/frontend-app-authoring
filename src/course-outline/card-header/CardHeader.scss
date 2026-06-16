@@ -24,6 +24,8 @@
     }
 
     &--with-link {
+      margin-top: 0.625rem;
+
       &:hover,
       &:focus-within {
         background-color: var(--pgn-color-light-300);
