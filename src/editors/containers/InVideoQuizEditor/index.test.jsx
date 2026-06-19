@@ -307,6 +307,39 @@ describe('InVideoQuizEditor', () => {
 
       expect(thunkActions.inVideoQuiz.loadInVideoQuizSettings).toHaveBeenCalled();
     });
+
+    it('allows saving when multiple problems share the same timestamp', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              selectedVideo: 'video-1',
+              videos: [{ id: 'video-1', display_name: 'Video 1' }],
+              problems: [
+                { id: 'problem-1', display_name: 'Problem 1' },
+                { id: 'problem-2', display_name: 'Problem 2' },
+              ],
+              quizItems: [
+                {
+                  id: 'quiz-1', problemId: 'problem-1', time: '1:30', jumpBack: '',
+                },
+                {
+                  id: 'quiz-2', problemId: 'problem-2', time: '1:30', jumpBack: '',
+                },
+              ],
+            },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.queryByText('Each problem must have a unique timestamp. Please remove duplicate times.')).not.toBeInTheDocument();
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).toHaveBeenCalled();
+    });
   });
 
   describe('hooks.getContent', () => {

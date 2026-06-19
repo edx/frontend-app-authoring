@@ -23,6 +23,138 @@ const extractBlockId = (fullBlockId) => {
   return parts[parts.length - 1];
 };
 
+const generateQuizItemId = () => `problem-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+/** Internal map key for legacy global MM:SS jump-back values. */
+export const GLOBAL_JUMP_BACK_KEY = 'globalJumpBack';
+
+/**
+ * Normalize timemap values that may be a single problem id or an array of ids.
+ * @param {string|string[]} value
+ * @returns {string[]}
+ */
+export const normalizeProblemIds = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  return value ? [value] : [];
+};
+
+/**
+ * Normalize jump-back field from studio/API into a lookup map.
+ * Supports legacy global MM:SS string, time-keyed map, and per-problem map.
+ */
+export const normalizeJumpBackField = (jumpBack) => {
+  if (!jumpBack) {
+    return {};
+  }
+  if (typeof jumpBack === 'string') {
+    const trimmed = jumpBack.trim();
+    if (!trimmed) {
+      return {};
+    }
+    if (trimmed.charAt(0) === '{') {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (typeof parsed === 'string') {
+          return { [GLOBAL_JUMP_BACK_KEY]: parsed };
+        }
+        return typeof parsed === 'object' && parsed !== null ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+    return { [GLOBAL_JUMP_BACK_KEY]: trimmed };
+  }
+  if (typeof jumpBack === 'object') {
+    return jumpBack;
+  }
+  return {};
+};
+
+/**
+ * Resolve jump-back for a quiz item row from normalized jump-back data.
+ */
+export const resolveQuizItemJumpBack = (jumpBackMap, problemId, time) => {
+  if (!jumpBackMap || typeof jumpBackMap !== 'object') {
+    return '';
+  }
+  return jumpBackMap[problemId] || jumpBackMap[time] || jumpBackMap[GLOBAL_JUMP_BACK_KEY] || '';
+};
+
+/**
+ * Expand timemap JSON into editor quiz item rows.
+ * Supports legacy {"1:30": "id1"} and multi-problem {"1:30": ["id1", "id2"]}.
+ */
+export const expandTimemapToQuizItems = (timemap, jumpBack = {}) => {
+  const jumpBackMap = normalizeJumpBackField(jumpBack);
+  return Object.entries(timemap).flatMap(([time, problemValue]) => (
+    normalizeProblemIds(problemValue).map((problemId) => ({
+      id: generateQuizItemId(),
+      problemId,
+      time,
+      jumpBack: resolveQuizItemJumpBack(jumpBackMap, problemId, time),
+    }))
+  ));
+};
+
+/**
+ * Group quiz items into timemap JSON for save.
+ * Single problems stay as strings; multiple problems at one time become arrays.
+ */
+export const buildTimemapFromQuizItems = (quizItems) => {
+  const groups = quizItems.reduce((acc, item) => {
+    if (item.problemId && item.time) {
+      if (!acc[item.time]) {
+        acc[item.time] = [];
+      }
+      acc[item.time].push(item.problemId);
+    }
+    return acc;
+  }, {});
+
+  return Object.entries(groups).reduce((acc, [time, problemIds]) => {
+    acc[time] = problemIds.length === 1 ? problemIds[0] : problemIds;
+    return acc;
+  }, {});
+};
+
+/**
+ * Build jump-back map keyed by problem id so multiple problems sharing the same
+ * timestamp can each keep their own jump-back value.
+ */
+export const buildJumpBackFromQuizItems = (quizItems) => (
+  quizItems.reduce((acc, item) => {
+    if (item.problemId && item.jumpBack) {
+      acc[item.problemId] = item.jumpBack;
+    }
+    return acc;
+  }, {})
+);
+
+/**
+ * Parse jump_back textarea value from studio_view HTML.
+ * Supports JSON maps and legacy plain MM:SS strings.
+ */
+export const parseJumpBackField = (value) => {
+  if (!value) {
+    return {};
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (typeof parsed === 'string') {
+      return normalizeJumpBackField(parsed);
+    }
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch (error) {
+    return normalizeJumpBackField(trimmed);
+  }
+};
+
 /**
  * Parse studio_view HTML response to extract field values
  * @param {string} html - The HTML response from studio_view API
@@ -61,14 +193,8 @@ const parseStudioViewHtml = (html) => {
   }
 
   if (jumpBackTextarea && jumpBackTextarea.value) {
-    try {
-      const decodedValue = decodeStudioValue(jumpBackTextarea.value);
-      jumpBack = JSON.parse(decodedValue);
-    } catch (error) {
-      logError('Failed to parse jump back data', error);
-      // Return empty jumpBack on parse error to prevent app crash
-      jumpBack = {};
-    }
+    const decodedValue = decodeStudioValue(jumpBackTextarea.value);
+    jumpBack = parseJumpBackField(decodedValue);
   }
 
   return { videoId, timemap, jumpBack };
@@ -124,15 +250,10 @@ export const loadInVideoQuizSettings = () => (dispatch) => {
                 dispatch(actions.inVideoQuiz.setSelectedVideo(videoId));
               }
 
-              // Parse timemap and populate quiz items
-              // timemap format: {"5": "problemId1", "120": "problemId2"}
-              // Convert to quizItems format
-              const quizItems = Object.entries(timemap).map(([time, problemId]) => ({
-                id: `problem-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
-                problemId,
-                time,
-                jumpBack: (jumpBack && jumpBack[time]) || '00:00',
-              }));
+              // Parse timemap and populate quiz items.
+              // Legacy: {"1:30": "problemId1"}
+              // Multi-problem: {"1:30": ["problemId1", "problemId2"]}
+              const quizItems = expandTimemapToQuizItems(timemap, jumpBack);
 
               if (quizItems.length > 0) {
                 dispatch(actions.inVideoQuiz.setQuizItems(quizItems));
@@ -181,21 +302,8 @@ export const saveInVideoQuizSettings = ({ onSuccess, onFailure } = {}) => (dispa
   const studioEndpointUrl = selectors.app.studioEndpointUrl(state);
   const displayName = selectors.app.blockTitle(state) || '';
 
-  // Convert quizItems array to timemap object
-  // Format: {"5": "problemId1", "120": "problemId2"}
-  const timemapObject = quizItems.reduce((acc, item) => {
-    if (item.problemId && item.time) {
-      acc[item.time] = item.problemId;
-    }
-    return acc;
-  }, {});
-
-  const jumpBackObject = quizItems.reduce((acc, item) => {
-    if (item.problemId && item.time && item.jumpBack) {
-      acc[item.time] = item.jumpBack;
-    }
-    return acc;
-  }, {});
+  const timemapObject = buildTimemapFromQuizItems(quizItems);
+  const jumpBackObject = buildJumpBackFromQuizItems(quizItems);
 
   // Convert timemap object to JSON string
   const timemapString = JSON.stringify(timemapObject);
