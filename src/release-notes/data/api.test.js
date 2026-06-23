@@ -1,5 +1,5 @@
 import { getConfig } from '@edx/frontend-platform';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { getAuthenticatedHttpClient, getHttpClient } from '@edx/frontend-platform/auth';
 import MockAdapter from 'axios-mock-adapter';
 
 import { initializeMocks } from '../../testUtils';
@@ -58,11 +58,13 @@ describe('release-notes api', () => {
     await expect(getReleaseNotes()).rejects.toBeTruthy();
   });
 
-  test('unsubscribeFromReleaseNoteEmails issues authenticated GET', async () => {
+  test('unsubscribeFromReleaseNoteEmails posts token without authentication', async () => {
     const expectedUrl = new URL('/api/release_notes/v1/email/unsubscribe/', getConfig().STUDIO_BASE_URL).href;
-    mock.onGet(expectedUrl).reply(200, { message: 'unsubscribed' });
-    const res = await unsubscribeFromReleaseNoteEmails();
+    const unauthenticatedMock = new MockAdapter(getHttpClient());
+    unauthenticatedMock.onPost(expectedUrl).reply(200, { message: 'unsubscribed' });
+    const res = await unsubscribeFromReleaseNoteEmails('signed-token');
     expect(res.message).toBe('unsubscribed');
-    expect(mock.history.get[0].url).toBe(expectedUrl);
+    expect(unauthenticatedMock.history.post[0].url).toBe(expectedUrl);
+    expect(JSON.parse(unauthenticatedMock.history.post[0].data)).toEqual({ token: 'signed-token' });
   });
 });

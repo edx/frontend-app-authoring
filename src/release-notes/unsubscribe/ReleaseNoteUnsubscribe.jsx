@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert, Button, Card, Container, Spinner,
 } from '@openedx/paragon';
 import { Info, CheckCircle, Email } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { useSearchParams } from 'react-router-dom';
 import { unsubscribeFromReleaseNoteEmails } from '../data/api';
 import messages from './messages';
 
 const ReleaseNoteUnsubscribe = () => {
   const intl = useIntl();
-  const [status, setStatus] = useState('idle'); // idle, loading, success, error
+  const [searchParams] = useSearchParams();
+  const token = useMemo(() => searchParams.get('token'), [searchParams]);
+  const [status, setStatus] = useState(token ? 'idle' : 'invalid');
 
   const handleUnsubscribe = () => {
+    if (!token) {
+      setStatus('invalid');
+      return;
+    }
+
     setStatus('loading');
 
-    unsubscribeFromReleaseNoteEmails()
+    unsubscribeFromReleaseNoteEmails(token)
       .then(() => {
         setStatus('success');
       })
@@ -25,6 +33,12 @@ const ReleaseNoteUnsubscribe = () => {
 
   return (
     <Container size="sm" className="d-flex align-items-center justify-content-center py-5">
+      {status === 'invalid' && (
+        <Alert variant="danger" icon={Info}>
+          <Alert.Heading>{intl.formatMessage(messages.unsubscribeInvalidTitle)}</Alert.Heading>
+          <p className="mb-0">{intl.formatMessage(messages.unsubscribeInvalid)}</p>
+        </Alert>
+      )}
       {status === 'idle' && (
         <Card className="text-center shadow-sm" style={{ maxWidth: '480px' }}>
           <Card.Section className="p-4">

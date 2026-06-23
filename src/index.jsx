@@ -1,6 +1,9 @@
 import {
   APP_INIT_ERROR, APP_READY, subscribe, initialize, mergeConfig, getConfig, getPath,
 } from '@edx/frontend-platform';
+import {
+  ensureAuthenticatedUser, fetchAuthenticatedUser, getAuthenticatedUser, hydrateAuthenticatedUser,
+} from '@edx/frontend-platform/auth';
 import { AppProvider, ErrorPage } from '@edx/frontend-platform/react';
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -47,6 +50,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const isReleaseNoteUnsubscribePath = () => {
+  const normalizedPath = global.location.pathname.replace(/\/$/, '');
+  return normalizedPath.endsWith('/release-notes/unsubscribe');
+};
 
 const App = () => {
   useEffect(() => {
@@ -188,6 +196,19 @@ initialize({
         ENABLE_RELEASE_NOTES: process.env.ENABLE_RELEASE_NOTES || 'false',
         ENABLE_RELEASE_NOTES_BANNER: process.env.ENABLE_RELEASE_NOTES_BANNER || 'false',
       }, 'CourseAuthoringConfig');
+    },
+    auth: async (requireUser, hydrateUser) => {
+      if (isReleaseNoteUnsubscribePath()) {
+        await fetchAuthenticatedUser();
+      } else if (requireUser) {
+        await ensureAuthenticatedUser(globalThis.location.href);
+      } else {
+        await fetchAuthenticatedUser();
+      }
+
+      if (hydrateUser && getAuthenticatedUser() !== null) {
+        hydrateAuthenticatedUser();
+      }
     },
   },
   messages,
