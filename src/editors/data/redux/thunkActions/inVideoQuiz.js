@@ -216,6 +216,7 @@ export const loadInVideoQuizSettings = () => (dispatch) => {
 
           if (!unitAncestor) {
             dispatch(actions.inVideoQuiz.setDirty(false));
+            dispatch(actions.inVideoQuiz.setUnitContentLoaded(true));
             dispatch(actions.requests.completeRequest({
               requestKey: RequestKeys.fetchBlock,
               response: { data: {} },
@@ -260,12 +261,14 @@ export const loadInVideoQuizSettings = () => (dispatch) => {
               }
 
               dispatch(actions.inVideoQuiz.setDirty(false));
+              dispatch(actions.inVideoQuiz.setUnitContentLoaded(true));
               dispatch(actions.requests.completeRequest({
                 requestKey: RequestKeys.fetchBlock,
                 response: { data },
               }));
             })
             .catch((error) => {
+              dispatch(actions.inVideoQuiz.setUnitContentLoaded(true));
               dispatch(actions.requests.failRequest({
                 requestKey: RequestKeys.fetchBlock,
                 error,
@@ -273,6 +276,7 @@ export const loadInVideoQuizSettings = () => (dispatch) => {
             });
         },
         onFailure: (error) => {
+          dispatch(actions.inVideoQuiz.setUnitContentLoaded(true));
           dispatch(actions.requests.failRequest({
             requestKey: RequestKeys.fetchBlock,
             error,
@@ -281,6 +285,7 @@ export const loadInVideoQuizSettings = () => (dispatch) => {
       }));
     },
     onFailure: (error) => {
+      dispatch(actions.inVideoQuiz.setUnitContentLoaded(true));
       dispatch(actions.requests.failRequest({
         requestKey: RequestKeys.fetchBlock,
         error,

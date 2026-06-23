@@ -74,6 +74,7 @@ const baseState = {
     selectedVideo: null,
     videos: [],
     problems: [],
+    unitContentLoaded: false,
     quizItems: [
       {
         id: 'quiz-1', problemId: '', time: '', jumpBack: '',
@@ -92,7 +93,15 @@ describe('InVideoQuizEditor', () => {
     it('shows both alerts when no videos and no problems exist in the unit', () => {
       editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
-        { initialState: baseState },
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
+            },
+          },
+        },
       );
 
       expect(screen.getByText('Content not found')).toBeInTheDocument();
@@ -108,6 +117,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               problems: [{ id: 'problem-1', display_name: 'Problem 1' }],
             },
           },
@@ -127,6 +137,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               videos: [{ id: 'video-1', display_name: 'Video 1' }],
             },
           },
@@ -146,6 +157,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               videos: [{ id: 'video-1', display_name: 'Video 1' }],
               problems: [{ id: 'problem-1', display_name: 'Problem 1' }],
             },
@@ -161,14 +173,7 @@ describe('InVideoQuizEditor', () => {
     it('does not show alert while still loading', () => {
       editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
-        {
-          initialState: {
-            ...baseState,
-            requests: {
-              fetchBlock: { status: 'pending' },
-            },
-          },
-        },
+        { initialState: baseState },
       );
 
       expect(screen.queryByText('Content not found')).not.toBeInTheDocument();
@@ -179,7 +184,15 @@ describe('InVideoQuizEditor', () => {
     it('dismisses the alert when close button is clicked', () => {
       editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
-        { initialState: baseState },
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
+            },
+          },
+        },
       );
 
       expect(screen.getByText('Content not found')).toBeInTheDocument();
@@ -211,6 +224,17 @@ describe('InVideoQuizEditor', () => {
       expect(container.querySelector('.pgn__spinner')).toBeInTheDocument();
     });
 
+    it('renders loading spinner while unit content is loading', () => {
+      const { container } = editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        { initialState: baseState },
+      );
+
+      expect(screen.getByTestId('editor-container')).toBeInTheDocument();
+      expect(container.querySelector('.pgn__spinner')).toBeInTheDocument();
+      expect(screen.queryByText('Content not found')).not.toBeInTheDocument();
+    });
+
     it('renders editor form when block is finished', () => {
       editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
@@ -219,6 +243,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               videos: [{ id: 'video-1', display_name: 'Video 1' }],
               problems: [{ id: 'problem-1', display_name: 'Problem 1' }],
             },
@@ -239,6 +264,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               videos: [
                 { id: 'video-1', display_name: 'Intro Video' },
                 { id: 'video-2', display_name: 'Lecture Video' },
@@ -261,6 +287,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               videos: [{ id: 'video-1', display_name: 'Video 1' }],
               problems: [
                 { id: 'problem-1', display_name: 'Quiz Question 1' },
@@ -278,7 +305,15 @@ describe('InVideoQuizEditor', () => {
     it('adds a quiz item when Add problem button is clicked', () => {
       const { container } = editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
-        { initialState: baseState },
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
+            },
+          },
+        },
       );
 
       const initialRows = container.querySelectorAll('.quiz-item-row').length;
@@ -290,7 +325,15 @@ describe('InVideoQuizEditor', () => {
     it('removes a quiz item when delete button is clicked', () => {
       const { container } = editorRender(
         <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
-        { initialState: baseState },
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
+            },
+          },
+        },
       );
 
       expect(container.querySelectorAll('.quiz-item-row').length).toBe(1);
@@ -316,6 +359,7 @@ describe('InVideoQuizEditor', () => {
             ...baseState,
             inVideoQuiz: {
               ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
               selectedVideo: 'video-1',
               videos: [{ id: 'video-1', display_name: 'Video 1' }],
               problems: [

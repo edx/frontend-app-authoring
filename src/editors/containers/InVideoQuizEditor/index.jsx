@@ -49,6 +49,7 @@ export const InVideoQuizEditor = ({
   videos,
   problems,
   quizItems,
+  unitContentLoaded,
   setSelectedVideo,
   addQuizItem,
   removeQuizItem,
@@ -60,14 +61,14 @@ export const InVideoQuizEditor = ({
   isDirty,
 }) => {
   const intl = useIntl();
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [contentAlertDismissed, setContentAlertDismissed] = useState(false);
   const returnUrl = useSelector(selectors.app.returnUrl);
   const analytics = useSelector(selectors.app.analytics);
 
-  const hasNoVideos = blockFinished && settingsLoaded && videos.length === 0;
-  const hasNoProblems = blockFinished && settingsLoaded && problems.length === 0;
+  const hasNoVideos = unitContentLoaded && videos.length === 0;
+  const hasNoProblems = unitContentLoaded && problems.length === 0;
+  const isLoadingUnitContent = blockFinished && blockId && blockValue && !unitContentLoaded;
 
   const isValidTimeFormat = useCallback((value) => /^\d+:[0-5]\d$/.test(value), []);
 
@@ -90,11 +91,10 @@ export const InVideoQuizEditor = ({
   }, [isValidTimeFormat]);
 
   useEffect(() => {
-    if (blockFinished && blockId && blockValue && !settingsLoaded) {
+    if (blockFinished && blockId && blockValue && !unitContentLoaded) {
       loadInVideoQuizSettings();
-      setSettingsLoaded(true);
     }
-  }, [blockFinished, blockId, blockValue, settingsLoaded, loadInVideoQuizSettings]);
+  }, [blockFinished, blockId, blockValue, unitContentLoaded, loadInVideoQuizSettings]);
 
   const handleSave = useCallback(() => {
     setSaveError(null);
@@ -359,7 +359,7 @@ export const InVideoQuizEditor = ({
       saveButtonAriaLabel={intl.formatMessage(messages.save)}
     >
       <div className="editor-body h-75 overflow-auto">
-        {!blockFinished ? loading : page}
+        {!blockFinished || isLoadingUnitContent ? loading : page}
       </div>
     </EditorContainer>
   );
@@ -387,6 +387,7 @@ InVideoQuizEditor.propTypes = {
     time: PropTypes.string,
     jumpBack: PropTypes.string,
   })),
+  unitContentLoaded: PropTypes.bool.isRequired,
   setSelectedVideo: PropTypes.func.isRequired,
   addQuizItem: PropTypes.func.isRequired,
   removeQuizItem: PropTypes.func.isRequired,
@@ -416,6 +417,7 @@ export const mapStateToProps = (state) => ({
   problems: selectors.inVideoQuiz.problems(state),
   quizItems: selectors.inVideoQuiz.quizItems(state),
   isDirty: selectors.inVideoQuiz.isDirty(state),
+  unitContentLoaded: selectors.inVideoQuiz.unitContentLoaded(state),
 });
 
 export const mapDispatchToProps = {

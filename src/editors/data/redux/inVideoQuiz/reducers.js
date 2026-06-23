@@ -7,6 +7,7 @@ const initialState = {
   selectedVideo: null,
   videos: [],
   problems: [],
+  unitContentLoaded: false,
   quizItems: [
     {
       id: generateId(),
@@ -34,6 +35,10 @@ const inVideoQuiz = createSlice({
     setProblems: (state, { payload }) => ({
       ...state,
       problems: payload,
+    }),
+    setUnitContentLoaded: (state, { payload }) => ({
+      ...state,
+      unitContentLoaded: payload,
     }),
     setQuizItems: (state, { payload }) => ({
       ...state,
