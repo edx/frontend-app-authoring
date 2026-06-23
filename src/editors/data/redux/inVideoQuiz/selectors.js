@@ -11,6 +11,7 @@ export const simpleSelectors = {
   problems: mkSimpleSelector(data => data.problems),
   quizItems: mkSimpleSelector(data => data.quizItems),
   isDirty: mkSimpleSelector(data => data.isDirty),
+  unitContentLoaded: mkSimpleSelector(data => data.unitContentLoaded),
   completeState: mkSimpleSelector(data => data),
 };
 
