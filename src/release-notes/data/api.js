@@ -1,5 +1,5 @@
 import { getConfig, camelCaseObject } from '@edx/frontend-platform';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { getAuthenticatedHttpClient, getHttpClient } from '@edx/frontend-platform/auth';
 
 const getApiBaseUrl = () => getConfig().STUDIO_BASE_URL;
 
@@ -27,7 +27,7 @@ export async function deleteReleaseNote(id) {
   return camelCaseObject(data);
 }
 
-export async function unsubscribeFromReleaseNoteEmails() {
-  const { data } = await getAuthenticatedHttpClient().get(getUnsubscribeApiUrl());
+export async function unsubscribeFromReleaseNoteEmails(token) {
+  const { data } = await getHttpClient().post(getUnsubscribeApiUrl(), { token });
   return camelCaseObject(data);
 }

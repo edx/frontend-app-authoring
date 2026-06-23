@@ -35,7 +35,15 @@ const messages = defineMessages({
   },
   unsubscribeError: {
     id: 'release-notes.unsubscribe.error',
-    defaultMessage: 'We were unable to process your unsubscribe request. Please sign in with the account that received the email and try again.',
+    defaultMessage: 'We were unable to process your unsubscribe request. Please use the unsubscribe link from your Release Notes email and try again.',
+  },
+  unsubscribeInvalidTitle: {
+    id: 'release-notes.unsubscribe.invalid.title',
+    defaultMessage: 'Invalid Unsubscribe Link',
+  },
+  unsubscribeInvalid: {
+    id: 'release-notes.unsubscribe.invalid',
+    defaultMessage: 'This unsubscribe link is invalid or incomplete. Please open the unsubscribe link from your Release Notes email.',
   },
   unsubscribeRetry: {
     id: 'release-notes.unsubscribe.retry',
