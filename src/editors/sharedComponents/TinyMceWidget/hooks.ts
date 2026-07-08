@@ -510,10 +510,13 @@ export const setAssetToStaticUrl = ({ editorValue, lmsEndpointUrl }) => {
 
   // TODO: should probably move this to when the assets are being looped through in the off chance that
   // some of the text in the editor contains the lmsEndpointUrl
-  const regExLmsEndpointUrl = RegExp(lmsEndpointUrl, 'g');
-  let content = editorValue.replace(regExLmsEndpointUrl, '');
+  let content = editorValue;
+  if (lmsEndpointUrl) {
+    const escapedLmsEndpointUrl = lmsEndpointUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    content = content.replace(RegExp(escapedLmsEndpointUrl, 'g'), '');
+  }
 
-  const assetSrcs = typeof content === 'string' ? content.split(/(src="|src=&quot;|href="|href=&quot)/g) : [];
+  const assetSrcs = typeof content === 'string' ? content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g) : [];
   assetSrcs.filter(src => src.startsWith('/asset')).forEach(src => {
     const nameFromEditorSrc = parseAssetName(src);
     const portableUrl = getStaticUrl({ displayName: nameFromEditorSrc });

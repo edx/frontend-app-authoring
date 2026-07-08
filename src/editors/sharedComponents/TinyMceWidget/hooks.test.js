@@ -227,6 +227,35 @@ describe('TinyMceEditor hooks', () => {
         const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
         expect(content).toEqual('<img src="/static/goku.img"/> <a href="/static/goku.img">testing link</a>');
       });
+      it('returns content with updated jsinput html_file links', () => {
+        const editorValue = `<jsinput html_file="/${baseAssetUrl}@textlog.html" gradefn="getGrade"/>`;
+        const lmsEndpointUrl = getConfig().LMS_BASE_URL;
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        expect(content).toEqual('<jsinput html_file="/static/textlog.html" gradefn="getGrade"/>');
+      });
+      it('returns content with updated jsinput html_file links when URL is absolute', () => {
+        const lmsEndpointUrl = getConfig().LMS_BASE_URL;
+        const editorValue = `<jsinput html_file="${lmsEndpointUrl}/${baseAssetUrl}@textlog.html" gradefn="getGrade"/>`;
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        expect(content).toEqual('<jsinput html_file="/static/textlog.html" gradefn="getGrade"/>');
+      });
+      it('returns content with updated jsinput html_file links using encoded quotes', () => {
+        const editorValue = `<jsinput html_file=&quot;/${baseAssetUrl}@textlog.html&quot; gradefn=&quot;getGrade&quot;/>`;
+        const lmsEndpointUrl = getConfig().LMS_BASE_URL;
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        expect(content).toEqual('<jsinput html_file=&quot;/static/textlog.html&quot; gradefn=&quot;getGrade&quot;/>');
+      });
+      it('does not strip the literal text "undefined" when lmsEndpointUrl is not provided', () => {
+        const editorValue = `<p>value may be undefined</p><img src="/${baseAssetUrl}@soME_ImagE_URl1"/>`;
+        const content = module.setAssetToStaticUrl({ editorValue });
+        expect(content).toEqual('<p>value may be undefined</p><img src="/static/soME_ImagE_URl1"/>');
+      });
+      it('returns content with updated href links using encoded quotes', () => {
+        const editorValue = `<a href=&quot;/${baseAssetUrl}@soMEImagEURl&quot;>testing link</a>`;
+        const lmsEndpointUrl = getConfig().LMS_BASE_URL;
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        expect(content).toEqual('<a href=&quot;/static/soMEImagEURl&quot;>testing link</a>');
+      });
     });
 
     describe('editorConfig', () => {
