@@ -19,14 +19,23 @@ import {
 } from '../../constants';
 
 const BrokenLinkHref: FC<{ href: string }> = ({ href }) => {
+  const normalizedHref = href.startsWith('www.')
+    ? `https://${href}`
+    : href;
+
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    window.open(href, '_blank');
+    window.open(normalizedHref, '_blank');
   };
 
   return (
     <div className="broken-link-container">
-      <a href={href} onClick={handleClick} className="broken-link" rel="noreferrer">
+      <a
+        href={normalizedHref}
+        onClick={handleClick}
+        className="broken-link"
+        rel="noreferrer"
+      >
         {href}
       </a>
     </div>
