@@ -40,8 +40,10 @@ import {
 } from './slice';
 import { ServerError } from './errors';
 import { updateFileValues } from './utils';
+import { VIDEO_PROCESSING_STATUSES } from './constants';
 
 let controllers = [];
+const VIDEO_STATUS_POLL_INTERVAL_MS = 10000;
 
 const updateVideoUploadStatus = async (courseId, edxVideoId, message, status) => {
   await sendVideoUploadStatus(courseId, edxVideoId, message, status);
@@ -298,6 +300,36 @@ export const newUploadData = ({
   return newData;
 };
 
+const pollForVideoStatus = (courseId, pendingVideoIds, dispatch) => {
+  if (isEmpty(pendingVideoIds)) {
+    return;
+  }
+  const poll = async () => {
+    try {
+      const { videos } = await fetchVideoList(courseId);
+      const pendingVideos = videos.filter(
+        (video) => pendingVideoIds.includes(video.edxVideoId)
+          && VIDEO_PROCESSING_STATUSES.includes(video.status),
+      );
+      const resolvedVideos = videos.filter(
+        (video) => pendingVideoIds.includes(video.edxVideoId)
+          && !VIDEO_PROCESSING_STATUSES.includes(video.status),
+      );
+      if (!isEmpty(resolvedVideos)) {
+        dispatch(updateModels({ modelType: 'videos', models: updateFileValues(resolvedVideos, false) }));
+      }
+      if (!isEmpty(pendingVideos)) {
+        setTimeout(poll, VIDEO_STATUS_POLL_INTERVAL_MS);
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`Polling for video status failed with message: ${error.message}`);
+      setTimeout(poll, VIDEO_STATUS_POLL_INTERVAL_MS);
+    }
+  };
+  setTimeout(poll, VIDEO_STATUS_POLL_INTERVAL_MS);
+};
+
 export function addVideoFile(
   courseId,
   files,
@@ -352,6 +384,10 @@ export function addVideoFile(
       const parsedVideos = updateFileValues(newVideos, true);
       dispatch(addModels({ modelType: 'videos', models: parsedVideos }));
       dispatch(setVideoIds({ videoIds: newVideoIds.concat(videoIds) }));
+      const pendingVideoIds = newVideos
+        .filter((video) => VIDEO_PROCESSING_STATUSES.includes(video.status))
+        .map((video) => video.edxVideoId);
+      pollForVideoStatus(courseId, pendingVideoIds, dispatch);
     } catch (error) {
       dispatch(
         updateEditStatus({ editType: 'add', status: RequestStatus.FAILED }),
