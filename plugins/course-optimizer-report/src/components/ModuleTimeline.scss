@@ -1,0 +1,51 @@
+.module-timeline__row {
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.module-timeline__row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.module-timeline__row-total {
+  font-size: 0.8rem;
+  color: #666666;
+}
+
+.module-timeline__track-scroll {
+  overflow-x: auto;
+}
+
+.module-timeline__track {
+  position: relative;
+  min-width: 100%;
+}
+
+.module-timeline__tiles {
+  position: relative;
+  height: 32px;
+}
+
+.module-timeline__issues {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.3rem 0.5rem;
+  align-items: center;
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+// Unwraps the <li> for layout purposes while keeping real list semantics,
+// so its children become direct items of the parent <ul>'s grid — letting
+// the browser auto-size the severity/category columns to their widest
+// badge across every row instead of each row sizing independently.
+.module-timeline__issue-row {
+  display: contents;
+}

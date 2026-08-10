@@ -1,0 +1,46 @@
+// Color values for the Course Optimizer report's enum-driven modifier
+// classes (severity, finding category, block-type learning family, and
+// individual block types). Keep in sync by hand with the corresponding
+// TypeScript order/label mappings in ../lib/.
+
+$severity-colors: (
+  'critical': #b00020,
+  'high': #d9730d,
+  'medium': #a68b00,
+  'low': #3a7d3a,
+);
+
+$category-colors: (
+  'error': #7b1fa2,
+  'accessibility': #1565c0,
+  'content-quality': #00838f,
+  'pacing': #6d4c41,
+);
+
+// oklch; blue for passive, green for active — neutral gets a desaturated
+// gray so it recedes without competing.
+$family-colors: (
+  'passive': oklch(56% 0.16 255deg),
+  'active': oklch(63% 0.16 145deg),
+  'neutral': oklch(60% 0.01 260deg),
+);
+
+// Same hue as each family's accent (255 blue for passive, 145 green for
+// active) so the timeline reads as one consistent passive/active color
+// scheme instead of a per-block-type rainbow — lightness/chroma still vary
+// per type so individual block types stay distinguishable within a family.
+$block-type-colors: (
+  'html': oklch(76% 0.07 255deg),
+  'video': oklch(50% 0.12 255deg),
+  'videoalpha': oklch(50% 0.12 255deg),
+  'problem': oklch(58% 0.18 145deg),
+  'discussion': oklch(68% 0.15 155deg),
+  'drag-and-drop-v2': oklch(71% 0.17 138deg),
+  'openassessment': oklch(52% 0.18 150deg),
+  'poll_question': oklch(77% 0.15 130deg),
+  'word_cloud': oklch(71% 0.16 120deg),
+  'annotatable': oklch(63% 0.16 162deg),
+  'itembank': oklch(58% 0.17 143deg),
+);
+
+$block-type-neutral-color: oklch(75% 0.01 260deg);
