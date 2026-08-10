@@ -23,7 +23,9 @@ import {
 } from './data/selectors';
 import { startLinkCheck, fetchLinkCheckStatus, fetchRerunLinkUpdateStatus } from './data/thunks';
 import { useModel } from '../generic/model-store';
+import { useWaffleFlags } from '../data/apiHooks';
 import ScanResults from './scan-results';
+import CourseOptimizerExtendedReportSlot from '../plugin-slots/CourseOptimizerExtendedReportSlot';
 
 const pollLinkCheckStatus = (dispatch: any, courseId: string, delay: number): number => {
   const interval = setInterval(() => {
@@ -94,6 +96,7 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
   const [scanResultsError, setScanResultsError] = useState<string | null>(null);
   const isSavingDenied = (RequestFailureStatuses as string[]).includes(savingStatus) && !errorMessage;
   const intl = useIntl();
+  const waffleFlags = useWaffleFlags();
   const getScanButtonState = () => {
     if (linkCheckInProgress && !errorMessage) {
       return STATEFUL_BUTTON_STATES.pending;
@@ -262,6 +265,9 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
                     </>
                   )}
                 </Card>
+                {waffleFlags.enableCourseOptimizerExtendedReport && (
+                  <CourseOptimizerExtendedReportSlot courseId={courseId} />
+                )}
               </article>
             </Layout.Element>
           </Layout>
