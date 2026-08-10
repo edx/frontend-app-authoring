@@ -1,0 +1,41 @@
+.summary-bar {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.summary-bar__label {
+  padding-right: 0.75rem;
+  color: #666666;
+}
+
+.summary-bar__info-icon {
+  margin-left: 0.35rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  cursor: help;
+}
+
+.summary-bar__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.summary-bar__breakdown-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.summary-bar__active-passive {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-bar__active-passive-bar {
+  width: 160px;
+}

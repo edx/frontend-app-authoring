@@ -1,0 +1,19 @@
+{
+    "name": "@openedx-plugins/course-optimizer-report",
+    "version": "0.1.0",
+    "description": "Course Optimizer report widget — time-on-task, learning-balance, and LLM-driven quality findings, ported from the Course Re-Run Assistant prototype",
+    "main": "src/index.tsx",
+    "peerDependencies": {
+        "@edx/frontend-app-authoring": "*",
+        "@edx/frontend-platform": "*",
+        "@openedx/paragon": "*",
+        "@tanstack/react-query": "*",
+        "react": "*",
+        "react-intl": "*"
+    },
+    "peerDependenciesMeta": {
+        "@edx/frontend-app-authoring": {
+            "optional": true
+        }
+    }
+}

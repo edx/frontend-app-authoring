@@ -1,0 +1,86 @@
+.content-timeline {
+  margin: 2rem 0;
+}
+
+.content-timeline__heading {
+  margin-bottom: 0.25rem;
+}
+
+.content-timeline__description {
+  margin-top: 0;
+  color: #666666;
+  max-width: 760px;
+  font-size: 0.9rem;
+}
+
+.content-timeline__view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.content-timeline__ribbon-scroll {
+  overflow-x: auto;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.content-timeline__ribbon {
+  position: relative;
+  min-width: 100%;
+}
+
+.content-timeline__section-labels {
+  position: relative;
+  height: 36px;
+}
+
+.content-timeline__section-label {
+  position: absolute;
+  top: 0;
+  padding-left: 6px;
+  border-left: 2px solid #cccccc;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.content-timeline__tiles {
+  position: relative;
+  height: 48px;
+  margin-top: 4px;
+}
+
+.content-timeline__ruler {
+  position: relative;
+  height: 20px;
+  margin-top: 4px;
+  border-top: 1px solid #dddddd;
+}
+
+.content-timeline__tick {
+  position: absolute;
+  top: 0;
+}
+
+.content-timeline__tick-mark {
+  width: 1px;
+  height: 5px;
+  background: #cccccc;
+
+  &--major {
+    height: 10px;
+    background: #666666;
+  }
+}
+
+.content-timeline__tick-label {
+  position: absolute;
+  left: 2px;
+  top: 10px;
+  font-size: 0.65rem;
+  color: #888888;
+}

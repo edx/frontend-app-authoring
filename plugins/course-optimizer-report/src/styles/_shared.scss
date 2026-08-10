@@ -1,0 +1,101 @@
+@import 'colors';
+
+// Shared sizing for severity/category count badges, used in the summary
+// breakdown and the by-module findings list.
+.cor-badge {
+  min-width: 1.4rem;
+  text-align: center;
+}
+
+// Severity/category swatches (Paragon Badge), used in the summary breakdown
+// and the by-module findings list.
+@each $key, $color in $severity-colors {
+  .cor-badge--severity-#{$key} {
+    background-color: $color;
+    color: #ffffff;
+  }
+}
+
+@each $key, $color in $category-colors {
+  .cor-badge--category-#{$key} {
+    background-color: $color;
+    color: #ffffff;
+  }
+}
+
+// Severity/category text color, used in the findings table.
+@each $key, $color in $severity-colors {
+  .cor-text--severity-#{$key} {
+    color: $color;
+    font-weight: 600;
+  }
+}
+
+@each $key, $color in $category-colors {
+  .cor-text--category-#{$key} {
+    color: $color;
+    font-weight: 600;
+  }
+}
+
+.cor-text--muted {
+  color: #555555;
+}
+
+// Severity/category filter pills (Paragon Chip), outlined when inactive,
+// filled solid when active.
+.cor-filter-pill--all {
+  --cor-filter-pill-color: #555555;
+}
+
+@each $key, $color in $severity-colors {
+  .cor-filter-pill--severity-#{$key} {
+    --cor-filter-pill-color: #{$color};
+  }
+}
+
+@each $key, $color in $category-colors {
+  .cor-filter-pill--category-#{$key} {
+    --cor-filter-pill-color: #{$color};
+  }
+}
+
+// Chip's own label text lives in a nested .pgn__chip__label span with its
+// own color, so overriding color on the chip element itself doesn't reach
+// the visible text — the label needs its own override.
+.cor-filter-pill {
+  border-color: var(--cor-filter-pill-color);
+
+  &.cor-filter-pill--active {
+    background-color: var(--cor-filter-pill-color);
+
+    .pgn__chip__label {
+      color: #ffffff;
+    }
+  }
+}
+
+// Timeline legend swatches, keyed by learning family.
+@each $key, $color in $family-colors {
+  .cor-legend__swatch--#{$key} {
+    border-left-color: $color;
+  }
+}
+
+// Active/passive split bar segments (Paragon ProgressBar), keyed by family.
+@each $key, $color in $family-colors {
+  .cor-progress-segment--#{$key} {
+    background-color: $color;
+  }
+}
+
+// Timeline tiles, keyed by raw OLX block_type.
+@each $key, $color in $block-type-colors {
+  .cor-tile--block-#{$key} {
+    background-color: $color;
+  }
+}
+
+.cor-tile--block-neutral {
+  background-color: $block-type-neutral-color;
+}
