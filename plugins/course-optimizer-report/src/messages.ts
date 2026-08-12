@@ -201,6 +201,36 @@ const messages = defineMessages({
     defaultMessage: 'The Course Optimizer report could not be loaded.',
     description: 'Heading shown when fetching the report fails',
   },
+  notStartedHeading: {
+    id: 'course-authoring.course-optimizer-report.not-started.heading',
+    defaultMessage: 'Course analysis',
+    description: 'Heading shown before a course has ever had an analysis run',
+  },
+  notStartedBody: {
+    id: 'course-authoring.course-optimizer-report.not-started.body',
+    defaultMessage: 'Run a deeper analysis of this course to see time-on-task, learning balance, and content-quality findings.',
+    description: 'Explanation shown before a course has ever had an analysis run',
+  },
+  startAnalysisButton: {
+    id: 'course-authoring.course-optimizer-report.start-analysis.button',
+    defaultMessage: 'Start analysis',
+    description: 'Button that kicks off a new Course Optimizer extended-analysis run',
+  },
+  rerunAnalysisButton: {
+    id: 'course-authoring.course-optimizer-report.rerun-analysis.button',
+    defaultMessage: 'Re-run analysis',
+    description: 'Button that kicks off a new Course Optimizer extended-analysis run for a course that already has one',
+  },
+  startAnalysisError: {
+    id: 'course-authoring.course-optimizer-report.start-analysis.error',
+    defaultMessage: 'Could not start the analysis run. Please try again.',
+    description: 'Shown when kicking off a new analysis run fails',
+  },
+  reportPendingBody: {
+    id: 'course-authoring.course-optimizer-report.pending.body',
+    defaultMessage: 'Analysis is starting…',
+    description: 'Shown while an analysis run has started but has no report yet',
+  },
 });
 
 export default messages;
