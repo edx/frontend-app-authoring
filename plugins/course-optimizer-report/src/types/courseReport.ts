@@ -109,3 +109,13 @@ export interface CourseReport {
   components: ComponentEntity[];
   findings: Finding[];
 }
+
+// Studio's course_analysis_report_status proxy response. `report` is null
+// until the pipeline reaches its Stage 2 snapshot -- PENDING/RUNNING runs
+// have a status but nothing else to show yet.
+export interface CourseAnalysisRun {
+  runId: string;
+  status: PipelineStatus;
+  report: CourseReport | null;
+  error: string | null;
+}

@@ -9,17 +9,21 @@ Renders as an additive section alongside (never instead of) the existing link-ch
 scan results; see `CourseOptimizerPage.tsx` and the `CourseOptimizerExtendedReportSlot`
 plugin-slot in the host app.
 
-## Current data source (phase 5a)
+## Data source
 
-`data/api.ts`'s `fetchCourseOptimizerReportMock` simulates a `PENDING -> RUNNING ->
-PARTIAL -> COMPLETE` pipeline run against `data/courseReportFixture.ts` (a typed copy
-of the prototype's `contracts/course_report.fixture.json`). This lets the whole widget
-be built, tested, and demoed in devstack with no dependency on xpert-api-services or a
-Studio-brokered auth token.
+`data/apiHooks.ts`'s `useCourseOptimizerReport` polls Studio's `course_analysis_report_status`
+proxy endpoint (`data/api.ts`'s `fetchCourseAnalysisReportStatus`), which in turn calls
+xpert-ai-workflows server-side — this package never talks to that backend directly and
+needs no separate auth client. A `null` result means the course has no analysis run yet,
+which the widget renders as a "Start analysis" prompt rather than an error.
 
-Swapping in a real fetch (phase 5b — a Studio-brokered-JWT-authenticated client against
-xpert-api-services) only requires changing `useCourseOptimizerReport`'s `queryFn` in
-`data/apiHooks.ts`; no component in this package needs to change.
+`useStartCourseAnalysisReport` kicks off a new run via the `course_analysis_report` proxy
+endpoint (Studio generates the course export server-side; no upload flow needed here) and
+invalidates the status query on success so the next poll picks up the new run.
+
+`data/courseReportFixture.ts` (a typed copy of the `xpert-labs/apps/course-optimizer`
+prototype's `contracts/course_report.fixture.json`) backs the selector and component
+tests, standing in for a real `CourseReport`.
 
 ## Structure
 

@@ -1,6 +1,8 @@
-import { Alert, Badge, Card } from '@openedx/paragon';
+import {
+  Alert, Badge, Button, Card,
+} from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { useCourseOptimizerReport } from './data/apiHooks';
+import { useCourseOptimizerReport, useStartCourseAnalysisReport } from './data/apiHooks';
 import { CourseReportProvider } from './context/CourseReportContext';
 import { ReportUiProvider } from './context/ReportUiContext';
 import messages from './messages';
@@ -38,7 +40,8 @@ interface Props {
 // flows in as a prop.
 const CourseOptimizerReportWidget = ({ courseId }: Props) => {
   const intl = useIntl();
-  const { data: report, isError } = useCourseOptimizerReport(courseId);
+  const { data: run, isError } = useCourseOptimizerReport(courseId);
+  const startAnalysis = useStartCourseAnalysisReport(courseId);
 
   if (isError) {
     return (
@@ -48,9 +51,66 @@ const CourseOptimizerReportWidget = ({ courseId }: Props) => {
     );
   }
 
-  if (!report) {
+  // Still resolving the first fetch -- run is undefined until then, and null
+  // afterwards only means "no run exists yet" (a real, renderable state).
+  if (run === undefined) {
     return null;
   }
+
+  const startButton = (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={() => startAnalysis.mutate()}
+      disabled={startAnalysis.isPending}
+    >
+      {intl.formatMessage(run ? messages.rerunAnalysisButton : messages.startAnalysisButton)}
+    </Button>
+  );
+
+  if (!run) {
+    return (
+      <Card className="course-optimizer-report-card mt-3">
+        <Card.Header title={intl.formatMessage(messages.notStartedHeading)} />
+        <Card.Section>
+          <p>{intl.formatMessage(messages.notStartedBody)}</p>
+          {startAnalysis.isError && (
+            <Alert variant="danger">{intl.formatMessage(messages.startAnalysisError)}</Alert>
+          )}
+          {startButton}
+        </Card.Section>
+      </Card>
+    );
+  }
+
+  if (!run.report) {
+    // A run exists but hasn't reached its first report snapshot yet.
+    const failed = run.status === 'FAILED';
+    return (
+      <Card className="course-optimizer-report-card mt-3">
+        <Card.Header
+          title={intl.formatMessage(messages.notStartedHeading)}
+          actions={(
+            <Badge variant={STATUS_BADGE_VARIANT[run.status]}>
+              {intl.formatMessage(messages[STATUS_MESSAGE[run.status]])}
+            </Badge>
+          )}
+        />
+        <Card.Section>
+          {failed ? (
+            <>
+              <Alert variant="danger">{run.error ?? intl.formatMessage(messages.startAnalysisError)}</Alert>
+              {startButton}
+            </>
+          ) : (
+            <p>{intl.formatMessage(messages.reportPendingBody)}</p>
+          )}
+        </Card.Section>
+      </Card>
+    );
+  }
+
+  const { report } = run;
 
   return (
     <CourseReportProvider value={report}>
@@ -59,9 +119,12 @@ const CourseOptimizerReportWidget = ({ courseId }: Props) => {
           <Card.Header
             title={report.course.display_name}
             actions={(
-              <Badge variant={STATUS_BADGE_VARIANT[report.status]}>
-                {intl.formatMessage(messages[STATUS_MESSAGE[report.status]])}
-              </Badge>
+              <div className="course-optimizer-report-widget__header-actions">
+                <Badge variant={STATUS_BADGE_VARIANT[report.status]}>
+                  {intl.formatMessage(messages[STATUS_MESSAGE[report.status]])}
+                </Badge>
+                {startButton}
+              </div>
             )}
           />
           <Card.Section>
