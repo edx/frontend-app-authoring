@@ -33,8 +33,7 @@ export async function getCourseDetail(courseId: string, username: string) {
 export const waffleFlagDefaults = {
   enableCourseOptimizer: false,
   enableCourseOptimizerCheckPrevRunLinks: false,
-  // TEMP: local-only override for manual devstack testing — revert before committing
-  enableCourseOptimizerExtendedReport: true,
+  enableCourseOptimizerExtendedReport: false,
   enableUnitExpandedView: false,
   enableOutlineComponentCreation: false,
   useNewHomePage: true,
