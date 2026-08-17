@@ -25,7 +25,7 @@ const FORMULA_TRIGGER = /^[=+\-@]/;
 
 function csvEscape(value: string): string {
   const safe = FORMULA_TRIGGER.test(value) ? `'${value}` : value;
-  return /["\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 function toCsv(findings: Finding[]): string {
