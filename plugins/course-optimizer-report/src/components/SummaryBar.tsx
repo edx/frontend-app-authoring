@@ -1,5 +1,5 @@
 import {
-  Badge, Icon, OverlayTrigger, ProgressBar, Tooltip,
+  Badge, Icon, IconButtonWithTooltip, ProgressBar,
 } from '@openedx/paragon';
 import { InfoOutline } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
@@ -12,12 +12,15 @@ import messages from '../messages';
 import './SummaryBar.scss';
 
 const InfoTooltip = ({ label }: { label: string }) => (
-  <OverlayTrigger
-    placement="top"
-    overlay={<Tooltip id="summary-bar-info-tooltip">{label}</Tooltip>}
-  >
-    <Icon src={InfoOutline} className="summary-bar__info-icon" />
-  </OverlayTrigger>
+  <IconButtonWithTooltip
+    tooltipPlacement="top"
+    tooltipContent={label}
+    src={InfoOutline}
+    iconAs={Icon}
+    alt={label}
+    size="inline"
+    className="summary-bar__info-icon"
+  />
 );
 
 // Renders a count-per-key breakdown (severity or category) as a colored

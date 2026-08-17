@@ -13,9 +13,11 @@
 
 .summary-bar__info-icon {
   margin-left: 0.35rem;
-  width: 0.9rem;
-  height: 0.9rem;
-  cursor: help;
+
+  svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
 }
 
 .summary-bar__breakdown {
