@@ -8,7 +8,7 @@ const messages = defineMessages({
   },
   summaryLearningTimeInfo: {
     id: 'course-authoring.course-optimizer-report.summary.learning-time.info',
-    defaultMessage: "LTI's & third-party content not included in this estimate",
+    defaultMessage: 'LTI and third-party content is not included in this estimate',
     description: 'Tooltip explaining a caveat of the estimated learning time stat',
   },
   summaryActivePassiveLabel: {
