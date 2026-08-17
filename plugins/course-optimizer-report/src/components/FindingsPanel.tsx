@@ -79,8 +79,8 @@ export const FindingsPanel = () => {
           <span className="findings-panel__filter-label">
             {intl.formatMessage(messages.findingsSeverityFilterLabel)}
           </span>
-          <FilterPill<'All'>
-            label="All"
+          <FilterPill
+            label={intl.formatMessage(messages.findingsFilterAll)}
             modifierClass="cor-filter-pill--all"
             active={severityFilters.length === SEVERITY_ORDER.length}
             onClick={() => setSeverityFilters(
@@ -101,8 +101,8 @@ export const FindingsPanel = () => {
           <span className="findings-panel__filter-label">
             {intl.formatMessage(messages.findingsCategoryFilterLabel)}
           </span>
-          <FilterPill<'All'>
-            label="All"
+          <FilterPill
+            label={intl.formatMessage(messages.findingsFilterAll)}
             modifierClass="cor-filter-pill--all"
             active={typeFilters.length === CATEGORIES.length}
             onClick={() => setTypeFilters(typeFilters.length === CATEGORIES.length ? [] : CATEGORIES)}
