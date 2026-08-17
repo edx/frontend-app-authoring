@@ -13,12 +13,19 @@ export interface ItemLocation {
 // Walks course -> sections -> subsections -> units -> components once and
 // records, for every non-course item id, its own display name plus its
 // ancestor chain. Lets a Finding.item_id be turned into a human location
-// string without a per-row tree walk. Ported from the prototype's
-// reselect-memoized `selectItemLocations` as a plain function over a
-// `CourseReport`.
+// string without a per-row tree walk.
+//
+// Cached by report identity (a WeakMap, not reselect) so that calling this
+// once per findings-table row doesn't re-walk the whole course hierarchy
+// each time — the report reference is stable across renders until refetched.
+const locationsCache = new WeakMap<CourseReport, Record<string, ItemLocation>>();
+
 export function selectItemLocations(report: CourseReport | undefined): Record<string, ItemLocation> {
+  if (!report) { return {}; }
+  const cached = locationsCache.get(report);
+  if (cached) { return cached; }
+
   const locations: Record<string, ItemLocation> = {};
-  if (!report) { return locations; }
 
   const sectionsById = Object.fromEntries(report.sections.map((s) => [s.section_id, s]));
   const subsectionsById = Object.fromEntries(report.subsections.map((s) => [s.subsection_id, s]));
@@ -77,5 +84,6 @@ export function selectItemLocations(report: CourseReport | undefined): Record<st
     }
   }
 
+  locationsCache.set(report, locations);
   return locations;
 }
