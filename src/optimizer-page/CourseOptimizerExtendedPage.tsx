@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import CourseOptimizerExtendedChecksSlot from '../plugin-slots/CourseOptimizerExtendedChecksSlot';
+import CourseOptimizerReportWidget from './extended';
 
 const CourseOptimizerExtendedPage: FC<{ courseId: string }> = ({ courseId }) => (
-  <CourseOptimizerExtendedChecksSlot courseId={courseId} />
+  <CourseOptimizerReportWidget courseId={courseId} />
 );
 
 export default CourseOptimizerExtendedPage;

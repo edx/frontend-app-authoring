@@ -33,11 +33,6 @@ interface Props {
   courseId: string;
 }
 
-// Registered as the RenderWidget for
-// org.openedx.frontend.authoring.course_optimizer_extended_report.v1.
-// Owns its own data-fetching and UI state via the Provider components below,
-// decoupling its lifecycle from the host CourseOptimizerPage — only courseId
-// flows in as a prop.
 const CourseOptimizerReportWidget = ({ courseId }: Props) => {
   const intl = useIntl();
   const { data: run, isError } = useCourseOptimizerReport(courseId);
