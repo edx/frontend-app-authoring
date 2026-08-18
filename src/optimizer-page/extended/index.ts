@@ -1,3 +1,4 @@
-import CourseOptimizerReportWidget from './CourseOptimizerReportWidget';
+import CourseOptimizerReportBody from './CourseOptimizerReportBody';
 
-export default CourseOptimizerReportWidget;
+export default CourseOptimizerReportBody;
+export { useCourseOptimizerReport, useStartCourseAnalysisReport } from './data/apiHooks';

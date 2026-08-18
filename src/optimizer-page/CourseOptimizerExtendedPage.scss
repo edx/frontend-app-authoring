@@ -1,0 +1,17 @@
+// Local copy of the couple of rules CourseOptimizerPage.tsx's scan-card /
+// scan-course-btn styling needs (defined upstream in
+// scan-results/ScanResults.scss, which this page never loads) -- kept
+// separate rather than importing that file so this fork-local page doesn't
+// pick up an unrelated dependency on the legacy broken-link-check styling.
+.scan-card {
+  box-shadow: none;
+  background-color: transparent;
+
+  hr {
+    margin: 0 18px;
+  }
+}
+
+.scan-course-btn:focus::before {
+  border: none !important;
+}

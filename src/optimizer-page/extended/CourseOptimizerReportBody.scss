@@ -1,13 +1,16 @@
 @import 'styles/shared';
 
-.course-optimizer-report-widget__export-row {
+.course-optimizer-report-body__export-row {
   display: flex;
   justify-content: flex-end;
   margin: 0.5rem 0;
 }
 
-.course-optimizer-report-widget__header-actions {
+.course-optimizer-report-body__status-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #666666;
 }

@@ -1,6 +1,36 @@
 import { defineMessages } from '@edx/frontend-platform/i18n';
 
 const messages = defineMessages({
+  pageTitle: {
+    id: 'course-authoring.course-optimizer-report.page.title',
+    defaultMessage: '{headingTitle} | {courseName} | {siteName}',
+    description: 'Browser tab title for the Course Optimizer extended-report page',
+  },
+  pageEyebrow: {
+    id: 'course-authoring.course-optimizer-report.page.eyebrow',
+    defaultMessage: 'Tools',
+    description: 'Small label above the Course Optimizer page heading',
+  },
+  pageHeading: {
+    id: 'course-authoring.course-optimizer-report.page.heading',
+    defaultMessage: 'Course Optimizer',
+    description: 'Main heading of the Course Optimizer page',
+  },
+  pageNewBadge: {
+    id: 'course-authoring.course-optimizer-report.page.new-badge',
+    defaultMessage: 'New',
+    description: 'Badge next to the Course Optimizer page heading marking it as a new feature',
+  },
+  pageDescription: {
+    id: 'course-authoring.course-optimizer-report.page.description',
+    defaultMessage: 'This tool uses AI to scan your course, identifying errors and potential issues to propose improvements. Unpublished changes will not be included in the scan. Note that this process will take more time for larger courses.',
+    description: 'Explanation of the Course Optimizer tool shown above the scan button',
+  },
+  reportLastGeneratedOn: {
+    id: 'course-authoring.course-optimizer-report.report.last-generated-on',
+    defaultMessage: 'Last generated on',
+    description: 'Label preceding the date the current report was generated',
+  },
   summaryLearningTimeLabel: {
     id: 'course-authoring.course-optimizer-report.summary.learning-time.label',
     defaultMessage: 'Estimated learning time on platform',
