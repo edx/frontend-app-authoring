@@ -25,7 +25,11 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: auto;
+  // Setting only overflow-x makes browsers compute overflow-y as auto too
+  // (not visible), which can clip absolutely-positioned content (tooltips,
+  // badges) whose overflow doesn't count toward this container's own
+  // (content-based) height. Keep vertical overflow visible explicitly.
+  overflow: auto visible;
   border: 1px solid #dddddd;
   border-radius: 8px;
   padding: 1rem;

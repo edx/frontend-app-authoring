@@ -1,13 +1,17 @@
 .findings-badge-strip {
   position: relative;
-  height: 20px;
+  // A little taller than one badge's own natural height (~18-20px
+  // depending on ambient font size) so it doesn't rely on matching that
+  // height exactly -- top-centering the badge inside it (rather than
+  // top: 0) keeps it visually settled even if this padding is generous.
+  height: 24px;
   margin-top: 4px;
 }
 
 .findings-badge-strip__badge {
   position: absolute;
-  top: 0;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   min-width: 1.4rem;
   text-align: center;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
