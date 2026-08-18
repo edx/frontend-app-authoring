@@ -80,15 +80,17 @@ const ModuleRow = ({
       </div>
 
       {findings.length > 0 && (
-        <Collapsible title={intl.formatMessage(messages.moduleFindingsToggle, { count: findings.length })}>
-          <Collapsible.Body>
-            <ul className="module-timeline__issues">
-              {findings.map((f) => (
-                <ModuleIssueRow key={f.id} report={report} finding={f} />
-              ))}
-            </ul>
-          </Collapsible.Body>
-        </Collapsible>
+        <div className="module-timeline__row-findings">
+          <Collapsible title={intl.formatMessage(messages.moduleFindingsToggle, { count: findings.length })}>
+            <Collapsible.Body>
+              <ul className="module-timeline__issues">
+                {findings.map((f) => (
+                  <ModuleIssueRow key={f.id} report={report} finding={f} />
+                ))}
+              </ul>
+            </Collapsible.Body>
+          </Collapsible>
+        </div>
       )}
     </div>
   );

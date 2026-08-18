@@ -53,10 +53,10 @@ const ColorBreakdown = <T extends string>({
   <div className="summary-bar__breakdown">
     {order.map((key) => (
       <span key={key} className="summary-bar__breakdown-row">
-        <Badge pill className={`cor-badge cor-badge--${modifierPrefix}-${toModifier(key)}`}>
+        <span className="summary-bar__breakdown-label">{key}</span>
+        <Badge pill className={`cor-badge cor-badge--count cor-badge--${modifierPrefix}-${toModifier(key)}`}>
           {counts[key] ?? 0}
         </Badge>
-        {key}
       </span>
     ))}
   </div>

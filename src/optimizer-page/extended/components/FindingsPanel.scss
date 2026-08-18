@@ -28,3 +28,9 @@
 .findings-panel__empty {
   color: #666666;
 }
+
+.findings-panel__table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}

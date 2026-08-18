@@ -209,12 +209,14 @@ export const FindingsPanel = () => {
       {findings.length === 0 ? (
         <p className="findings-panel__empty">{intl.formatMessage(messages.findingsEmpty)}</p>
       ) : (
-        <DataTable
-          isSortable
-          data={rows}
-          itemCount={rows.length}
-          columns={columns}
-        />
+        <div className="findings-panel__table-scroll">
+          <DataTable
+            isSortable
+            data={rows}
+            itemCount={rows.length}
+            columns={columns}
+          />
+        </div>
       )}
     </section>
   );

@@ -7,9 +7,15 @@
 
 .summary-bar__tile {
   height: 100%;
+
+  .pgn__card-body {
+    padding: var(--pgn-spacing-card-spacer-x, 1rem);
+  }
 }
 
 .summary-bar__tile-label {
+  display: flex;
+  align-items: center;
   font-size: 0.75rem;
   font-weight: 600;
   color: #666666;
@@ -30,7 +36,12 @@
 .summary-bar__info-icon {
   margin-left: 0.35rem;
 
-  svg {
+  // Resize the icon's own sizing box (not the inner <svg>, which fills its
+  // parent at 100% per Paragon's .pgn__icon svg rule) -- overriding just the
+  // svg's dimensions here would leave it smaller than its 1.5rem parent span
+  // with no auto-centering, which is what made the icon look offset with the
+  // hover background visible around it.
+  .btn-icon__icon-container .pgn__icon.btn-icon__icon {
     width: 0.9rem;
     height: 0.9rem;
   }
@@ -44,10 +55,22 @@
 }
 
 .summary-bar__breakdown-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
   font-size: 0.8rem;
+}
+
+.summary-bar__breakdown-label {
+  text-align: left;
+}
+
+// Fixed (not just minimum) width so single- and double-digit counts render
+// as the same size pill instead of single digits looking clipped/oval next
+// to rounder double-digit ones.
+.cor-badge--count {
+  width: 1.5rem;
 }
 
 .summary-bar__active-passive-bar {
