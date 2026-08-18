@@ -66,6 +66,16 @@ const messages = defineMessages({
     defaultMessage: 'No',
     description: 'Value shown when the course does not meet its target hour band',
   },
+  summaryActsNote: {
+    id: 'course-authoring.course-optimizer-report.summary.acts-note',
+    defaultMessage: '{components, plural, one {# activity} other {# activities}} across {sections, plural, one {# section} other {# sections}}',
+    description: 'Sub-note under the total learning time stat, e.g. "42 activities across 10 sections"',
+  },
+  summaryActivePercentValue: {
+    id: 'course-authoring.course-optimizer-report.summary.active-percent.value',
+    defaultMessage: '{percent}% active',
+    description: 'Headline value for the active/passive stat tile, e.g. "23% active"',
+  },
   summaryFindingsLabel: {
     id: 'course-authoring.course-optimizer-report.summary.findings.label',
     defaultMessage: 'Findings',
@@ -75,6 +85,11 @@ const messages = defineMessages({
     id: 'course-authoring.course-optimizer-report.summary.findings.total',
     defaultMessage: '{count} total',
     description: 'Total finding count, e.g. "5 total"',
+  },
+  summaryFindingsAutoFixable: {
+    id: 'course-authoring.course-optimizer-report.summary.findings.auto-fixable',
+    defaultMessage: '{count, plural, one {# auto-fixable} other {# auto-fixable}}',
+    description: 'Sub-note under the findings stat showing how many are auto-fixable',
   },
   summaryBySeverityLabel: {
     id: 'course-authoring.course-optimizer-report.summary.by-severity.label',
@@ -105,6 +120,16 @@ const messages = defineMessages({
     id: 'course-authoring.course-optimizer-report.timeline.view.by-section',
     defaultMessage: 'By Section',
     description: 'Timeline view toggle: show one track per section/module',
+  },
+  legendFlagLabel: {
+    id: 'course-authoring.course-optimizer-report.legend.flag.label',
+    defaultMessage: 'Flagged',
+    description: 'Timeline legend entry label for a flagged section marker',
+  },
+  legendFlagDescription: {
+    id: 'course-authoring.course-optimizer-report.legend.flag.description',
+    defaultMessage: 'long stretch of one learning mode without a break',
+    description: 'Timeline legend entry description for a flagged section marker',
   },
   moduleFindingsToggle: {
     id: 'course-authoring.course-optimizer-report.module.findings-toggle',

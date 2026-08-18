@@ -18,6 +18,7 @@ export const ContentTimeline = () => {
   const report = useCourseReport();
   const timeline = useMemo(() => selectTimeline(report), [report]);
   const [view, setView] = useState<TimelineView>('course');
+  const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
 
   const grandTotalLabel = fmtMinutes(timeline.totalMinutes);
 
@@ -54,14 +55,20 @@ export const ContentTimeline = () => {
           <div className="content-timeline__ribbon" style={{ width: timeline.ribbonWidth }}>
             <div className="content-timeline__section-labels">
               {timeline.sections.map((section) => (
-                <div
+                <button
                   key={section.sectionId}
-                  className="content-timeline__section-label"
+                  type="button"
+                  aria-pressed={highlightedSectionId === section.sectionId}
+                  className={`content-timeline__section-label ${highlightedSectionId === section.sectionId ? 'content-timeline__section-label--active' : ''}`}
                   style={{ left: section.x, width: section.width }}
-                  title={section.title}
+                  title={`${section.title} · ${fmtMinutes(section.totalMinutes)}`}
+                  onClick={() => setHighlightedSectionId(
+                    (current) => (current === section.sectionId ? null : section.sectionId),
+                  )}
                 >
-                  {section.title}
-                </div>
+                  <span className="content-timeline__section-label-title">{section.title}</span>
+                  <span className="content-timeline__section-label-time">{fmtMinutes(section.totalMinutes)}</span>
+                </button>
               ))}
             </div>
 
@@ -72,6 +79,7 @@ export const ContentTimeline = () => {
                   tile={tile}
                   left={tile.x}
                   height={46}
+                  dimmed={!!highlightedSectionId && highlightedSectionId !== section.sectionId}
                 />
               )))}
             </div>

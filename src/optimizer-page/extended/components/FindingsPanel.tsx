@@ -8,7 +8,7 @@ import { CATEGORY_ORDER } from '../lib/categoryColor';
 import { toModifier } from '../lib/cssModifier';
 import { SEVERITY_ORDER } from '../lib/severityColor';
 import messages from '../messages';
-import { buildFindingRow } from './FindingRow';
+import { buildFindingRow, safeGuidelineUrl, type FindingRowData } from './FindingRow';
 import type { FindingType, Severity } from '../types/courseReport';
 import './FindingsPanel.scss';
 
@@ -39,6 +39,56 @@ const FilterPill = <T extends string>({
   </Chip>
   );
 
+// Orders severity/category values by their worst-to-best display order
+// (rather than alphabetically) when a Severity/Category column is sorted.
+function orderedSortType(order: string[]) {
+  return (rowA: { values: Record<string, string> }, rowB: { values: Record<string, string> }, columnId: string) => (
+    order.indexOf(rowA.values[columnId]) - order.indexOf(rowB.values[columnId])
+  );
+}
+
+// Column Cell renderers -- declared at module scope (not inline in
+// FindingsPanel's columns array) so DataTable/react-table sees a stable
+// component identity across renders instead of a new one every time.
+type CellProps = { row: { original: FindingRowData } };
+
+const SeverityCell = ({ row }: CellProps) => (
+  <span className={`cor-text--severity-${toModifier(row.original.severity)}`}>{row.original.severity}</span>
+);
+
+const CategoryCell = ({ row }: CellProps) => (
+  <span className={`cor-text--category-${toModifier(row.original.category)}`}>{row.original.category}</span>
+);
+
+const SuggestionCell = ({ row }: CellProps) => (
+  <span className="cor-text--muted">{row.original.suggestion}</span>
+);
+
+const AutoFixableCell = ({ row }: CellProps) => {
+  const intl = useIntl();
+  return row.original.autoFixable
+    ? intl.formatMessage(messages.findingsAutoFixableYes)
+    : intl.formatMessage(messages.findingsAutoFixableNo);
+};
+
+const ScoreCell = ({ row }: CellProps) => row.original.score ?? '—';
+
+const GuidelineCell = ({ row }: CellProps) => {
+  const intl = useIntl();
+  const guidelineUrl = safeGuidelineUrl(row.original.guideline);
+  if (!guidelineUrl) { return '—'; }
+  return (
+    <a
+      href={guidelineUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${row.original.category} guideline for "${row.original.summary}"`}
+    >
+      {intl.formatMessage(messages.findingsGuidelineLink)}
+    </a>
+  );
+};
+
 export const FindingsPanel = () => {
   const intl = useIntl();
   const report = useCourseReport();
@@ -53,19 +103,51 @@ export const FindingsPanel = () => {
   );
 
   const rows = useMemo(
-    () => findings.map((f) => buildFindingRow(report, f, intl)),
-    [findings, report, intl],
+    () => findings.map((f) => buildFindingRow(report, f)),
+    [findings, report],
   );
 
   const columns = [
-    { Header: intl.formatMessage(messages.findingsColumnSeverity), accessor: 'Severity' },
-    { Header: intl.formatMessage(messages.findingsColumnCategory), accessor: 'Category' },
-    { Header: intl.formatMessage(messages.findingsColumnLocation), accessor: 'Location' },
-    { Header: intl.formatMessage(messages.findingsColumnSummary), accessor: 'Summary' },
-    { Header: intl.formatMessage(messages.findingsColumnSuggestion), accessor: 'Suggestion' },
-    { Header: intl.formatMessage(messages.findingsColumnAutoFixable), accessor: 'Auto-fixable' },
-    { Header: intl.formatMessage(messages.findingsColumnScore), accessor: 'Score' },
-    { Header: intl.formatMessage(messages.findingsColumnGuideline), accessor: 'Guideline' },
+    {
+      Header: intl.formatMessage(messages.findingsColumnSeverity),
+      accessor: 'severity',
+      sortType: orderedSortType(SEVERITY_ORDER),
+      Cell: SeverityCell,
+    },
+    {
+      Header: intl.formatMessage(messages.findingsColumnCategory),
+      accessor: 'category',
+      sortType: orderedSortType(CATEGORY_ORDER),
+      Cell: CategoryCell,
+    },
+    { Header: intl.formatMessage(messages.findingsColumnLocation), accessor: 'location' },
+    {
+      Header: intl.formatMessage(messages.findingsColumnSummary), accessor: 'summary', disableSortBy: true,
+    },
+    {
+      Header: intl.formatMessage(messages.findingsColumnSuggestion),
+      accessor: 'suggestion',
+      disableSortBy: true,
+      Cell: SuggestionCell,
+    },
+    {
+      Header: intl.formatMessage(messages.findingsColumnAutoFixable),
+      accessor: 'autoFixable',
+      disableSortBy: true,
+      Cell: AutoFixableCell,
+    },
+    {
+      Header: intl.formatMessage(messages.findingsColumnScore),
+      accessor: 'score',
+      disableSortBy: true,
+      Cell: ScoreCell,
+    },
+    {
+      Header: intl.formatMessage(messages.findingsColumnGuideline),
+      accessor: 'guideline',
+      disableSortBy: true,
+      Cell: GuidelineCell,
+    },
   ];
 
   return (
@@ -128,6 +210,7 @@ export const FindingsPanel = () => {
         <p className="findings-panel__empty">{intl.formatMessage(messages.findingsEmpty)}</p>
       ) : (
         <DataTable
+          isSortable
           data={rows}
           itemCount={rows.length}
           columns={columns}

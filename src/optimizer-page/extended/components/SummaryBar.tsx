@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import {
-  Badge, Icon, IconButtonWithTooltip, ProgressBar,
+  Badge, Card, Icon, IconButtonWithTooltip, ProgressBar,
 } from '@openedx/paragon';
 import { InfoOutline } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
@@ -21,6 +22,19 @@ const InfoTooltip = ({ label }: { label: string }) => (
     size="inline"
     className="summary-bar__info-icon"
   />
+);
+
+const StatTile = ({
+  label, value, sub, children,
+}: { label: ReactNode; value?: ReactNode; sub?: ReactNode; children?: ReactNode }) => (
+  <Card className="summary-bar__tile">
+    <Card.Body>
+      <div className="summary-bar__tile-label">{label}</div>
+      {value !== undefined && <div className="summary-bar__tile-value">{value}</div>}
+      {sub && <div className="summary-bar__tile-sub">{sub}</div>}
+      {children}
+    </Card.Body>
+  </Card>
 );
 
 // Renders a count-per-key breakdown (severity or category) as a colored
@@ -70,74 +84,56 @@ export const SummaryBar = () => {
   const timeSummary = report?.time_summary;
   const findingSummary = report?.finding_summary;
 
-  if (!timeSummary || !findingSummary) { return null; }
+  if (!report || !timeSummary || !findingSummary) { return null; }
+
+  const activePercent = Math.round(timeSummary.active_ratio * 100);
+  const autoFixableCount = report.findings.filter((f) => f.auto_fixable).length;
 
   return (
     <section className="summary-bar">
-      <table>
-        <tbody>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryLearningTimeLabel)}
-              <InfoTooltip label={intl.formatMessage(messages.summaryLearningTimeInfo)} />
-            </td>
-            <td>{fmtMinutes(timeSummary.total_minutes)}</td>
-          </tr>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryActivePassiveLabel)}
-            </td>
-            <td>
-              <div className="summary-bar__active-passive">
-                <ActivePassiveBar activeRatio={timeSummary.active_ratio} />
-                <span>
-                  {intl.formatMessage(messages.summaryActivePassiveValue, {
-                    active: fmtMinutes(timeSummary.active_minutes),
-                    passive: fmtMinutes(timeSummary.passive_minutes),
-                    percent: Math.round(timeSummary.active_ratio * 100),
-                  })}
-                </span>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryMeetsTargetLabel)}
-            </td>
-            <td>
-              {timeSummary.meets_target_hours
-                ? intl.formatMessage(messages.summaryMeetsTargetYes)
-                : intl.formatMessage(messages.summaryMeetsTargetNo)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <table>
-        <tbody>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryFindingsLabel)}
-            </td>
-            <td>{intl.formatMessage(messages.summaryFindingsTotal, { count: findingSummary.total })}</td>
-          </tr>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryBySeverityLabel)}
-            </td>
-            <td>
-              <ColorBreakdown order={SEVERITY_ORDER} modifierPrefix="severity" counts={findingSummary.by_severity} />
-            </td>
-          </tr>
-          <tr>
-            <td className="summary-bar__label">
-              {intl.formatMessage(messages.summaryByCategoryLabel)}
-            </td>
-            <td>
-              <ColorBreakdown order={CATEGORY_ORDER} modifierPrefix="category" counts={findingSummary.by_type} />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <StatTile
+        label={(
+          <>
+            {intl.formatMessage(messages.summaryLearningTimeLabel)}
+            <InfoTooltip label={intl.formatMessage(messages.summaryLearningTimeInfo)} />
+          </>
+        )}
+        value={fmtMinutes(timeSummary.total_minutes)}
+        sub={intl.formatMessage(messages.summaryActsNote, {
+          components: report.components.length,
+          sections: report.sections.length,
+        })}
+      />
+      <StatTile
+        label={intl.formatMessage(messages.summaryActivePassiveLabel)}
+        value={intl.formatMessage(messages.summaryActivePercentValue, { percent: activePercent })}
+      >
+        <ActivePassiveBar activeRatio={timeSummary.active_ratio} />
+        <div className="summary-bar__tile-sub">
+          {intl.formatMessage(messages.summaryActivePassiveValue, {
+            active: fmtMinutes(timeSummary.active_minutes),
+            passive: fmtMinutes(timeSummary.passive_minutes),
+            percent: activePercent,
+          })}
+        </div>
+      </StatTile>
+      <StatTile
+        label={intl.formatMessage(messages.summaryMeetsTargetLabel)}
+        value={timeSummary.meets_target_hours
+          ? intl.formatMessage(messages.summaryMeetsTargetYes)
+          : intl.formatMessage(messages.summaryMeetsTargetNo)}
+      />
+      <StatTile
+        label={intl.formatMessage(messages.summaryFindingsLabel)}
+        value={findingSummary.total}
+        sub={intl.formatMessage(messages.summaryFindingsAutoFixable, { count: autoFixableCount })}
+      />
+      <StatTile label={intl.formatMessage(messages.summaryBySeverityLabel)}>
+        <ColorBreakdown order={SEVERITY_ORDER} modifierPrefix="severity" counts={findingSummary.by_severity} />
+      </StatTile>
+      <StatTile label={intl.formatMessage(messages.summaryByCategoryLabel)}>
+        <ColorBreakdown order={CATEGORY_ORDER} modifierPrefix="category" counts={findingSummary.by_type} />
+      </StatTile>
     </section>
   );
 };

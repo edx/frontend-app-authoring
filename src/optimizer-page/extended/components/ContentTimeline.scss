@@ -33,19 +33,46 @@
 
 .content-timeline__section-labels {
   position: relative;
-  height: 36px;
+  height: 40px;
 }
 
 .content-timeline__section-label {
   position: absolute;
   top: 0;
-  padding-left: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 0 0 6px;
+  border: none;
   border-left: 2px solid #cccccc;
+  background: transparent;
   box-sizing: border-box;
   overflow: hidden;
   white-space: nowrap;
+  cursor: pointer;
+  border-radius: 3px;
+
+  &:hover {
+    background: #f3f1ed;
+  }
+
+  &--active {
+    border-left-color: #1f1f1f;
+    background: rgb(0 38 43 / 0.06);
+  }
+}
+
+.content-timeline__section-label-title {
   font-size: 0.75rem;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.content-timeline__section-label-time {
+  font-size: 0.65rem;
+  color: #888888;
 }
 
 .content-timeline__tiles {
