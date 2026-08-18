@@ -64,12 +64,12 @@ describe('CourseOptimizerReportBody', () => {
     // Timeline legend now explains the flagged-section marker.
     expect(screen.getByText('Flagged')).toBeInTheDocument();
 
-    // The full-course view is dense enough that tiles don't show a findings
-    // badge there -- only in the by-section view (see below).
-    expect(screen.getByRole('button', { name: /Welcome Video/ })).toHaveTextContent('');
+    // The full-course view is dense enough that it doesn't show a findings
+    // badge strip at all -- only the by-section view does (see below).
+    expect(screen.queryByTitle('1 finding')).not.toBeInTheDocument();
   });
 
-  it('shows a findings-count badge on tiles only in the by-section timeline view', () => {
+  it('shows a findings-count badge below the track only in the by-section timeline view', () => {
     const run: CourseAnalysisRun = {
       runId: 'run-123', status: 'COMPLETE', report: courseReportFixture, error: null,
     };
@@ -77,7 +77,15 @@ describe('CourseOptimizerReportBody', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'By Section' }));
 
-    expect(screen.getByRole('button', { name: /Welcome Video/ })).toHaveTextContent('1');
+    // The badge is a sibling below the track, not layered on the tile itself.
+    const tile = screen.getByRole('button', { name: /Welcome Video/ });
+    expect(tile).toHaveTextContent('');
+    const moduleRow = tile.closest('.module-timeline__row') as HTMLElement;
+    // This section has two single-finding components (Welcome Video and the
+    // Environment Check Quiz), so two "1 finding" badges are expected here.
+    const badges = within(moduleRow).getAllByTitle('1 finding');
+    expect(badges).toHaveLength(2);
+    badges.forEach((badge) => expect(badge).toHaveTextContent('1'));
   });
 
   it('sorts the findings table by severity when the column header is clicked', () => {

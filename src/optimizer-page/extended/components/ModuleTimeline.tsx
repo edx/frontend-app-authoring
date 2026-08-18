@@ -3,10 +3,13 @@ import { Badge, Collapsible } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { useCourseReport } from '../context/CourseReportContext';
 import { selectTimeline, type TimelineSection } from '../selectors/timelineSelectors';
-import { selectFindingsBySection, selectModuleLocationLabel } from '../selectors/findingsSelectors';
+import {
+  selectFindingsBySection, selectFindingsForItem, selectModuleLocationLabel,
+} from '../selectors/findingsSelectors';
 import { toModifier } from '../lib/cssModifier';
 import { formatMinutesRounded as fmtMinutes } from '../lib/formatMinutes';
 import messages from '../messages';
+import { FindingsBadgeStrip } from './FindingsBadgeStrip';
 import { FlagStrip } from './FlagStrip';
 import { TimelineTileButton } from './TimelineTileButton';
 import type { CourseReport, Finding } from '../types/courseReport';
@@ -54,6 +57,12 @@ const ModuleRow = ({
     return { tile, left, width };
   });
   const trackWidth = Math.round(section.totalMinutes * PX_PER_MIN_MODULE);
+  const findingsBadgeSpans = positionedTiles.map(({ tile, left, width }) => ({
+    componentId: tile.componentId,
+    x: left,
+    width,
+    findings: selectFindingsForItem(report, tile.componentId),
+  }));
 
   return (
     <div className="module-timeline__row">
@@ -72,10 +81,10 @@ const ModuleRow = ({
                 left={left}
                 width={width}
                 height={30}
-                showFindingsBadge
               />
             ))}
           </div>
+          <FindingsBadgeStrip width={trackWidth} spans={findingsBadgeSpans} />
           <FlagStrip width={trackWidth} spans={[{ x: 0, width: trackWidth, flags: section.flags }]} />
         </div>
       </div>
