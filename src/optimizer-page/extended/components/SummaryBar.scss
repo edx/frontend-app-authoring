@@ -69,8 +69,12 @@
 
 // Same min-width regardless of digit count, so single- and double-digit
 // counts render as the same size pill instead of single digits looking
-// clipped/oval next to rounder double-digit ones.
-.cor-badge--count {
+// clipped/oval next to rounder double-digit ones. Compounded with
+// .cor-badge (not just .cor-badge--count alone) so this reliably wins over
+// _shared.scss's own `.cor-badge { min-width: 1.4rem; }` -- both are
+// single-class selectors of equal specificity, so which one wins otherwise
+// depends on unpredictable stylesheet load order.
+.cor-badge.cor-badge--count {
   min-width: 2rem;
 }
 

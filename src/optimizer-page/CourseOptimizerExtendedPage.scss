@@ -15,3 +15,13 @@
 .scan-course-btn:focus::before {
   border: none !important;
 }
+
+// Bootstrap 4 (this app's version) has no gap-* utilities -- only Bootstrap
+// 5 does -- so a `gap-3` className here would be a silent no-op. This gives
+// the scan/re-run button breathing room above it once flex-wrap drops it to
+// its own line on narrow viewports, without affecting the normal
+// side-by-side layout (justify-content-between already spaces them wider
+// than this gap when there's room).
+.course-optimizer-page__header-row {
+  gap: 1rem;
+}
