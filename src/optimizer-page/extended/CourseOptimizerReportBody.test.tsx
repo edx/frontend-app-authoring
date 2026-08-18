@@ -64,7 +64,19 @@ describe('CourseOptimizerReportBody', () => {
     // Timeline legend now explains the flagged-section marker.
     expect(screen.getByText('Flagged')).toBeInTheDocument();
 
-    // A tile with findings shows its finding count as a badge.
+    // The full-course view is dense enough that tiles don't show a findings
+    // badge there -- only in the by-section view (see below).
+    expect(screen.getByRole('button', { name: /Welcome Video/ })).toHaveTextContent('');
+  });
+
+  it('shows a findings-count badge on tiles only in the by-section timeline view', () => {
+    const run: CourseAnalysisRun = {
+      runId: 'run-123', status: 'COMPLETE', report: courseReportFixture, error: null,
+    };
+    render(<CourseOptimizerReportBody run={run} isError={false} startAnalysisError={false} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'By Section' }));
+
     expect(screen.getByRole('button', { name: /Welcome Video/ })).toHaveTextContent('1');
   });
 

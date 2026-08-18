@@ -72,6 +72,7 @@ const ModuleRow = ({
                 left={left}
                 width={width}
                 height={30}
+                showFindingsBadge
               />
             ))}
           </div>

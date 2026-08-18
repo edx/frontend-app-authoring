@@ -19,13 +19,18 @@ interface TimelineTileButtonProps {
   // Set when a different section is highlighted in the full-course view, so
   // this tile's own section can visually recede without changing its data.
   dimmed?: boolean;
+  // Findings-count badge only makes sense at the by-section zoom level,
+  // where each tile is wide enough to read; the full-course ribbon is dense
+  // enough that badges there just clutter it (findings are still surfaced
+  // via the tooltip and aria-label in both views).
+  showFindingsBadge?: boolean;
 }
 
 // One clickable, hoverable segment of a timeline ribbon/track. Shared by the
 // full-course ribbon and each module's per-row track so tile appearance and
 // interaction stay identical between the two views.
 export const TimelineTileButton = ({
-  tile, left, height, width, dimmed,
+  tile, left, height, width, dimmed, showFindingsBadge,
 }: TimelineTileButtonProps) => {
   const { selectItem } = useReportUi();
   const report = useCourseReport();
@@ -57,7 +62,7 @@ export const TimelineTileButton = ({
         className={`timeline-tile cor-tile--block-${tile.blockTypeModifier} ${dimmed ? 'timeline-tile--dimmed' : ''}`}
         style={{ left, width: Math.max(width ?? tile.width, 1), height }}
       >
-        {findings.length > 0 && highestSeverity && (
+        {showFindingsBadge && findings.length > 0 && highestSeverity && (
           <Badge pill className={`timeline-tile__badge cor-badge cor-badge--severity-${toModifier(highestSeverity)}`}>
             {findings.length}
           </Badge>
