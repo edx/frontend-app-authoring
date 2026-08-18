@@ -1,5 +1,5 @@
 import { render, initializeMocks } from '@src/testUtils';
-import CourseOptimizerExtendedReportSlot from '.';
+import CourseOptimizerExtendedChecksSlot from '.';
 
 jest.mock('@openedx/frontend-plugin-framework/dist', () => ({
   // eslint-disable-next-line react/prop-types
@@ -8,13 +8,13 @@ jest.mock('@openedx/frontend-plugin-framework/dist', () => ({
   ),
 }));
 
-describe('CourseOptimizerExtendedReportSlot', () => {
+describe('CourseOptimizerExtendedChecksSlot', () => {
   beforeEach(() => initializeMocks());
 
   it('renders with the slot id and forwards courseId as a plugin prop', () => {
-    const { getByTestId } = render(<CourseOptimizerExtendedReportSlot courseId="course-v1:org+course+run" />);
+    const { getByTestId } = render(<CourseOptimizerExtendedChecksSlot courseId="course-v1:org+course+run" />);
     const slot = getByTestId('plugin-slot');
-    expect(slot).toHaveAttribute('data-id', 'org.openedx.frontend.authoring.course_optimizer_extended_report.v1');
+    expect(slot).toHaveAttribute('data-id', 'org.openedx.frontend.authoring.course_optimizer_extended_checks.v1');
     expect(slot).toHaveAttribute('data-course-id', 'course-v1:org+course+run');
   });
 });
