@@ -36,7 +36,7 @@ const CourseOptimizerExtendedPage: FC<{ courseId: string }> = ({ courseId }) => 
       <Container size="xl" className="mt-4 px-4 export">
         <section className="setting-items mb-4">
           <article>
-            <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3">
+            <div className="d-flex flex-wrap justify-content-between align-items-end mb-3 p-3">
               <div>
                 <p className="small text-muted mb-1">{intl.formatMessage(messages.pageEyebrow)}</p>
                 <div className="d-flex align-items-center">
