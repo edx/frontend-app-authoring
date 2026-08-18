@@ -1,5 +1,16 @@
 @import 'styles/shared';
 
+// Safety net: every section with content that can legitimately grow wide
+// (the timeline ribbon/track, the findings table) has its own
+// overflow-x: auto scroll container, so this outer boundary should never
+// need to clip anything in practice -- but capping it here means any
+// unforeseen overflow is contained to a stray inner scrollbar instead of
+// growing the whole page horizontally.
+.course-optimizer-report-body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .course-optimizer-report-body__export-row {
   display: flex;
   justify-content: flex-end;
