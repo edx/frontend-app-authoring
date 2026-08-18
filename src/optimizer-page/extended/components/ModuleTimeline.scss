@@ -35,7 +35,13 @@
   // their absolute positioning doesn't count toward this container's own
   // (content-based) height. Keep vertical overflow visible explicitly.
   overflow: auto visible;
-  padding-bottom: 4px;
+  // Horizontal buffer so a findings badge centered on the first/last tile
+  // (whose midpoint can sit only a few px from the track's own edge) has
+  // room to extend past x: 0 / x: trackWidth without clipping against this
+  // scroll container's edge -- the track's own tile positions are
+  // untouched, this just insets the whole track a bit within its scroller.
+  padding: 0 1rem 4px;
+  box-sizing: border-box;
 }
 
 .module-timeline__track {
