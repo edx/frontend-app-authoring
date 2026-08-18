@@ -67,11 +67,11 @@
   text-align: left;
 }
 
-// Fixed (not just minimum) width so single- and double-digit counts render
-// as the same size pill instead of single digits looking clipped/oval next
-// to rounder double-digit ones.
+// Same min-width regardless of digit count, so single- and double-digit
+// counts render as the same size pill instead of single digits looking
+// clipped/oval next to rounder double-digit ones.
 .cor-badge--count {
-  width: 1.5rem;
+  min-width: 2rem;
 }
 
 .summary-bar__active-passive-bar {
