@@ -1,9 +1,8 @@
 import { OverlayTrigger, Tooltip } from '@openedx/paragon';
-import { useCourseReport } from '../context/CourseReportContext';
 import { useReportUi } from '../context/ReportUiContext';
-import { selectFindingsForItem } from '../selectors/findingsSelectors';
 import type { TimelineTile } from '../selectors/timelineSelectors';
 import { formatMinutesPrecise as fmtMinutes } from '../lib/formatMinutes';
+import type { Finding } from '../types/courseReport';
 import './TimelineTileButton.scss';
 
 interface TimelineTileButtonProps {
@@ -17,6 +16,10 @@ interface TimelineTileButtonProps {
   // Set when a different section is highlighted in the full-course view, so
   // this tile's own section can visually recede without changing its data.
   dimmed?: boolean;
+  // Passed in rather than looked up here so each caller (ContentTimeline,
+  // ModuleTimeline) computes it once per tile instead of two callers each
+  // independently re-scanning report.findings for the same componentId.
+  findings: Finding[];
 }
 
 // One clickable, hoverable segment of a timeline ribbon/track. Shared by the
@@ -25,11 +28,9 @@ interface TimelineTileButtonProps {
 // are rendered separately, below the track (see FindingsBadgeStrip) --
 // putting them on the tile itself clipped on tiles narrower than the badge.
 export const TimelineTileButton = ({
-  tile, left, height, width, dimmed,
+  tile, left, height, width, dimmed, findings,
 }: TimelineTileButtonProps) => {
   const { selectItem } = useReportUi();
-  const report = useCourseReport();
-  const findings = selectFindingsForItem(report, tile.componentId);
 
   const tooltip = (
     <Tooltip id={`timeline-tile-tooltip-${tile.componentId}`}>

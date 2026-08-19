@@ -25,16 +25,19 @@ const InfoTooltip = ({ label }: { label: string }) => (
 );
 
 const StatTile = ({
-  label, value, sub, children,
-}: { label: ReactNode; value?: ReactNode; sub?: ReactNode; children?: ReactNode }) => (
+  label, value, children,
+}: { label: ReactNode; value?: ReactNode; children?: ReactNode }) => (
   <Card className="summary-bar__tile">
     <Card.Body>
       <div className="summary-bar__tile-label">{label}</div>
       {value !== undefined && <div className="summary-bar__tile-value">{value}</div>}
-      {sub && <div className="summary-bar__tile-sub">{sub}</div>}
       {children}
     </Card.Body>
   </Card>
+);
+
+const TileSub = ({ children }: { children: ReactNode }) => (
+  <div className="summary-bar__tile-sub">{children}</div>
 );
 
 // Renders a count-per-key breakdown (severity or category) as a colored
@@ -99,23 +102,26 @@ export const SummaryBar = () => {
           </>
         )}
         value={fmtMinutes(timeSummary.total_minutes)}
-        sub={intl.formatMessage(messages.summaryActsNote, {
-          components: report.components.length,
-          sections: report.sections.length,
-        })}
-      />
+      >
+        <TileSub>
+          {intl.formatMessage(messages.summaryActsNote, {
+            components: report.components.length,
+            sections: report.sections.length,
+          })}
+        </TileSub>
+      </StatTile>
       <StatTile
         label={intl.formatMessage(messages.summaryActivePassiveLabel)}
         value={intl.formatMessage(messages.summaryActivePercentValue, { percent: activePercent })}
       >
         <ActivePassiveBar activeRatio={timeSummary.active_ratio} />
-        <div className="summary-bar__tile-sub">
+        <TileSub>
           {intl.formatMessage(messages.summaryActivePassiveValue, {
             active: fmtMinutes(timeSummary.active_minutes),
             passive: fmtMinutes(timeSummary.passive_minutes),
             percent: activePercent,
           })}
-        </div>
+        </TileSub>
       </StatTile>
       <StatTile
         label={intl.formatMessage(messages.summaryMeetsTargetLabel)}
@@ -126,8 +132,11 @@ export const SummaryBar = () => {
       <StatTile
         label={intl.formatMessage(messages.summaryFindingsLabel)}
         value={findingSummary.total}
-        sub={intl.formatMessage(messages.summaryFindingsAutoFixable, { count: autoFixableCount })}
-      />
+      >
+        <TileSub>
+          {intl.formatMessage(messages.summaryFindingsAutoFixable, { count: autoFixableCount })}
+        </TileSub>
+      </StatTile>
       <StatTile label={intl.formatMessage(messages.summaryBySeverityLabel)}>
         <ColorBreakdown order={SEVERITY_ORDER} modifierPrefix="severity" counts={findingSummary.by_severity} />
       </StatTile>

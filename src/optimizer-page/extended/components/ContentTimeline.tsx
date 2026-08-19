@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { useCourseReport } from '../context/CourseReportContext';
+import { selectFindingsForItem } from '../selectors/findingsSelectors';
 import { selectTimeline } from '../selectors/timelineSelectors';
 import { formatMinutesRounded as fmtMinutes } from '../lib/formatMinutes';
 import messages from '../messages';
@@ -80,6 +81,7 @@ export const ContentTimeline = () => {
                   left={tile.x}
                   height={46}
                   dimmed={!!highlightedSectionId && highlightedSectionId !== section.sectionId}
+                  findings={selectFindingsForItem(report, tile.componentId)}
                 />
               )))}
             </div>

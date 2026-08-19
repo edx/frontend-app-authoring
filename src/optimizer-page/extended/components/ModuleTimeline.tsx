@@ -54,14 +54,18 @@ const ModuleRow = ({
     const left = Math.round(cumMin * PX_PER_MIN_MODULE);
     cumMin += tile.minutes;
     const width = Math.round(cumMin * PX_PER_MIN_MODULE) - left;
-    return { tile, left, width };
+    return {
+      tile, left, width, findings: selectFindingsForItem(report, tile.componentId),
+    };
   });
   const trackWidth = Math.round(section.totalMinutes * PX_PER_MIN_MODULE);
-  const findingsBadgeSpans = positionedTiles.map(({ tile, left, width }) => ({
+  const findingsBadgeSpans = positionedTiles.map(({
+    tile, left, width, findings: tileFindings,
+  }) => ({
     componentId: tile.componentId,
     x: left,
     width,
-    findings: selectFindingsForItem(report, tile.componentId),
+    findings: tileFindings,
   }));
 
   return (
@@ -74,13 +78,16 @@ const ModuleRow = ({
       <div className="module-timeline__track-scroll">
         <div className="module-timeline__track" style={{ width: trackWidth }}>
           <div className="module-timeline__tiles">
-            {positionedTiles.map(({ tile, left, width }) => (
+            {positionedTiles.map(({
+              tile, left, width, findings: tileFindings,
+            }) => (
               <TimelineTileButton
                 key={tile.componentId}
                 tile={tile}
                 left={left}
                 width={width}
                 height={30}
+                findings={tileFindings}
               />
             ))}
           </div>

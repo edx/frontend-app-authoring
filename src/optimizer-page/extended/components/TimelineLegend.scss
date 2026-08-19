@@ -1,3 +1,5 @@
+@import 'styles/colors';
+
 .timeline-legend {
   flex-wrap: wrap;
   margin: 0.75rem 0;
@@ -21,5 +23,5 @@
 }
 
 .timeline-legend__entry--flag {
-  border-left-color: #d9730d;
+  border-left-color: $flag-color;
 }

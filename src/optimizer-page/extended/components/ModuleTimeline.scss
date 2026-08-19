@@ -1,3 +1,5 @@
+@import 'styles/shared';
+
 .module-timeline__row {
   border: 1px solid #dddddd;
   border-radius: 8px;
@@ -27,21 +29,14 @@
 }
 
 .module-timeline__track-scroll {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  // Setting only overflow-x makes browsers compute overflow-y as auto too
-  // (not visible) -- clipping the findings badges below the track, since
-  // their absolute positioning doesn't count toward this container's own
-  // (content-based) height. Keep vertical overflow visible explicitly.
-  overflow: auto visible;
+  @extend %timeline-track-scroll;
+
   // Horizontal buffer so a findings badge centered on the first/last tile
   // (whose midpoint can sit only a few px from the track's own edge) has
   // room to extend past x: 0 / x: trackWidth without clipping against this
   // scroll container's edge -- the track's own tile positions are
   // untouched, this just insets the whole track a bit within its scroller.
   padding: 0 1rem 4px;
-  box-sizing: border-box;
 }
 
 .module-timeline__track {

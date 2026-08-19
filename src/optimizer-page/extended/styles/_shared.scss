@@ -99,3 +99,17 @@
 .cor-tile--block-neutral {
   background-color: $block-type-neutral-color;
 }
+
+// Scrollable timeline track container (the full-course ribbon and each
+// by-section track both extend this) -- horizontal scroll only. Setting
+// just overflow-x makes browsers compute overflow-y as auto too, which
+// clips absolutely-positioned content (tooltips, findings badges) whose
+// overflow doesn't count toward the container's own content-based height,
+// so overflow-y stays explicitly visible.
+%timeline-track-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: auto visible;
+  box-sizing: border-box;
+}
