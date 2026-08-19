@@ -45,8 +45,7 @@ $block-type-colors: (
 
 $block-type-neutral-color: oklch(75% 0.01 260deg);
 
-// Long-passive-stretch / low-engagement section marker (FlagStrip, and the
-// legend entry describing it) -- kept as its own variable, even though it
-// happens to match $severity-colors' 'high' today, since the two are
-// conceptually unrelated and shouldn't be tied to each other by coincidence.
+// Long-passive-stretch section marker (FlagStrip, TimelineLegend) -- its
+// own variable since it's conceptually unrelated to severity, even though
+// it matches $severity-colors' 'high' today.
 $flag-color: #d9730d;

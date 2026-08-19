@@ -1,9 +1,8 @@
 import { selectLocationLabel } from '../selectors/findingsSelectors';
 import type { CourseReport, Finding } from '../types/courseReport';
 
-// `guideline` is backend-provided data rendered as an <a href>; only allow
-// http(s) so a malicious/malformed value (e.g. a `javascript:` URL) can't
-// execute when clicked.
+// guideline is backend-provided; only allow http(s) so a `javascript:` URL
+// can't execute when clicked.
 export function safeGuidelineUrl(guideline: string | null): string | null {
   if (!guideline) { return null; }
   try {
@@ -25,9 +24,8 @@ export interface FindingRowData {
   guideline: string | null;
 }
 
-// Builds one FindingsPanel DataTable row from a Finding. Values are kept raw
-// (not pre-rendered JSX) so DataTable's isSortable can compare them directly;
-// FindingsPanel's column `Cell` renderers apply the styled presentation.
+// Raw values (not JSX) so DataTable's isSortable can compare them directly;
+// FindingsPanel's Cell renderers apply the styled presentation.
 export function buildFindingRow(report: CourseReport | undefined, finding: Finding): FindingRowData {
   return {
     severity: finding.severity,

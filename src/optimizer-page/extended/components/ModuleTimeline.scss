@@ -31,11 +31,8 @@
 .module-timeline__track-scroll {
   @extend %timeline-track-scroll;
 
-  // Horizontal buffer so a findings badge centered on the first/last tile
-  // (whose midpoint can sit only a few px from the track's own edge) has
-  // room to extend past x: 0 / x: trackWidth without clipping against this
-  // scroll container's edge -- the track's own tile positions are
-  // untouched, this just insets the whole track a bit within its scroller.
+  // Buffer so a findings badge centered on the first/last tile has room to
+  // extend past x: 0 / x: trackWidth without clipping.
   padding: 0 1rem 4px;
 }
 
@@ -64,10 +61,8 @@
   font-size: 0.8rem;
 }
 
-// Unwraps the <li> for layout purposes while keeping real list semantics,
-// so its children become direct items of the parent <ul>'s grid — letting
-// the browser auto-size the severity/category columns to their widest
-// badge across every row instead of each row sizing independently.
+// Unwraps the <li> so its children join the parent <ul>'s grid directly,
+// letting columns auto-size across all rows instead of per-row.
 .module-timeline__issue-row {
   display: contents;
 }

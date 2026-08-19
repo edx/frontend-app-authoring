@@ -45,10 +45,8 @@ const ModuleRow = ({
 }) => {
   const intl = useIntl();
 
-  // Recompute each tile's position/width at the module track's own px/min
-  // scale (finer than the course ribbon's) rather than rescaling the
-  // ribbon's global-scale x/width, which would drift once rounding compounds
-  // across many tiles.
+  // Recomputed at this track's own px/min scale rather than rescaled from
+  // the ribbon's, which would drift as rounding compounds across tiles.
   let cumMin = 0;
   const positionedTiles = section.tiles.map((tile) => {
     const left = Math.round(cumMin * PX_PER_MIN_MODULE);

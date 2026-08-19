@@ -12,13 +12,11 @@ import { buildFindingRow, safeGuidelineUrl, type FindingRowData } from './Findin
 import type { FindingType, Severity } from '../types/courseReport';
 import './FindingsPanel.scss';
 
-// Backed by FindingType/typeFilters, displayed to the user as "Category".
+// FindingType/typeFilters internally, "Category" to the user.
 const CATEGORIES = CATEGORY_ORDER;
 
-// A single toggleable filter pill: outlined when off, filled solid when on.
-// Built on Paragon's Chip for its interaction/focus/a11y semantics
-// (isSelected, keyboard activation); color comes from a
-// cor-filter-pill--* modifier class.
+// A toggleable filter pill: outlined when off, filled when on. Built on
+// Paragon's Chip for its interaction/a11y semantics.
 const FilterPill = <T extends string>({
   label,
   modifierClass,
@@ -47,14 +45,10 @@ function orderedSortType(order: string[]) {
   );
 }
 
-// Column Cell renderers -- declared at module scope (not inline in
-// FindingsPanel's columns array) so DataTable/react-table sees a stable
-// component identity across renders instead of a new one every time.
+// Cell renderers stay at module scope for a stable component identity
+// across renders (react-table treats a new Cell function as a new column).
 type CellProps = { row: { original: FindingRowData } };
 
-// Severity/category cells are identical apart from which field they read
-// (which also names the cor-text--* modifier), so this shared helper backs
-// both rather than duplicating the className logic across two components.
 const taggedCellClassName = (field: 'severity' | 'category', value: string) => `cor-text--${field}-${toModifier(value)}`;
 
 const SeverityCell = ({ row }: CellProps) => (

@@ -37,11 +37,8 @@
 .summary-bar__info-icon {
   margin-left: 0.35rem;
 
-  // Resize the icon's own sizing box (not the inner <svg>, which fills its
-  // parent at 100% per Paragon's .pgn__icon svg rule) -- overriding just the
-  // svg's dimensions here would leave it smaller than its 1.5rem parent span
-  // with no auto-centering, which is what made the icon look offset with the
-  // hover background visible around it.
+  // Resize the icon's sizing box, not the inner <svg> (which fills its
+  // parent at 100%) -- otherwise it renders undersized and off-center.
   .btn-icon__icon-container .pgn__icon.btn-icon__icon {
     width: 0.9rem;
     height: 0.9rem;
@@ -67,13 +64,9 @@
   text-align: left;
 }
 
-// Same min-width regardless of digit count, so single- and double-digit
-// counts render as the same size pill instead of single digits looking
-// clipped/oval next to rounder double-digit ones. Compounded with
-// .cor-badge (not just .cor-badge--count alone) so this reliably wins over
-// _shared.scss's own `.cor-badge { min-width: 1.4rem; }` -- both are
-// single-class selectors of equal specificity, so which one wins otherwise
-// depends on unpredictable stylesheet load order.
+// Same min-width regardless of digit count. Compounded with .cor-badge so
+// this reliably beats _shared.scss's .cor-badge min-width regardless of
+// stylesheet load order (equal-specificity selectors otherwise).
 .cor-badge.cor-badge--count {
   min-width: 2rem;
 }

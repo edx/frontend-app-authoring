@@ -40,10 +40,8 @@ const TileSub = ({ children }: { children: ReactNode }) => (
   <div className="summary-bar__tile-sub">{children}</div>
 );
 
-// Renders a count-per-key breakdown (severity or category) as a colored
-// count badge + plain-text label per row. Always shows every key in
-// `order`, even at zero, so the full label set (Critical/High/Medium/Low,
-// etc.) stays visible.
+// Count-per-key breakdown (severity or category). Always shows every key
+// in `order`, even at zero, so the full label set stays visible.
 const ColorBreakdown = <T extends string>({
   order,
   modifierPrefix,

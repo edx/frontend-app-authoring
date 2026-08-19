@@ -11,12 +11,10 @@ export interface FindingsBadgeSpan {
   findings: Finding[];
 }
 
-// Renders one severity-colored, numbered badge per timeline tile that has
-// findings, in a dedicated strip below the tiles track. Rendered below the
-// track (rather than layered on top of/inside each tile) so a tile too
-// narrow for a legible badge doesn't clip it -- each badge keeps its own
-// natural size and is centered under its tile's midpoint instead of being
-// stretched to the tile's own (often much narrower) width.
+// One severity-colored, numbered badge per tile with findings, in a strip
+// below the tiles track. Each badge keeps its own natural size, centered
+// under its tile's midpoint, rather than being stretched to (and clipped
+// by) the tile's own width.
 export const FindingsBadgeStrip = ({ spans, width }: { spans: FindingsBadgeSpan[]; width: number }) => {
   const flagged = spans.filter((s) => s.findings.length > 0);
   if (flagged.length === 0) { return null; }

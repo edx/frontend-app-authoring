@@ -9,24 +9,19 @@ interface TimelineTileButtonProps {
   tile: TimelineTile;
   left: number;
   height: number;
-  // Course view renders at the ribbon's own scale (tile.width already
-  // matches it); module view renders at a different px/min scale and passes
-  // its own recomputed width so left position and width stay consistent.
+  // Module view renders at a different px/min scale than the ribbon, so
+  // it passes its own recomputed width.
   width?: number;
-  // Set when a different section is highlighted in the full-course view, so
-  // this tile's own section can visually recede without changing its data.
+  // Set when a different section is highlighted in the full-course view.
   dimmed?: boolean;
-  // Passed in rather than looked up here so each caller (ContentTimeline,
-  // ModuleTimeline) computes it once per tile instead of two callers each
-  // independently re-scanning report.findings for the same componentId.
+  // Passed in so callers compute it once per tile instead of each caller
+  // re-scanning report.findings independently.
   findings: Finding[];
 }
 
-// One clickable, hoverable segment of a timeline ribbon/track. Shared by the
-// full-course ribbon and each module's per-row track so tile appearance and
-// interaction stay identical between the two views. Findings-count badges
-// are rendered separately, below the track (see FindingsBadgeStrip) --
-// putting them on the tile itself clipped on tiles narrower than the badge.
+// One clickable, hoverable segment of a timeline ribbon/track, shared by
+// the full-course ribbon and each module's track. Findings-count badges
+// render separately below the track (see FindingsBadgeStrip), not here.
 export const TimelineTileButton = ({
   tile, left, height, width, dimmed, findings,
 }: TimelineTileButtonProps) => {

@@ -1,8 +1,6 @@
-// Local copy of the couple of rules CourseOptimizerPage.tsx's scan-card /
-// scan-course-btn styling needs (defined upstream in
-// scan-results/ScanResults.scss, which this page never loads) -- kept
-// separate rather than importing that file so this fork-local page doesn't
-// pick up an unrelated dependency on the legacy broken-link-check styling.
+// Local copy of the scan-card/scan-course-btn rules from
+// scan-results/ScanResults.scss (which this page never loads), so this
+// fork-local page doesn't depend on legacy broken-link-check styling.
 .scan-card {
   box-shadow: none;
   background-color: transparent;
@@ -16,12 +14,8 @@
   border: none !important;
 }
 
-// Bootstrap 4 (this app's version) has no gap-* utilities -- only Bootstrap
-// 5 does -- so a `gap-3` className here would be a silent no-op. This gives
-// the scan/re-run button breathing room above it once flex-wrap drops it to
-// its own line on narrow viewports, without affecting the normal
-// side-by-side layout (justify-content-between already spaces them wider
-// than this gap when there's room).
+// Bootstrap 4 has no gap-* utility classes; a real `gap` is needed here for
+// spacing when flex-wrap drops the button to its own line.
 .course-optimizer-page__header-row {
   gap: 1rem;
 }

@@ -31,16 +31,12 @@ const STATUS_BADGE_VARIANT: Record<PipelineStatus, string> = {
 interface Props {
   run: CourseAnalysisRun | null | undefined;
   isError: boolean;
-  // Whether the most recent attempt to start/re-run an analysis failed --
-  // surfaced here since the button that triggers it lives in the page header,
-  // not in this body.
+  // The start/re-run button lives in the page header, not here.
   startAnalysisError: boolean;
 }
 
-// Renders beneath CourseOptimizerExtendedPage's persistent header (heading,
-// description, and the single start/re-run button) -- this component owns
-// only the report body: the not-started/pending/failed states, and the full
-// report (summary, timeline, findings) once one is available.
+// Renders beneath the page's persistent header: not-started/pending/failed
+// states, then the full report once one is available.
 const CourseOptimizerReportBody = ({ run, isError, startAnalysisError }: Props) => {
   const intl = useIntl();
 

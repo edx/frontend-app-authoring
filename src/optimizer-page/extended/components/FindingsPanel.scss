@@ -35,13 +35,9 @@
   min-width: 0;
   overflow-x: auto;
 
-  // Paragon's DataTable renders a row-flex .pgn__data-table-layout-wrapper
-  // around the table; as a flex item, .pgn__data-table-layout-main defaults
-  // to min-width: auto, which refuses to shrink below the table's own
-  // min-content width (e.g. long Suggestion/Summary text) -- inflating this
-  // whole subtree, and the page along with it, instead of scrolling inside
-  // this wrapper's own overflow-x. Force both back to a normal shrinkable
-  // width so overflow is contained here.
+  // DataTable's .pgn__data-table-layout-main is a flex item that defaults
+  // to min-width: auto, refusing to shrink below the table's min-content
+  // width and widening the page instead of scrolling here.
   .pgn__data-table-layout-wrapper,
   .pgn__data-table-layout-main {
     min-width: 0;
