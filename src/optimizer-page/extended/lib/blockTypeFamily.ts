@@ -48,14 +48,14 @@ export const FAMILY_DESCRIPTION: Record<BlockFamily, string> = {
 
 // The set of block_type values with their own modifier class in
 // ../styles/_shared.scss (.cor-tile--block-*); anything outside this set
-// falls back to .cor-tile--block-neutral.
-const KNOWN_BLOCK_TYPES = new Set([
-  'html', 'video', 'videoalpha', 'problem', 'discussion', 'drag-and-drop-v2',
-  'openassessment', 'poll_question', 'word_cloud', 'annotatable', 'itembank',
-]);
+// (including NEUTRAL types, which are intentionally styled the same as
+// unrecognized ones) falls back to .cor-tile--block-neutral.
+const KNOWN_BLOCK_TYPES = new Set([...PASSIVE, ...ACTIVE]);
 
 // Modifier suffix for a tile's background color, matching a
-// .cor-tile--block-* class in ../styles/_shared.scss.
+// .cor-tile--block-* class in ../styles/_shared.scss. A NEUTRAL block type
+// (e.g. 'lti') and a genuinely unrecognized one both land here deliberately
+// -- see KNOWN_BLOCK_TYPES above.
 export function blockTypeModifier(blockType: string): string {
   return KNOWN_BLOCK_TYPES.has(blockType) ? blockType : 'neutral';
 }

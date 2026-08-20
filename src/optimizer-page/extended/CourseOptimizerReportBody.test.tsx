@@ -117,6 +117,44 @@ describe('CourseOptimizerReportBody', () => {
     expect(otherSectionTile.className).not.toContain('timeline-tile--dimmed');
   });
 
+  it('falls back to a raw label instead of crashing on an unrecognized pipeline status', () => {
+    const run = {
+      runId: 'run-123', status: 'CANCELLED', report: null, error: null,
+    } as unknown as CourseAnalysisRun;
+    render(<CourseOptimizerReportBody run={run} isError={false} startAnalysisError={false} />);
+    expect(screen.getByText('Status: CANCELLED')).toBeInTheDocument();
+  });
+
+  it('still displays a finding whose severity/category the frontend does not recognize yet', () => {
+    const extraFinding = {
+      ...courseReportFixture.findings[0],
+      id: 'run-2026-07-15-ds101:extra:0',
+      type: 'Bias',
+      severity: 'Extreme',
+    } as unknown as typeof courseReportFixture.findings[0];
+    const reportWithUnknowns = {
+      ...courseReportFixture,
+      finding_summary: {
+        total: courseReportFixture.finding_summary.total + 1,
+        by_severity: { ...courseReportFixture.finding_summary.by_severity, Extreme: 1 },
+        by_type: { ...courseReportFixture.finding_summary.by_type, Bias: 1 },
+      },
+      findings: [...courseReportFixture.findings, extraFinding],
+    } as unknown as typeof courseReportFixture;
+    const run: CourseAnalysisRun = {
+      runId: 'run-123', status: 'COMPLETE', report: reportWithUnknowns, error: null,
+    };
+    render(<CourseOptimizerReportBody run={run} isError={false} startAnalysisError={false} />);
+
+    expect(screen.getByText(/Findings \(6\)/)).toBeInTheDocument();
+    // Appears in the SummaryBar breakdown and findings table rather than being silently dropped.
+    expect(screen.getAllByText('Extreme').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Bias').length).toBeGreaterThan(0);
+    // And as a selectable filter pill (FindingsPanel), not just a static count.
+    expect(screen.getByRole('button', { name: 'Extreme' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bias' })).toBeInTheDocument();
+  });
+
   it('renders a PARTIAL snapshot with only some findings populated', () => {
     const partialFixture = {
       ...courseReportFixture, status: 'PARTIAL' as const, findings: courseReportFixture.findings.slice(0, 2),

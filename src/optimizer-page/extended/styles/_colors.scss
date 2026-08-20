@@ -45,6 +45,12 @@ $block-type-colors: (
 
 $block-type-neutral-color: oklch(75% 0.01 260deg);
 
+// Fallback for a severity/category value with no entry in $severity-colors/
+// $category-colors above (e.g. one the backend added since this file was
+// last updated) -- keeps badges/pills/text visible instead of unstyled.
+$unknown-value-color: #555555;
+$unknown-value-text-color: #ffffff;
+
 // Long-passive-stretch section marker (FlagStrip, TimelineLegend) -- its
 // own variable since it's conceptually unrelated to severity, even though
 // it matches $severity-colors' 'high' today.

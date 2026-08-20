@@ -1,6 +1,6 @@
 import { Badge } from '@openedx/paragon';
 import { toModifier } from '../lib/cssModifier';
-import { SEVERITY_ORDER } from '../lib/severityColor';
+import { severityRank } from '../lib/severityColor';
 import type { Finding } from '../types/courseReport';
 import './FindingsBadgeStrip.scss';
 
@@ -22,7 +22,9 @@ export const FindingsBadgeStrip = ({ spans, width }: { spans: FindingsBadgeSpan[
   return (
     <div className="findings-badge-strip" style={{ width }}>
       {flagged.map((span) => {
-        const highestSeverity = SEVERITY_ORDER.find((s) => span.findings.some((f) => f.severity === s)) ?? 'Low';
+        const highestSeverity = span.findings.reduce(
+          (worst, f) => (severityRank(f.severity) < severityRank(worst.severity) ? f : worst),
+        ).severity;
         const count = span.findings.length;
         const label = `${count} finding${count > 1 ? 's' : ''}`;
         return (

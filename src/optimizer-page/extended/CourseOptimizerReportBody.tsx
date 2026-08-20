@@ -2,6 +2,7 @@ import {
   Alert, Badge,
 } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
+import type { IntlShape } from 'react-intl';
 import { CourseReportProvider } from './context/CourseReportContext';
 import { ReportUiProvider } from './context/ReportUiContext';
 import messages from './messages';
@@ -12,7 +13,7 @@ import { ExportFindingsButton } from './components/ExportFindingsButton';
 import type { CourseAnalysisRun, PipelineStatus } from './types/courseReport';
 import './CourseOptimizerReportBody.scss';
 
-const STATUS_MESSAGE: Record<PipelineStatus, keyof typeof messages> = {
+const STATUS_MESSAGE: Partial<Record<PipelineStatus, keyof typeof messages>> = {
   PENDING: 'reportStatusPending',
   RUNNING: 'reportStatusRunning',
   PARTIAL: 'reportStatusPartial',
@@ -20,13 +21,24 @@ const STATUS_MESSAGE: Record<PipelineStatus, keyof typeof messages> = {
   FAILED: 'reportStatusFailed',
 };
 
-const STATUS_BADGE_VARIANT: Record<PipelineStatus, string> = {
+const STATUS_BADGE_VARIANT: Partial<Record<PipelineStatus, string>> = {
   PENDING: 'light',
   RUNNING: 'info',
   PARTIAL: 'warning',
   COMPLETE: 'success',
   FAILED: 'danger',
 };
+
+// A status the frontend doesn't recognize yet still renders -- with its raw
+// value visible -- rather than crashing on a missing lookup entry.
+const statusLabel = (intl: IntlShape, status: PipelineStatus) => {
+  const key = STATUS_MESSAGE[status];
+  return key
+    ? intl.formatMessage(messages[key])
+    : intl.formatMessage(messages.reportStatusUnknown, { status });
+};
+
+const statusBadgeVariant = (status: PipelineStatus) => STATUS_BADGE_VARIANT[status] ?? 'light';
 
 interface Props {
   run: CourseAnalysisRun | null | undefined;
@@ -70,8 +82,8 @@ const CourseOptimizerReportBody = ({ run, isError, startAnalysisError }: Props) 
     const failed = run.status === 'FAILED';
     return (
       <div className="course-optimizer-report-body px-3 py-1">
-        <Badge variant={STATUS_BADGE_VARIANT[run.status]} className="mb-2">
-          {intl.formatMessage(messages[STATUS_MESSAGE[run.status]])}
+        <Badge variant={statusBadgeVariant(run.status)} className="mb-2">
+          {statusLabel(intl, run.status)}
         </Badge>
         {failed ? (
           <Alert variant="danger">{run.error ?? intl.formatMessage(messages.startAnalysisError)}</Alert>
@@ -89,8 +101,8 @@ const CourseOptimizerReportBody = ({ run, isError, startAnalysisError }: Props) 
       <ReportUiProvider>
         <div className="course-optimizer-report-body px-3 py-1">
           <div className="course-optimizer-report-body__status-row">
-            <Badge variant={STATUS_BADGE_VARIANT[report.status]}>
-              {intl.formatMessage(messages[STATUS_MESSAGE[report.status]])}
+            <Badge variant={statusBadgeVariant(report.status)}>
+              {statusLabel(intl, report.status)}
             </Badge>
             <span>
               {intl.formatMessage(messages.reportLastGeneratedOn)}

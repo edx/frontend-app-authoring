@@ -5,10 +5,11 @@ import {
 import { InfoOutline } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { useCourseReport } from '../context/CourseReportContext';
-import { CATEGORY_ORDER } from '../lib/categoryColor';
+import { categoryDisplayOrder } from '../lib/categoryColor';
 import { toModifier } from '../lib/cssModifier';
 import { formatMinutesRounded as fmtMinutes } from '../lib/formatMinutes';
-import { SEVERITY_ORDER } from '../lib/severityColor';
+import { severityDisplayOrder } from '../lib/severityColor';
+import type { FindingType, Severity } from '../types/courseReport';
 import messages from '../messages';
 import './SummaryBar.scss';
 
@@ -136,10 +137,18 @@ export const SummaryBar = () => {
         </TileSub>
       </StatTile>
       <StatTile label={intl.formatMessage(messages.summaryBySeverityLabel)}>
-        <ColorBreakdown order={SEVERITY_ORDER} modifierPrefix="severity" counts={findingSummary.by_severity} />
+        <ColorBreakdown
+          order={severityDisplayOrder(Object.keys(findingSummary.by_severity) as Severity[])}
+          modifierPrefix="severity"
+          counts={findingSummary.by_severity}
+        />
       </StatTile>
       <StatTile label={intl.formatMessage(messages.summaryByCategoryLabel)}>
-        <ColorBreakdown order={CATEGORY_ORDER} modifierPrefix="category" counts={findingSummary.by_type} />
+        <ColorBreakdown
+          order={categoryDisplayOrder(Object.keys(findingSummary.by_type) as FindingType[])}
+          modifierPrefix="category"
+          counts={findingSummary.by_type}
+        />
       </StatTile>
     </section>
   );

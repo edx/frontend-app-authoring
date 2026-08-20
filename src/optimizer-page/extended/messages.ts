@@ -131,6 +131,21 @@ const messages = defineMessages({
     defaultMessage: 'long stretch of one learning mode without a break',
     description: 'Timeline legend entry description for a flagged section marker',
   },
+  flagLongPassiveStretch: {
+    id: 'course-authoring.course-optimizer-report.flag.long-passive-stretch',
+    defaultMessage: 'Long passive stretch',
+    description: 'Label for the long_passive_stretch learning-balance flag',
+  },
+  flagNoKnowledgeCheck: {
+    id: 'course-authoring.course-optimizer-report.flag.no-knowledge-check',
+    defaultMessage: 'No knowledge check',
+    description: 'Label for the no_knowledge_check learning-balance flag',
+  },
+  flagLowActiveEngagement: {
+    id: 'course-authoring.course-optimizer-report.flag.low-active-engagement',
+    defaultMessage: 'Low active engagement',
+    description: 'Label for the low_active_engagement learning-balance flag',
+  },
   moduleFindingsToggle: {
     id: 'course-authoring.course-optimizer-report.module.findings-toggle',
     defaultMessage: '{count, plural, one {{count} finding} other {{count} findings}}',
@@ -250,6 +265,11 @@ const messages = defineMessages({
     id: 'course-authoring.course-optimizer-report.status.failed',
     defaultMessage: 'Failed',
     description: 'Pipeline status label',
+  },
+  reportStatusUnknown: {
+    id: 'course-authoring.course-optimizer-report.status.unknown',
+    defaultMessage: 'Status: {status}',
+    description: 'Fallback pipeline status label for a status value not otherwise recognized',
   },
   reportErrorHeading: {
     id: 'course-authoring.course-optimizer-report.error.heading',

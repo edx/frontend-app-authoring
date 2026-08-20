@@ -4,16 +4,13 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { useCourseReport } from '../context/CourseReportContext';
 import { useReportUi } from '../context/ReportUiContext';
 import { selectFilteredFindings } from '../selectors/findingsSelectors';
-import { CATEGORY_ORDER } from '../lib/categoryColor';
+import { categoryDisplayOrder, categoryRank } from '../lib/categoryColor';
 import { toModifier } from '../lib/cssModifier';
-import { SEVERITY_ORDER } from '../lib/severityColor';
+import { severityDisplayOrder, severityRank } from '../lib/severityColor';
 import messages from '../messages';
 import { buildFindingRow, safeGuidelineUrl, type FindingRowData } from './FindingRow';
 import type { FindingType, Severity } from '../types/courseReport';
 import './FindingsPanel.scss';
-
-// FindingType/typeFilters internally, "Category" to the user.
-const CATEGORIES = CATEGORY_ORDER;
 
 // A toggleable filter pill: outlined when off, filled when on. Built on
 // Paragon's Chip for its interaction/a11y semantics.
@@ -37,11 +34,11 @@ const FilterPill = <T extends string>({
   </Chip>
   );
 
-// Orders severity/category values by their worst-to-best display order
+// Orders severity/category values by their worst-to-best display rank
 // (rather than alphabetically) when a Severity/Category column is sorted.
-function orderedSortType(order: string[]) {
-  return (rowA: { values: Record<string, string> }, rowB: { values: Record<string, string> }, columnId: string) => (
-    order.indexOf(rowA.values[columnId]) - order.indexOf(rowB.values[columnId])
+function orderedSortType<T extends string>(rank: (value: T) => number) {
+  return (rowA: { values: Record<string, T> }, rowB: { values: Record<string, T> }, columnId: string) => (
+    rank(rowA.values[columnId]) - rank(rowB.values[columnId])
   );
 }
 
@@ -49,7 +46,7 @@ function orderedSortType(order: string[]) {
 // across renders (react-table treats a new Cell function as a new column).
 type CellProps = { row: { original: FindingRowData } };
 
-const taggedCellClassName = (field: 'severity' | 'category', value: string) => `cor-text--${field}-${toModifier(value)}`;
+const taggedCellClassName = (field: 'severity' | 'category', value: string) => `cor-text--tagged cor-text--${field}-${toModifier(value)}`;
 
 const SeverityCell = ({ row }: CellProps) => (
   <span className={taggedCellClassName('severity', row.original.severity)}>{row.original.severity}</span>
@@ -106,17 +103,26 @@ export const FindingsPanel = () => {
     [findings, report],
   );
 
+  const severities = useMemo(
+    () => severityDisplayOrder((report?.findings ?? []).map((f) => f.severity)),
+    [report],
+  );
+  const categories = useMemo(
+    () => categoryDisplayOrder((report?.findings ?? []).map((f) => f.type)),
+    [report],
+  );
+
   const columns = [
     {
       Header: intl.formatMessage(messages.findingsColumnSeverity),
       accessor: 'severity',
-      sortType: orderedSortType(SEVERITY_ORDER),
+      sortType: orderedSortType(severityRank),
       Cell: SeverityCell,
     },
     {
       Header: intl.formatMessage(messages.findingsColumnCategory),
       accessor: 'category',
-      sortType: orderedSortType(CATEGORY_ORDER),
+      sortType: orderedSortType(categoryRank),
       Cell: CategoryCell,
     },
     { Header: intl.formatMessage(messages.findingsColumnLocation), accessor: 'location' },
@@ -163,12 +169,12 @@ export const FindingsPanel = () => {
           <FilterPill
             label={intl.formatMessage(messages.findingsFilterAll)}
             modifierClass="cor-filter-pill--all"
-            active={severityFilters.length === SEVERITY_ORDER.length}
+            active={severityFilters.length === severities.length}
             onClick={() => setSeverityFilters(
-              severityFilters.length === SEVERITY_ORDER.length ? [] : SEVERITY_ORDER,
+              severityFilters.length === severities.length ? [] : severities,
             )}
           />
-          {SEVERITY_ORDER.map((s: Severity) => (
+          {severities.map((s: Severity) => (
             <FilterPill
               key={s}
               label={s}
@@ -185,10 +191,10 @@ export const FindingsPanel = () => {
           <FilterPill
             label={intl.formatMessage(messages.findingsFilterAll)}
             modifierClass="cor-filter-pill--all"
-            active={typeFilters.length === CATEGORIES.length}
-            onClick={() => setTypeFilters(typeFilters.length === CATEGORIES.length ? [] : CATEGORIES)}
+            active={typeFilters.length === categories.length}
+            onClick={() => setTypeFilters(typeFilters.length === categories.length ? [] : categories)}
           />
-          {CATEGORIES.map((c: FindingType) => (
+          {categories.map((c: FindingType) => (
             <FilterPill
               key={c}
               label={c}
