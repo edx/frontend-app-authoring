@@ -12,6 +12,8 @@ import {
 } from '@openedx/paragon';
 import { MoreHoriz } from '@openedx/paragon/icons';
 
+import { useWaffleFlags } from '../../../../data/apiHooks';
+import { VideosPageContext } from '../../VideosPageProvider';
 import messages from './messages';
 
 export const TranscriptActionMenu = ({
@@ -23,6 +25,8 @@ export const TranscriptActionMenu = ({
 }) => {
   const [isOpen, , close, toggle] = useToggle();
   const [target, setTarget] = useState(null);
+  const { courseId } = React.useContext(VideosPageContext);
+  const { enableTranscriptEditor } = useWaffleFlags(courseId);
   return (
     <>
       <IconButton
@@ -43,17 +47,19 @@ export const TranscriptActionMenu = ({
         <Menu
           className="transcript-menu overflow-hidden"
         >
-          <MenuItem
-            as={Button}
-            variant="tertiary"
-            key={`transcript-actions-${language}-edit`}
-            onClick={() => {
-              onEdit(language);
-              close();
-            }}
-          >
-            <FormattedMessage {...messages.editTranscript} />
-          </MenuItem>
+          {enableTranscriptEditor && (
+            <MenuItem
+              as={Button}
+              variant="tertiary"
+              key={`transcript-actions-${language}-edit`}
+              onClick={() => {
+                onEdit(language);
+                close();
+              }}
+            >
+              <FormattedMessage {...messages.editTranscript} />
+            </MenuItem>
+          )}
           <MenuItem
             as={Button}
             variant="tertiary"
