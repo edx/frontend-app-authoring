@@ -54,7 +54,6 @@ export const waffleFlagDefaults = {
   useReactMarkdownEditor: true,
   useVideoGalleryFlow: false,
   enableAudioDescription: false,
-  enableTranscriptEditor: false,
 } as const;
 
 export type WaffleFlagName = keyof typeof waffleFlagDefaults;
