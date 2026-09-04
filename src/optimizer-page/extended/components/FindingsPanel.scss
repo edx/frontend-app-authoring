@@ -1,0 +1,46 @@
+.findings-panel {
+  margin: 2rem 0;
+}
+
+.findings-panel__heading {
+  margin-bottom: 0.5rem;
+}
+
+.findings-panel__filters {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.findings-panel__filter-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.findings-panel__filter-label {
+  color: #666666;
+}
+
+.findings-panel__empty {
+  color: #666666;
+}
+
+.findings-panel__table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+
+  // DataTable's .pgn__data-table-layout-main is a flex item that defaults
+  // to min-width: auto, refusing to shrink below the table's min-content
+  // width and widening the page instead of scrolling here.
+  .pgn__data-table-layout-wrapper,
+  .pgn__data-table-layout-main {
+    min-width: 0;
+    max-width: 100%;
+  }
+}

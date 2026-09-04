@@ -21,12 +21,14 @@ import { CourseUnit, SubsectionUnitRedirect } from './course-unit';
 import { Certificates } from './certificates';
 import CourseExportPage from './export-page/CourseExportPage';
 import CourseOptimizerPage from './optimizer-page/CourseOptimizerPage';
+import CourseOptimizerExtendedPage from './optimizer-page/CourseOptimizerExtendedPage';
 import CourseImportPage from './import-page/CourseImportPage';
 import { DECODED_ROUTES } from './constants';
 import CourseChecklist from './course-checklist';
 import GroupConfigurations from './group-configurations';
 import { CourseLibraries } from './course-libraries';
 import { IframeProvider } from './generic/hooks/context/iFrameContext';
+import { useWaffleFlags } from './data/apiHooks';
 
 /**
  * As of this writing, these routes are mounted at a path prefixed with the following:
@@ -46,6 +48,7 @@ import { IframeProvider } from './generic/hooks/context/iFrameContext';
  */
 const CourseAuthoringRoutes = () => {
   const { courseId } = useParams();
+  const waffleFlags = useWaffleFlags(courseId);
 
   return (
     <CourseAuthoringPage courseId={courseId}>
@@ -131,7 +134,13 @@ const CourseAuthoringRoutes = () => {
         />
         <Route
           path="optimizer"
-          element={<PageWrap><CourseOptimizerPage courseId={courseId} /></PageWrap>}
+          element={(
+            <PageWrap>
+              {waffleFlags.enableCourseOptimizerExtendedChecks
+                ? <CourseOptimizerExtendedPage courseId={courseId} />
+                : <CourseOptimizerPage courseId={courseId} />}
+            </PageWrap>
+          )}
         />
         <Route
           path="checklists"

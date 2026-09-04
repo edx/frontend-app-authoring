@@ -1,0 +1,27 @@
+@import '../styles/colors';
+
+.timeline-legend {
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.timeline-legend__entry {
+  border-left: 3px solid;
+  padding-left: 0.5rem;
+}
+
+.timeline-legend__label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timeline-legend__description {
+  font-size: 0.8rem;
+  color: #666666;
+  font-style: italic;
+}
+
+.timeline-legend__entry--flag {
+  border-left-color: $flag-color;
+}

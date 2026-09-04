@@ -1,0 +1,15 @@
+// Kept separate from _shared.scss (full of compiled badge/tile/pill class
+// rules) so files that only need this placeholder don't duplicate that
+// unrelated CSS -- each importing .scss compiles as its own webpack module.
+
+// Scrollable timeline track (full-course ribbon and by-section tracks).
+// overflow-y stays explicit: setting only overflow-x makes browsers compute
+// overflow-y as auto too, clipping absolutely-positioned content (tooltips,
+// badges) that doesn't count toward this container's own height.
+%timeline-track-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: auto visible;
+  box-sizing: border-box;
+}
