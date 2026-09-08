@@ -3,11 +3,11 @@ import { getConfig } from '@edx/frontend-platform';
 import type { CourseAnalysisRun } from '../types/courseReport';
 
 export const postCourseAnalysisReportApiUrl = (courseId: string): string => (
-  new URL(`api/contentstore/v0/course_analysis_report/${courseId}`, getConfig().STUDIO_BASE_URL).href
+  new URL(`api/contentstore/v1/course_optimizer/analysis/${courseId}`, getConfig().STUDIO_BASE_URL).href
 );
 
 export const getCourseAnalysisReportStatusApiUrl = (courseId: string): string => (
-  new URL(`api/contentstore/v0/course_analysis_report_status/${courseId}`, getConfig().STUDIO_BASE_URL).href
+  new URL(`api/contentstore/v1/course_optimizer/analysis/${courseId}/status`, getConfig().STUDIO_BASE_URL).href
 );
 
 // Kicks off a new Course Optimizer extended-analysis run. Studio generates
