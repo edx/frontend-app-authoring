@@ -17,7 +17,6 @@ import AudioDescriptionWidget from './components/AudioDescriptionWidget';
 import './index.scss';
 import SocialShareWidget from './components/SocialShareWidget';
 import messages from '../../messages';
-import { useEditorContext } from '../../../../EditorContext';
 
 interface Props {
   onReturn: () => void;
@@ -30,7 +29,6 @@ const VideoSettingsModal: React.FC<Props> = ({
   isLibrary,
   onClose,
 }) => {
-  const { isAudioDescriptionEnabled } = useEditorContext();
   return (
     <>
       {!isLibrary && (
@@ -52,7 +50,7 @@ const VideoSettingsModal: React.FC<Props> = ({
       )}
       <ThumbnailWidget />
       <TranscriptWidget />
-      {isAudioDescriptionEnabled && !isLibrary && <AudioDescriptionWidget />}
+      {!isLibrary && <AudioDescriptionWidget />}
       <DurationWidget />
       <HandoutWidget />
       <LicenseWidget />
