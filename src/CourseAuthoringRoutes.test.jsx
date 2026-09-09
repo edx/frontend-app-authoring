@@ -1,5 +1,6 @@
 import CourseAuthoringRoutes from './CourseAuthoringRoutes';
 import { getApiWaffleFlagsUrl } from './data/api';
+import { mockWaffleFlags } from './data/apiHooks.mock';
 import {
   screen, initializeMocks, render, waitFor,
 } from './testUtils';
@@ -9,6 +10,8 @@ const pagesAndResourcesMockText = 'Pages And Resources';
 const editorContainerMockText = 'Editor Container';
 const videoSelectorContainerMockText = 'Video Selector Container';
 const customPagesMockText = 'Custom Pages';
+const courseOptimizerMockText = 'Course Optimizer';
+const courseOptimizerExtendedMockText = 'Course Optimizer Extended';
 const mockComponentFn = jest.fn();
 
 jest.mock('react-router-dom', () => ({
@@ -45,10 +48,20 @@ jest.mock('./custom-pages/CustomPages', () => (props) => {
   mockComponentFn(props);
   return customPagesMockText;
 });
+jest.mock('./optimizer-page/CourseOptimizerPage', () => (props) => {
+  mockComponentFn(props);
+  return courseOptimizerMockText;
+});
+jest.mock('./optimizer-page/CourseOptimizerExtendedPage', () => (props) => {
+  mockComponentFn(props);
+  return courseOptimizerExtendedMockText;
+});
 
 describe('<CourseAuthoringRoutes>', () => {
+  let axiosMock;
+
   beforeEach(async () => {
-    const { axiosMock } = initializeMocks();
+    ({ axiosMock } = initializeMocks());
     axiosMock
       .onGet(getApiWaffleFlagsUrl(courseId))
       .reply(200, {});
@@ -98,6 +111,29 @@ describe('<CourseAuthoringRoutes>', () => {
           courseId,
         }),
       );
+    });
+  });
+
+  it('renders the legacy CourseOptimizerPage when the extended checks flag is off', async () => {
+    render(
+      <CourseAuthoringRoutes />,
+      { routerProps: { initialEntries: ['/optimizer'] } },
+    );
+    await waitFor(() => {
+      expect(screen.getByText(courseOptimizerMockText)).toBeVisible();
+      expect(screen.queryByText(courseOptimizerExtendedMockText)).not.toBeInTheDocument();
+    });
+  });
+
+  it('renders the CourseOptimizerExtendedPage when the extended checks flag is on', async () => {
+    mockWaffleFlags({ enableCourseOptimizerExtendedChecks: true });
+    render(
+      <CourseAuthoringRoutes />,
+      { routerProps: { initialEntries: ['/optimizer'] } },
+    );
+    await waitFor(() => {
+      expect(screen.getByText(courseOptimizerExtendedMockText)).toBeVisible();
+      expect(screen.queryByText(courseOptimizerMockText)).not.toBeInTheDocument();
     });
   });
 });

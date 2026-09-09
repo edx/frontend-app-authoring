@@ -1,0 +1,24 @@
+@import 'styles/shared';
+
+// Safety net: inner sections scroll their own overflow, so this should
+// never clip anything real -- it just stops the whole page from widening
+// if one doesn't.
+.course-optimizer-report-body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.course-optimizer-report-body__export-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0;
+}
+
+.course-optimizer-report-body__status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #666666;
+}
