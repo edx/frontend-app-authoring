@@ -28,34 +28,32 @@ const VideoSettingsModal: React.FC<Props> = ({
   onReturn,
   isLibrary,
   onClose,
-}) => {
-  return (
-    <>
-      {!isLibrary && (
-        <Button
-          variant="link"
-          className="text-primary-500 video-settings-back-btn"
-          size="sm"
-          onClick={onClose || onReturn}
-        >
-          <Icon src={ArrowBackIos} className="video-settings-back-icon" />
-          <FormattedMessage {...messages.replaceVideoButtonLabel} />
-        </Button>
-      )}
-      <ErrorSummary />
-      <ConnectedVideoPreviewWidget />
-      <VideoSourceWidget />
-      {!isLibrary && (
-        <SocialShareWidget />
-      )}
-      <ThumbnailWidget />
-      <TranscriptWidget />
-      {!isLibrary && <AudioDescriptionWidget />}
-      <DurationWidget />
-      <HandoutWidget />
-      <LicenseWidget />
-    </>
-  );
-};
+}) => (
+  <>
+    {!isLibrary && (
+      <Button
+        variant="link"
+        className="text-primary-500 video-settings-back-btn"
+        size="sm"
+        onClick={onClose || onReturn}
+      >
+        <Icon src={ArrowBackIos} className="video-settings-back-icon" />
+        <FormattedMessage {...messages.replaceVideoButtonLabel} />
+      </Button>
+    )}
+    <ErrorSummary />
+    <ConnectedVideoPreviewWidget />
+    <VideoSourceWidget />
+    {!isLibrary && (
+      <SocialShareWidget />
+    )}
+    <ThumbnailWidget />
+    <TranscriptWidget />
+    {!isLibrary && <AudioDescriptionWidget />}
+    <DurationWidget />
+    <HandoutWidget />
+    <LicenseWidget />
+  </>
+);
 
 export default VideoSettingsModal;
