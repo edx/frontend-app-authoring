@@ -52,7 +52,7 @@ describe('CourseOptimizerExtendedPage', () => {
   it('kicks off a new run when the header button is clicked', async () => {
     axiosMock.onGet(statusUrl).reply(404);
     const startUrl = postCourseAnalysisReportApiUrl(courseId);
-    axiosMock.onPost(startUrl).reply(202, { run_id: 'run-123' });
+    axiosMock.onPost(startUrl).reply(202, { status: 'pending' });
 
     render(<CourseOptimizerExtendedPage courseId={courseId} />);
 

@@ -60,19 +60,18 @@ describe('useCourseOptimizerReport', () => {
 describe('useStartCourseAnalysisReport', () => {
   const courseId = 'course-v1:2U+DS101+2025_T1';
 
-  it('posts to the Studio proxy endpoint and returns the run id', async () => {
+  it('posts to the Studio proxy endpoint to queue a run', async () => {
     const { axiosMock } = initializeMocks();
     const url = postCourseAnalysisReportApiUrl(courseId);
-    axiosMock.onPost(url).reply(202, { run_id: 'run-123' });
+    axiosMock.onPost(url).reply(202, { status: 'pending' });
 
     const wrapper = createWrapper();
     const { result } = renderHook(() => useStartCourseAnalysisReport(courseId), { wrapper });
 
-    let mutationResult: { runId: string } | undefined;
     await act(async () => {
-      mutationResult = await result.current.mutateAsync();
+      await result.current.mutateAsync();
     });
 
-    expect(mutationResult).toEqual({ runId: 'run-123' });
+    expect(axiosMock.history.post[0].url).toEqual(url);
   });
 });

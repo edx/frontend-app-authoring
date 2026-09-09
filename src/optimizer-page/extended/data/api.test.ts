@@ -10,14 +10,13 @@ import {
 describe('postCourseAnalysisReport', () => {
   const courseId = 'course-v1:2U+DS101+2025_T1';
 
-  it('posts to the Studio proxy endpoint and returns the run id', async () => {
+  it('posts to the Studio proxy endpoint to queue a run', async () => {
     const { axiosMock } = initializeMocks();
     const url = postCourseAnalysisReportApiUrl(courseId);
-    axiosMock.onPost(url).reply(202, { run_id: 'run-123' });
+    axiosMock.onPost(url).reply(202, { status: 'pending' });
 
-    const result = await postCourseAnalysisReport(courseId);
+    await postCourseAnalysisReport(courseId);
 
-    expect(result).toEqual({ runId: 'run-123' });
     expect(axiosMock.history.post[0].url).toEqual(url);
   });
 });
