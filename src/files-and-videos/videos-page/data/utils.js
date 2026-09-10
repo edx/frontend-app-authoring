@@ -66,10 +66,6 @@ export const getFormattedDuration = (value) => {
   return [hours, minutes, seconds].map(zeroPad).join(':');
 };
 
-export const hasOnlyAsciiCharacters = (value) => (
-  typeof value === 'string' && [...value].every(character => character.charCodeAt(0) <= 127)
-);
-
 export const getLanguages = (availableLanguages) => {
   const languages = {};
   availableLanguages?.forEach(language => {

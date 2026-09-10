@@ -23,12 +23,7 @@ import {
   resetErrors,
   updateVideoOrder,
 } from '@src/files-and-videos/videos-page/data/thunks';
-import { failAddVideo, updateEditStatus } from '@src/files-and-videos/videos-page/data/slice';
-import {
-  getFormattedDuration,
-  hasOnlyAsciiCharacters,
-  resampleFile,
-} from '@src/files-and-videos/videos-page/data/utils';
+import { getFormattedDuration, resampleFile } from '@src/files-and-videos/videos-page/data/utils';
 import VideoInfoModalSidebar from '@src/files-and-videos/videos-page/info-sidebar';
 import InfoTab from '@src/files-and-videos/videos-page/info-sidebar/InfoTab';
 import messages from '@src/files-and-videos/videos-page/messages';
@@ -107,19 +102,6 @@ export const CourseVideosTable = () => {
   const handleErrorReset = (error) => dispatch(resetErrors(error));
   const handleAddFile = (files) => {
     handleErrorReset({ errorType: 'add' });
-
-    const invalidFiles = files.filter(file => !hasOnlyAsciiCharacters(file?.name));
-    if (invalidFiles.length > 0) {
-      invalidFiles.forEach(file => {
-        dispatch(failAddVideo({
-          fileName: file.name,
-          message: intl.formatMessage(messages.invalidFileName, { fileName: file.name }),
-        }));
-      });
-      dispatch(updateEditStatus({ editType: 'add', status: RequestStatus.FAILED }));
-      return;
-    }
-
     uploadingIdsRef.current.uploadCount = files.length;
 
     files.forEach((file, idx) => {

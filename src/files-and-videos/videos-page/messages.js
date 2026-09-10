@@ -76,11 +76,6 @@ const messages = defineMessages({
     defaultMessage: 'Open new Studio tab',
     description: 'Label for hyperlink to open a new tab',
   },
-  invalidFileName: {
-    id: 'course-authoring.video-uploads.invalid-file-name',
-    defaultMessage: 'The file name for {fileName} must contain only ASCII characters.',
-    description: 'Error shown when a video filename contains non-ASCII characters',
-  },
   videoUploadTrackerModalBody: {
     id: 'course-authoring.files-and-videos.video-upload-tracker-modal.body.message',
     defaultMessage: 'The following ({uploadCount}) {uploadCount, plural, one {video is} other {videos are}} being uploaded:',
