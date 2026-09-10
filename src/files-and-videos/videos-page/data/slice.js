@@ -90,9 +90,9 @@ const slice = createSlice({
       state.errors[error] = [];
     },
     failAddVideo: (state, { payload }) => {
-      const { fileName } = payload;
+      const { fileName, message } = payload;
       const currentErrorState = state.errors.add;
-      state.errors.add = [...currentErrorState, `Failed to add ${fileName}.`];
+      state.errors.add = [...currentErrorState, message || `Failed to add ${fileName}.`];
     },
   },
 });
