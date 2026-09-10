@@ -20,9 +20,11 @@ describe('CourseOptimizerReportBody', () => {
     expect(screen.getByText('The Course Optimizer report could not be loaded.')).toBeInTheDocument();
   });
 
-  it('prompts to start analysis when the course has no run yet', () => {
+  it('prompts to start analysis when the course has no run yet, distinct from a load error', () => {
     render(<CourseOptimizerReportBody run={null} isError={false} startAnalysisError={false} />);
-    expect(screen.getByText(/Run a deeper analysis/)).toBeInTheDocument();
+    expect(screen.getByText('No previous scans found for this course')).toBeInTheDocument();
+    expect(screen.getByText(/Start a new scan using the button above/)).toBeInTheDocument();
+    expect(screen.queryByText('The Course Optimizer report could not be loaded.')).not.toBeInTheDocument();
   });
 
   it('shows the start-analysis error alert alongside the not-started body', () => {
