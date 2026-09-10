@@ -6,7 +6,18 @@ import {
   createResampledFile,
   validateForm,
   checkTranscriptionPlans,
+  hasOnlyAsciiCharacters,
 } from './utils';
+
+describe('hasOnlyAsciiCharacters', () => {
+  it('accepts ASCII filenames', () => {
+    expect(hasOnlyAsciiCharacters('Video - 28.mp4')).toBe(true);
+  });
+
+  it('rejects filenames containing non-ASCII characters', () => {
+    expect(hasOnlyAsciiCharacters('Video #28 – Best practice.mp4')).toBe(false);
+  });
+});
 
 describe('getSupportedFormats', () => {
   it('should return null', () => {

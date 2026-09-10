@@ -203,14 +203,25 @@ const addVideoToEdxVal = async (courseId, file, dispatch) => {
     // eslint-disable-next-line
     console.log(`Post Response: ${JSON.stringify(createUrlResponse)}`);
     if (createUrlResponse.status < 200 || createUrlResponse.status >= 300) {
-      dispatch(failAddVideo({ fileName: file.name, message: createUrlResponse.data?.error }));
+      dispatch(
+        failAddVideo({
+          fileName: file.name,
+          message: createUrlResponse.data?.error,
+        }),
+      );
+      return {};
     }
     const [{ uploadUrl, edxVideoId }] = camelCaseObject(
       createUrlResponse.data,
     ).files;
     return { uploadUrl, edxVideoId };
   } catch (error) {
-    dispatch(failAddVideo({ fileName: file.name, message: error.response?.data?.error }));
+    dispatch(
+      failAddVideo({
+        fileName: file.name,
+        message: error.response?.data?.error,
+      }),
+    );
     return {};
   }
 };
