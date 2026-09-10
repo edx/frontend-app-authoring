@@ -73,8 +73,8 @@ export async function downloadTranscript({
   apiUrl,
   filename,
 }) {
-  const { data } = await getAuthenticatedHttpClient()
-    .get(`${getApiBaseUrl()}${apiUrl}?edx_video_id=${videoId}&language_code=${language}`);
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  const data = await fetchTranscriptContent({ videoId, language, apiUrl });
   const file = new Blob([data], { type: 'text/plain;charset=utf-8' });
   saveAs(file, filename);
 }
