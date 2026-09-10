@@ -4,33 +4,30 @@ import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, Icon } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
 import { TRANSCRIPT_FAILURE_STATUSES } from '../../../videos-page/data/constants';
+import messages from '../../messages';
 
-const TranscriptColumn = ({ row, handleOpenFileInfo }) => {
+const TranscriptColumn = ({ row, handleOpenFileInfo = /** @type {((file: any) => void) | null} */ (null) }) => {
   const { transcripts, transcriptionStatus } = row.original;
-  const numOfTranscripts = transcripts?.length;
-  const transcriptMessage = numOfTranscripts > 0 ? `(${numOfTranscripts}) available` : null;
+  const numOfTranscripts = transcripts?.length ?? 0;
+  const label = <FormattedMessage {...messages.transcriptCountLabel} values={{ numOfTranscripts }} />;
 
   return (
     <div className="row m-0 align-items-center">
       {TRANSCRIPT_FAILURE_STATUSES.includes(transcriptionStatus) && (
         <Icon src={Info} size="sm" className="mr-2 text-danger-500" />
       )}
-      {numOfTranscripts > 0 && handleOpenFileInfo ? (
+      {handleOpenFileInfo ? (
         <Button
           variant="link"
           size="inline"
-          onClick={(e) => { e.stopPropagation(); handleOpenFileInfo(row.original); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenFileInfo(row.original);
+          }}
         >
-          {transcriptMessage}
+          {label}
         </Button>
-      ) : (
-        <FormattedMessage
-          id="course-authoring.videos-page.table.transcriptColumn.message"
-          description="Message with the number of transcripts available"
-          defaultMessage="{message}"
-          values={{ message: transcriptMessage }}
-        />
-      )}
+      ) : label}
     </div>
   );
 };
@@ -43,10 +40,6 @@ TranscriptColumn.propTypes = {
     }.isRequired,
   }.isRequired,
   handleOpenFileInfo: PropTypes.func,
-};
-
-TranscriptColumn.defaultProps = {
-  handleOpenFileInfo: null,
 };
 
 export default TranscriptColumn;

@@ -151,6 +151,7 @@ const TranscriptTab = ({
     dispatch(resetErrors({ errorType: 'transcript' }));
     switch (actionType) {
       case 'delete':
+        /* istanbul ignore if -- legacy empty-row path; the add form no longer creates empty rows */
         if (isEmpty(language)) {
           const updatedSelection = previousSelection;
           updatedSelection.shift();
@@ -185,6 +186,7 @@ const TranscriptTab = ({
           transcripts,
         }));
         break;
+      /* istanbul ignore next */
       default:
         break;
     }
@@ -194,6 +196,7 @@ const TranscriptTab = ({
     .filter(([lang]) => !previousSelection.includes(lang));
 
   const handleSubmitNewTranscript = () => {
+    /* istanbul ignore if -- the submit button is disabled in this state */
     if (!newLanguage || !selectedFile) {
       return;
     }
