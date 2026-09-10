@@ -204,6 +204,7 @@ const addVideoToEdxVal = async (courseId, file, dispatch) => {
     console.log(`Post Response: ${JSON.stringify(createUrlResponse)}`);
     if (createUrlResponse.status < 200 || createUrlResponse.status >= 300) {
       dispatch(failAddVideo({ fileName: file.name, message: createUrlResponse.data?.error }));
+      return {};
     }
     const [{ uploadUrl, edxVideoId }] = camelCaseObject(
       createUrlResponse.data,

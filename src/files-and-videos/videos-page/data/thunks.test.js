@@ -14,15 +14,39 @@ describe('addVideoFile', () => {
     jest.clearAllMocks();
   });
   it('Should dispatch failed if url cannot be created.', async () => {
+    const message = 'The file name for mockName must contain only ASCII characters.';
     jest.spyOn(api, 'addVideo').mockResolvedValue({
       status: 404,
+      data: { error: message },
     });
+    jest.spyOn(api, 'fetchVideoList').mockResolvedValue({ videos: [] });
 
-    await addVideoFile(courseId, [mockFile], undefined, uploadingIdsRef)(dispatch, getState);
+    await addVideoFile(courseId, [mockFile], [], uploadingIdsRef)(dispatch, getState);
 
     expect(dispatch).toHaveBeenCalledWith({
       payload: {
         fileName: mockFile.name,
+        message,
+      },
+      type: 'videos/failAddVideo',
+    });
+  });
+  it('surfaces the backend error when creating the upload URL is rejected', async () => {
+    const message = 'The file name for mockName must contain only ASCII characters.';
+    jest.spyOn(api, 'addVideo').mockRejectedValue({
+      response: {
+        status: 400,
+        data: { error: message },
+      },
+    });
+    jest.spyOn(api, 'fetchVideoList').mockResolvedValue({ videos: [] });
+
+    await addVideoFile(courseId, [mockFile], [], uploadingIdsRef)(dispatch, getState);
+
+    expect(dispatch).toHaveBeenCalledWith({
+      payload: {
+        fileName: mockFile.name,
+        message,
       },
       type: 'videos/failAddVideo',
     });
