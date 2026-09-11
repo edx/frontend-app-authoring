@@ -15,8 +15,13 @@ import './CourseOptimizerExtendedPage.scss';
 const CourseOptimizerExtendedPage: FC<{ courseId: string }> = ({ courseId }) => {
   const intl = useIntl();
   const courseDetails = useModel('courseDetails', courseId);
-  const { data: run, isError } = useCourseOptimizerReport(courseId);
   const startAnalysis = useStartCourseAnalysisReport(courseId);
+  // True from the moment a start is requested onward -- see
+  // useCourseOptimizerReport for why this still needs to poll through a null
+  // result right after starting a run. Harmless to stay true indefinitely
+  // after success: it's only consulted while the fetched run is still null.
+  const awaitingRun = startAnalysis.isPending || startAnalysis.isSuccess;
+  const { data: run, isError } = useCourseOptimizerReport(courseId, awaitingRun);
 
   const scanButtonState = startAnalysis.isPending
     ? STATEFUL_BUTTON_STATES.pending

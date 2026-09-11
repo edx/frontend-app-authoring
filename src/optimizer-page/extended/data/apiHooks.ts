@@ -12,18 +12,22 @@ const ACTIVE_STATUSES = new Set(['PENDING', 'RUNNING', 'PARTIAL']);
 // cycle is fully decoupled from CourseOptimizerPage.tsx's existing Redux-based
 // polling for the legacy link-check scan; the two share no state.
 //
-// Only polls while a run is actively in progress. A null result (no run
-// exists yet) stops polling rather than repeatedly re-checking status for a
-// run that was never started -- useStartCourseAnalysisReport's own
-// invalidateQueries call is what picks up a newly-started run, not this
-// interval.
-export function useCourseOptimizerReport(courseId: string) {
+// Only polls while a run is actively in progress, or `awaitingRun` is true.
+// A null result normally stops polling rather than repeatedly re-checking
+// status for a run that was never started -- but the POST that starts a run
+// only queues a background export/upload task (see postCourseAnalysisReport),
+// so a null result can still show up briefly right after starting one, before
+// it's reached xpert-ai-workflows. `awaitingRun` (true from a successful
+// start until a real run appears) bridges that gap without reintroducing
+// polling for a course that was simply never scanned.
+export function useCourseOptimizerReport(courseId: string, awaitingRun: boolean) {
   return useQuery({
     queryKey: courseOptimizerReportQueryKeys.report(courseId),
     queryFn: () => fetchCourseAnalysisReportStatus(courseId),
     refetchInterval: (query) => {
       const { status } = query.state.data ?? {};
-      return status && ACTIVE_STATUSES.has(status) ? 2000 : false;
+      if (status && ACTIVE_STATUSES.has(status)) { return 2000; }
+      return awaitingRun && query.state.data === null ? 2000 : false;
     },
   });
 }

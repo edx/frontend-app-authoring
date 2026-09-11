@@ -25,7 +25,7 @@ describe('useCourseOptimizerReport', () => {
     axiosMock.onGet(url).reply(404);
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useCourseOptimizerReport(courseId), { wrapper });
+    const { result } = renderHook(() => useCourseOptimizerReport(courseId, false), { wrapper });
 
     await waitFor(() => expect(result.current.isFetched).toBe(true));
     expect(result.current.data).toBeNull();
@@ -35,7 +35,12 @@ describe('useCourseOptimizerReport', () => {
     expect(axiosMock.history.get.length).toBe(callCountAfterFirstFetch);
   });
 
-  it('picks up a newly-started run via invalidation, not the polling interval', async () => {
+  it('keeps polling through a still-null result right after starting a run, until it appears', async () => {
+    // postCourseAnalysisReport only queues a background export/upload task
+    // (edx-platform#466) -- the run isn't visible to the status endpoint the
+    // instant the POST resolves, so the immediate post-start refetch below
+    // still 404s once before a run exists. Without `awaitingRun`, that null
+    // result would stop polling for good (the bug a reviewer caught on #114).
     const { axiosMock } = initializeMocks();
     const statusUrl = getCourseAnalysisReportStatusApiUrl(courseId);
     const startUrl = postCourseAnalysisReportApiUrl(courseId);
@@ -46,21 +51,22 @@ describe('useCourseOptimizerReport', () => {
     const Wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => ({
-      report: useCourseOptimizerReport(courseId),
-      start: useStartCourseAnalysisReport(courseId),
-    }), { wrapper: Wrapper });
+    const { result } = renderHook(() => {
+      const start = useStartCourseAnalysisReport(courseId);
+      const report = useCourseOptimizerReport(courseId, start.isPending || start.isSuccess);
+      return { report, start };
+    }, { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.report.data).toBeNull());
 
-    axiosMock.onGet(statusUrl).reply(200, {
-      run_id: 'run-123', status: 'RUNNING', report: null, error: null,
-    });
     await act(async () => {
       await result.current.start.mutateAsync();
     });
 
-    await waitFor(() => expect(result.current.report.data?.status).toBe('RUNNING'));
+    axiosMock.onGet(statusUrl).reply(200, {
+      run_id: 'run-123', status: 'RUNNING', report: null, error: null,
+    });
+    await waitFor(() => expect(result.current.report.data?.status).toBe('RUNNING'), { timeout: 5000 });
   });
 
   it('stops polling once the run reaches a terminal status', async () => {
@@ -71,7 +77,7 @@ describe('useCourseOptimizerReport', () => {
     });
 
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useCourseOptimizerReport(courseId), { wrapper });
+    const { result } = renderHook(() => useCourseOptimizerReport(courseId, false), { wrapper });
 
     await waitFor(() => expect(result.current.data?.status).toBe('COMPLETE'));
 
