@@ -12,17 +12,20 @@ const ACTIVE_STATUSES = new Set(['PENDING', 'RUNNING', 'PARTIAL']);
 // cycle is fully decoupled from CourseOptimizerPage.tsx's existing Redux-based
 // polling for the legacy link-check scan; the two share no state.
 //
-// A null result means the course has no analysis run yet -- polling keeps
-// going in that case too (ACTIVE_STATUSES.has(undefined ?? 'PENDING')), so
-// starting a run via useStartCourseAnalysisReport is picked up on the next
-// tick without any manual query invalidation.
+// Only polls while a run is actively in progress. A null result (no run
+// exists yet) stops polling rather than repeatedly re-checking status for a
+// run that was never started. Studio (edx-platform#466/ea9a0d03c6) marks a
+// just-started run PENDING in its own cache synchronously before the start
+// POST returns, so this never sees a false null right after starting one --
+// useStartCourseAnalysisReport's invalidateQueries picks that up immediately.
 export function useCourseOptimizerReport(courseId: string) {
   return useQuery({
     queryKey: courseOptimizerReportQueryKeys.report(courseId),
     queryFn: () => fetchCourseAnalysisReportStatus(courseId),
-    refetchInterval: (query) => (
-      ACTIVE_STATUSES.has(query.state.data?.status ?? 'PENDING') ? 2000 : false
-    ),
+    refetchInterval: (query) => {
+      const { status } = query.state.data ?? {};
+      return status && ACTIVE_STATUSES.has(status) ? 2000 : false;
+    },
   });
 }
 

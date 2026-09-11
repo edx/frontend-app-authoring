@@ -278,12 +278,12 @@ const messages = defineMessages({
   },
   notStartedHeading: {
     id: 'course-authoring.course-optimizer-report.not-started.heading',
-    defaultMessage: 'Course analysis',
+    defaultMessage: 'No previous scans found for this course',
     description: 'Heading shown before a course has ever had an analysis run',
   },
   notStartedBody: {
     id: 'course-authoring.course-optimizer-report.not-started.body',
-    defaultMessage: 'Run a deeper analysis of this course to see time-on-task, learning balance, and content-quality findings.',
+    defaultMessage: 'Start a new scan using the button above to see time-on-task, learning balance, and content-quality findings.',
     description: 'Explanation shown before a course has ever had an analysis run',
   },
   startAnalysisButton: {
