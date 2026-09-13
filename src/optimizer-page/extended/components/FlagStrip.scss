@@ -1,0 +1,15 @@
+@import '../styles/colors';
+
+.flag-strip {
+  position: relative;
+  height: 16px;
+  margin-top: 4px;
+}
+
+.flag-strip__span {
+  position: absolute;
+  top: 0;
+  height: 8px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(45deg, $flag-color, $flag-color 4px, #f5c99b 4px, #f5c99b 8px);
+}

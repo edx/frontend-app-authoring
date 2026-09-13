@@ -33,6 +33,7 @@ export async function getCourseDetail(courseId: string, username: string) {
 export const waffleFlagDefaults = {
   enableCourseOptimizer: false,
   enableCourseOptimizerCheckPrevRunLinks: false,
+  enableCourseOptimizerExtendedChecks: false,
   enableUnitExpandedView: false,
   enableOutlineComponentCreation: false,
   useNewHomePage: true,
@@ -53,7 +54,6 @@ export const waffleFlagDefaults = {
   useNewGroupConfigurationsPage: true,
   useReactMarkdownEditor: true,
   useVideoGalleryFlow: false,
-  enableAudioDescription: false,
 } as const;
 
 export type WaffleFlagName = keyof typeof waffleFlagDefaults;

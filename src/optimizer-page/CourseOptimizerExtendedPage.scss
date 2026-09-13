@@ -1,0 +1,21 @@
+// Local copy of the scan-card/scan-course-btn rules from
+// scan-results/ScanResults.scss (which this page never loads), so this
+// fork-local page doesn't depend on legacy broken-link-check styling.
+.scan-card {
+  box-shadow: none;
+  background-color: transparent;
+
+  hr {
+    margin: 0 18px;
+  }
+}
+
+.scan-course-btn:focus::before {
+  border: none !important;
+}
+
+// Bootstrap 4 has no gap-* utility classes; a real `gap` is needed here for
+// spacing when flex-wrap drops the button to its own line.
+.course-optimizer-page__header-row {
+  gap: 1rem;
+}

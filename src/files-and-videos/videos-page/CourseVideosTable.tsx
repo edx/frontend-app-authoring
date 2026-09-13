@@ -161,7 +161,7 @@ export const CourseVideosTable = () => {
     id: 'transcriptStatus',
     Header: 'Transcript',
     accessor: 'transcriptStatus',
-    Cell: ({ row, handleOpenFileInfo }: any) => TranscriptColumn({ row, handleOpenFileInfo }),
+    Cell: ({ row }) => TranscriptColumn({ row }),
     Filter: CheckboxFilter,
     filter: 'exactTextCase',
     filterChoices: [

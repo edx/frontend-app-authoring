@@ -1,0 +1,76 @@
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+  max-width: 100%;
+}
+
+.summary-bar__tile {
+  height: 100%;
+
+  .pgn__card-body {
+    padding: var(--pgn-spacing-card-spacer-x, 1rem);
+  }
+}
+
+.summary-bar__tile-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666666;
+}
+
+.summary-bar__tile-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.summary-bar__tile-sub {
+  font-size: 0.75rem;
+  color: #666666;
+  margin-top: 0.4rem;
+}
+
+.summary-bar__info-icon {
+  margin-left: 0.35rem;
+
+  // Resize the icon's sizing box, not the inner <svg> (which fills its
+  // parent at 100%) -- otherwise it renders undersized and off-center.
+  .btn-icon__icon-container .pgn__icon.btn-icon__icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+}
+
+.summary-bar__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.summary-bar__breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.summary-bar__breakdown-label {
+  text-align: left;
+}
+
+// Same min-width regardless of digit count. Compounded with .cor-badge so
+// this reliably beats _shared.scss's .cor-badge min-width regardless of
+// stylesheet load order (equal-specificity selectors otherwise).
+.cor-badge.cor-badge--count {
+  min-width: 2rem;
+}
+
+.summary-bar__active-passive-bar {
+  margin-top: 0.6rem;
+}
