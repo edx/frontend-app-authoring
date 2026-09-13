@@ -15,5 +15,8 @@
 * [`org.openedx.frontend.authoring.additional_course_plugin.v1`](./AdditionalCoursePluginSlot/)
 * [`org.openedx.frontend.authoring.video_transcript_additional_translations_component.v1`](./AdditionalTranslationsComponentSlot/)
 
+## XBlock Editors
+* [`org.openedx.frontend.authoring.in_video_quiz_editor.v1`](./InVideoQuizEditorSlot/)
+
 ## Footer Slot
 * [`org.openedx.frontend.layout.studio_footer.v1`](./StudioFooterSlot/)

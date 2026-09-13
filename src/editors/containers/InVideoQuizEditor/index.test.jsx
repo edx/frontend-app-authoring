@@ -18,6 +18,10 @@ jest.mock('../../data/redux/thunkActions/inVideoQuiz', () => {
   };
 });
 
+jest.mock('@openedx/frontend-plugin-framework', () => ({
+  PluginSlot: 'PluginSlot',
+}));
+
 jest.mock('../EditorContainer', () => ({
   __esModule: true,
   default: ({ children, onSave }) => (
