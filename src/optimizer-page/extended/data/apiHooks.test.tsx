@@ -66,6 +66,53 @@ describe('useCourseOptimizerReport', () => {
     await waitFor(() => expect(result.current.report.data?.status).toBe('RUNNING'));
   });
 
+  it('recovers if a start succeeds while the page\'s initial status fetch is still in flight', async () => {
+    // Regression test: if the very first status GET (on mount) hasn't
+    // resolved yet when a start succeeds, React Query only cancels-and-
+    // refetches a query that has already resolved at least once --
+    // invalidateQueries alone would just await that still-in-flight,
+    // pre-start request and adopt its stale 404/null result.
+    const { axiosMock } = initializeMocks();
+    const statusUrl = getCourseAnalysisReportStatusApiUrl(courseId);
+    const startUrl = postCourseAnalysisReportApiUrl(courseId);
+
+    let releaseStaleGet: () => void = () => {};
+    const staleGetGate = new Promise<void>((resolve) => { releaseStaleGet = resolve; });
+    let getCallCount = 0;
+    axiosMock.onGet(statusUrl).reply(async () => {
+      getCallCount += 1;
+      if (getCallCount === 1) {
+        await staleGetGate;
+        return [404];
+      }
+      return [200, {
+        run_id: 'run-123', status: 'PENDING', report: null, error: null,
+      }];
+    });
+    axiosMock.onPost(startUrl).reply(202, { status: 'PENDING' });
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const Wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => ({
+      report: useCourseOptimizerReport(courseId),
+      start: useStartCourseAnalysisReport(courseId),
+    }), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.start.mutateAsync();
+    });
+
+    await waitFor(() => expect(result.current.report.data?.status).toBe('PENDING'));
+
+    // The stale, pre-start 404 resolving afterward must not overwrite the
+    // real PENDING result with null.
+    releaseStaleGet();
+    await new Promise((resolve) => { setTimeout(resolve, 100); });
+    expect(result.current.report.data?.status).toBe('PENDING');
+  });
+
   it('stops polling once the run reaches a terminal status', async () => {
     const { axiosMock } = initializeMocks();
     const url = getCourseAnalysisReportStatusApiUrl(courseId);

@@ -34,8 +34,16 @@ export function useStartCourseAnalysisReport(courseId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => postCourseAnalysisReport(courseId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: courseOptimizerReportQueryKeys.report(courseId) });
+    onSuccess: async () => {
+      const queryKey = courseOptimizerReportQueryKeys.report(courseId);
+      // If the page's very first status fetch is still in flight (e.g. the
+      // user starts a run before it resolves), React Query only cancels and
+      // refetches a query that has already resolved at least once --
+      // otherwise invalidateQueries just awaits that already-running,
+      // pre-start request and adopts its stale result. Cancel it explicitly
+      // first so the invalidated refetch is a real, post-start request.
+      await queryClient.cancelQueries({ queryKey });
+      await queryClient.invalidateQueries({ queryKey });
     },
   });
 }
