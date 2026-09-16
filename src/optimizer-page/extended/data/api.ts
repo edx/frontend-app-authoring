@@ -10,14 +10,13 @@ export const getCourseAnalysisReportStatusApiUrl = (courseId: string): string =>
   new URL(`api/contentstore/v1/course_optimizer/analysis/${courseId}/status`, getConfig().STUDIO_BASE_URL).href
 );
 
-// Kicks off a new Course Optimizer extended-analysis run. Studio generates
-// the course export server-side and hands it to xpert-ai-workflows, so this
-// is a plain Studio API call (getAuthenticatedHttpClient), same as every
-// other Studio-backed hook in this repo.
-export async function postCourseAnalysisReport(courseId: string): Promise<{ runId: string }> {
-  const { data } = await getAuthenticatedHttpClient()
-    .post(postCourseAnalysisReportApiUrl(courseId));
-  return { runId: data.run_id };
+// Kicks off a new Course Optimizer extended-analysis run. Studio queues a
+// background task (course export + upload to xpert-ai-workflows) and
+// returns immediately -- this call doesn't wait for a run to exist, and
+// callers should rely on fetchCourseAnalysisReportStatus polling to learn
+// when one does.
+export async function postCourseAnalysisReport(courseId: string): Promise<void> {
+  await getAuthenticatedHttpClient().post(postCourseAnalysisReportApiUrl(courseId));
 }
 
 // Fetches the course's most recent Course Optimizer extended-analysis run.

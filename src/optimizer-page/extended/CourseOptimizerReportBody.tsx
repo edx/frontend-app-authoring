@@ -69,6 +69,7 @@ const CourseOptimizerReportBody = ({ run, isError, startAnalysisError }: Props) 
   if (!run) {
     return (
       <div className="course-optimizer-report-body px-3 py-1">
+        <h4>{intl.formatMessage(messages.notStartedHeading)}</h4>
         <p>{intl.formatMessage(messages.notStartedBody)}</p>
         {startAnalysisError && (
           <Alert variant="danger">{intl.formatMessage(messages.startAnalysisError)}</Alert>
