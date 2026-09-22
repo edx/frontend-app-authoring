@@ -69,6 +69,12 @@ export const InVideoQuizEditor = ({
   const hasNoVideos = unitContentLoaded && videos.length === 0;
   const hasNoProblems = unitContentLoaded && problems.length === 0;
   const isLoadingUnitContent = blockFinished && blockId && blockValue && !unitContentLoaded;
+  const hasSelectedVideo = videos.some((video) => video.id === selectedVideo);
+  const hasAnyProblem = quizItems.some((item) => item.problemId || item.time);
+  const isVideoMissing = !hasSelectedVideo
+    && quizItems.some((item) => item.problemId && item.time);
+  const isEntirelyEmpty = !hasSelectedVideo && !hasAnyProblem;
+  const isProblemMissing = hasSelectedVideo && !hasAnyProblem;
 
   const isValidTimeFormat = useCallback((value) => /^\d+:[0-5]\d$/.test(value), []);
 
@@ -98,6 +104,18 @@ export const InVideoQuizEditor = ({
 
   const handleSave = useCallback(() => {
     setSaveError(null);
+    if (isEntirelyEmpty) {
+      setSaveError(intl.formatMessage(messages.videoAndProblemRequiredError));
+      return;
+    }
+    if (isVideoMissing) {
+      setSaveError(intl.formatMessage(messages.videoRequiredError));
+      return;
+    }
+    if (isProblemMissing) {
+      setSaveError(intl.formatMessage(messages.problemMissingError));
+      return;
+    }
     const hasInvalidTime = quizItems.some((item) => (
       (item.time && !isValidTimeFormat(item.time))
       || (item.jumpBack && !isValidTimeFormat(item.jumpBack))
@@ -132,7 +150,10 @@ export const InVideoQuizEditor = ({
         setSaveError(error?.response?.data?.error || error?.message || 'Failed to save settings');
       },
     });
-  }, [saveInVideoQuizSettings, returnFunction, returnUrl, analytics, quizItems, intl, isValidTimeFormat]);
+  }, [
+    saveInVideoQuizSettings, returnFunction, returnUrl, analytics, quizItems,
+    intl, isValidTimeFormat, isVideoMissing, isEntirelyEmpty, isProblemMissing,
+  ]);
 
   const handleVideoChange = useCallback((e) => {
     setSelectedVideo(e.target.value);
@@ -167,12 +188,12 @@ export const InVideoQuizEditor = ({
   const handleTimeChange = useCallback((index, e) => {
     const formatted = formatTimeInput(e.target.value);
     updateTime({ index, time: formatted });
-  }, [quizItems, updateTime]);
+  }, [updateTime]);
 
   const handleJumpBackChange = useCallback((index, e) => {
     const formatted = formatTimeInput(e.target.value);
     updateJumpBack({ index, jumpBack: formatted });
-  }, [quizItems, updateJumpBack]);
+  }, [updateJumpBack]);
 
   const handleAddProblem = useCallback(() => {
     addQuizItem();
@@ -223,6 +244,7 @@ export const InVideoQuizEditor = ({
             as="select"
             value={selectedVideo || ''}
             onChange={handleVideoChange}
+            isInvalid={isVideoMissing}
           >
             <option value="">{intl.formatMessage(messages.selectVideo)}</option>
             {videos.map((video) => (
@@ -231,6 +253,11 @@ export const InVideoQuizEditor = ({
               </option>
             ))}
           </Form.Control>
+          {isVideoMissing && (
+          <Form.Control.Feedback type="invalid">
+            {intl.formatMessage(messages.videoRequiredError)}
+          </Form.Control.Feedback>
+          )}
         </Form.Group>
       </div>
 
