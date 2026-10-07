@@ -12,8 +12,6 @@ import {
 } from '@openedx/paragon';
 import { MoreHoriz } from '@openedx/paragon/icons';
 
-import { useWaffleFlags } from '../../../../data/apiHooks';
-import { VideosPageContext } from '../../VideosPageProvider';
 import messages from './messages';
 
 export const TranscriptActionMenu = ({
@@ -21,12 +19,10 @@ export const TranscriptActionMenu = ({
   launchDeleteConfirmation,
   handleTranscript,
   input,
-  onEdit,
+  onEdit = () => {},
 }) => {
   const [isOpen, , close, toggle] = useToggle();
   const [target, setTarget] = useState(null);
-  const { courseId } = React.useContext(VideosPageContext);
-  const { enableTranscriptEditor } = useWaffleFlags(courseId);
   return (
     <>
       <IconButton
@@ -47,23 +43,19 @@ export const TranscriptActionMenu = ({
         <Menu
           className="transcript-menu overflow-hidden"
         >
-          {enableTranscriptEditor && (
-            <MenuItem
-              as={Button}
-              variant="tertiary"
-              key={`transcript-actions-${language}-edit`}
-              onClick={() => {
-                onEdit(language);
-                close();
-              }}
-            >
-              <FormattedMessage {...messages.editTranscript} />
-            </MenuItem>
-          )}
           <MenuItem
             as={Button}
             variant="tertiary"
-            key={`transcript-actions-${language}-replace`}
+            onClick={() => {
+              onEdit(language);
+              close();
+            }}
+          >
+            <FormattedMessage {...messages.editTranscript} />
+          </MenuItem>
+          <MenuItem
+            as={Button}
+            variant="tertiary"
             onClick={() => { input.click(); close(); }}
           >
             <FormattedMessage {...messages.replaceTranscript} />
@@ -71,7 +63,6 @@ export const TranscriptActionMenu = ({
           <MenuItem
             as={Button}
             variant="tertiary"
-            key={`transcript-actions-${language}-download`}
             onClick={() => handleTranscript({ language }, 'download')}
           >
             <FormattedMessage {...messages.downloadTranscript} />
@@ -80,7 +71,6 @@ export const TranscriptActionMenu = ({
           <MenuItem
             as={Button}
             variant="tertiary"
-            key={`transcript-actions-${language}-delete`}
             onClick={launchDeleteConfirmation}
           >
             <FormattedMessage {...messages.deleteTranscript} />
@@ -99,10 +89,6 @@ TranscriptActionMenu.propTypes = {
   input: PropTypes.shape({
     click: PropTypes.func.isRequired,
   }).isRequired,
-};
-
-TranscriptActionMenu.defaultProps = {
-  onEdit: () => {},
 };
 
 export default TranscriptActionMenu;

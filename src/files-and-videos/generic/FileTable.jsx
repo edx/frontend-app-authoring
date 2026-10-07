@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import isEmpty from 'lodash/isEmpty';
@@ -43,7 +45,7 @@ const FileTable = ({
   maxFileSize,
   thumbnailPreview,
   infoModalSidebar,
-  infoModalContentUnderPreview,
+  infoModalContentUnderPreview = /** @type {(file: any) => React.ReactNode} */ (/* istanbul ignore next */ () => null),
 }) => {
   const intl = useIntl();
   const pageCount = Math.ceil(files.length / 50);
@@ -185,16 +187,29 @@ const FileTable = ({
     }),
   };
 
-  const hasMoreInfoColumn = tableColumns.filter(col => col.id === 'moreInfo').length === 1;
-  if (!hasMoreInfoColumn) {
-    tableColumns.push({ ...moreInfoColumn }); // eslint-disable-line no-param-reassign
-  }
+  const handleOpenFileInfoRef = useRef(handleOpenFileInfo);
+  handleOpenFileInfoRef.current = handleOpenFileInfo;
 
-  const transcriptColIndex = tableColumns.findIndex(col => col.id === 'transcriptStatus');
-  if (transcriptColIndex !== -1) {
-    // eslint-disable-next-line no-param-reassign, react/prop-types
-    tableColumns[transcriptColIndex].Cell = ({ row }) => TranscriptColumn({ row, handleOpenFileInfo });
-  }
+  // Copy the caller's columns instead of mutating them. Memoized (with the ref above)
+  // so the columns identity stays stable across re-renders: a new identity makes
+  // DataTable reset its internal state.
+  const columns = useMemo(() => {
+    const cols = [...tableColumns];
+    if (cols.filter(col => col.id === 'moreInfo').length !== 1) {
+      cols.push({ ...moreInfoColumn });
+    }
+    const transcriptColIndex = cols.findIndex(col => col.id === 'transcriptStatus');
+    if (transcriptColIndex !== -1) {
+      cols[transcriptColIndex] = {
+        ...cols[transcriptColIndex],
+        // eslint-disable-next-line react/no-unstable-nested-components, react/prop-types
+        Cell: ({ row }) => (
+          <TranscriptColumn row={row} handleOpenFileInfo={(file) => handleOpenFileInfoRef.current(file)} />
+        ),
+      };
+    }
+    return cols;
+  }, [tableColumns]);
 
   return (
     <div className="files-table">
@@ -223,7 +238,7 @@ const FileTable = ({
         initialState={initialState}
         tableActions={headerActions}
         bulkActions={headerActions}
-        columns={tableColumns}
+        columns={columns}
         itemCount={files.length}
         pageCount={pageCount}
         data={files}
@@ -335,13 +350,13 @@ FileTable.propTypes = {
   maxFileSize: PropTypes.number.isRequired,
   thumbnailPreview: PropTypes.func.isRequired,
   infoModalSidebar: PropTypes.func.isRequired,
+  // Render function `(file) => ReactNode` shown in the info modal under the file preview.
   infoModalContentUnderPreview: PropTypes.func,
 };
 
 FileTable.defaultProps = {
   files: null,
   handleLockFile: () => {},
-  infoModalContentUnderPreview: () => null,
 };
 
 export default FileTable;

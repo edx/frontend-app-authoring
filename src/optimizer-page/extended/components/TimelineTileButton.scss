@@ -1,0 +1,43 @@
+.timeline-tile {
+  position: absolute;
+  top: 0;
+  border: none;
+  border-right: 2px solid #333333;
+  box-sizing: border-box;
+  padding: 0;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+
+  &--dimmed {
+    opacity: 0.3;
+  }
+}
+
+.timeline-tile__tooltip-type {
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: #cccccc;
+  margin-bottom: 4px;
+}
+
+.timeline-tile__tooltip-subsection {
+  margin-bottom: 4px;
+  color: #dddddd;
+}
+
+.timeline-tile__tooltip-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.timeline-tile__tooltip-name {
+  font-weight: 600;
+}
+
+.timeline-tile__tooltip-findings {
+  margin-top: 4px;
+  color: #ffb4b4;
+}

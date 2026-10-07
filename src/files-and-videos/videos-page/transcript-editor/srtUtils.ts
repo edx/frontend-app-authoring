@@ -1,4 +1,10 @@
-export const parseSrt = (text) => {
+export interface Cue {
+  startTime: string;
+  endTime: string;
+  text: string;
+}
+
+export const parseSrt = (text: string | null | undefined): Cue[] => {
   if (!text || typeof text !== 'string') {
     return [];
   }
@@ -7,7 +13,7 @@ export const parseSrt = (text) => {
     .trim()
     .split(/\n\s*\n/)
     .map((block) => block.split('\n'))
-    .map((lines) => {
+    .map((lines): Cue | null => {
       if (lines.length < 2) {
         return null;
       }
@@ -27,28 +33,28 @@ export const parseSrt = (text) => {
         text: textLines.join('\n').trim(),
       };
     })
-    .filter(Boolean);
+    .filter((cue): cue is Cue => cue !== null);
 };
 
-export const serializeSrt = (cues) => cues
+export const serializeSrt = (cues: Cue[]): string => cues
   .map((cue, index) => `${index + 1}\n${cue.startTime} --> ${cue.endTime}\n${cue.text}`)
   .join('\n\n');
 
-export const parseTimestamp = (timestamp) => {
+export const parseTimestamp = (timestamp: string): number => {
   const [hms, ms] = timestamp.split(',');
   const [hours, minutes, seconds] = hms.split(':').map(Number);
   return (hours * 3600) + (minutes * 60) + seconds + (Number(ms || 0) / 1000);
 };
 
-export const formatTimestamp = (totalSeconds) => {
+export const formatTimestamp = (totalSeconds: number): string => {
   const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
   const hours = Math.floor(safeSeconds / 3600);
   const minutes = Math.floor((safeSeconds % 3600) / 60);
   const seconds = Math.floor(safeSeconds % 60);
   const milliseconds = Math.round((safeSeconds - Math.floor(safeSeconds)) * 1000);
 
-  const pad2 = (value) => String(value).padStart(2, '0');
-  const pad3 = (value) => String(value).padStart(3, '0');
+  const pad2 = (value: number) => String(value).padStart(2, '0');
+  const pad3 = (value: number) => String(value).padStart(3, '0');
 
   return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)},${pad3(milliseconds)}`;
 };
@@ -59,7 +65,7 @@ export const formatTimestamp = (totalSeconds) => {
  * Returns false if the file has cue blocks where ANY block has a malformed
  * timestamp line (partial corruption is not allowed).
  */
-export const isValidSrt = (text) => {
+export const isValidSrt = (text: string | null | undefined): boolean => {
   if (!text || typeof text !== 'string') {
     return true;
   }

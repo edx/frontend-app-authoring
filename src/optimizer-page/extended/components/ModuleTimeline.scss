@@ -1,0 +1,68 @@
+@import '../styles/timeline';
+
+.module-timeline__row {
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.module-timeline__row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.module-timeline__row-total {
+  font-size: 0.8rem;
+  color: #666666;
+}
+
+.module-timeline__track-scroll {
+  @extend %timeline-track-scroll;
+
+  // Buffer so a findings badge centered on the first/last tile has room to
+  // extend past x: 0 / x: trackWidth without clipping.
+  padding: 0 1rem 4px;
+}
+
+.module-timeline__track {
+  position: relative;
+  min-width: 100%;
+}
+
+.module-timeline__tiles {
+  position: relative;
+  height: 32px;
+}
+
+.module-timeline__row-findings {
+  margin-top: 0.5rem;
+}
+
+.module-timeline__issues {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.3rem 0.5rem;
+  align-items: center;
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+// Unwraps the <li> so its children join the parent <ul>'s grid directly,
+// letting columns auto-size across all rows instead of per-row.
+.module-timeline__issue-row {
+  display: contents;
+}
