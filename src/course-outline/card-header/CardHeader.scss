@@ -53,23 +53,15 @@
         pointer-events: none;
       }
 
-      // TitleButton.tsx applies `min-width-0 flex-shrink-1` to this element, but
-      // neither class exists in our build, so without this rule it can't shrink
-      // and long unit titles overflow the row instead of the child's ellipsis engaging.
-      .item-card-header__title-link-content {
-        min-width: 0;
-        flex-shrink: 1;
-      }
-
       .item-card-header__title-link-content .truncate-1-line {
-        display: block;
-        white-space: nowrap;
+        -webkit-line-clamp: 1;  /* stylelint-disable-line value-no-vendor-prefix */
+        line-clamp: 1;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: -webkit-box;  /* stylelint-disable-line value-no-vendor-prefix */
         min-width: 0;
-        -webkit-line-clamp: unset;
-        line-clamp: unset;
-        -webkit-box-orient: unset;
+        text-align: left;
+        -webkit-box-orient: vertical;  /* stylelint-disable-line value-no-vendor-prefix */
       }
 
       .item-card-header__title-link-content:hover .truncate-1-line {
