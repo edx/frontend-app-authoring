@@ -121,6 +121,21 @@ const messages = defineMessages({
     defaultMessage: 'Please select a problem for the entered time.',
     description: 'Validation error when timer is entered but problem is missing.',
   },
+  videoRequiredError: {
+    id: 'InVideoQuizEditor.videoRequiredError',
+    defaultMessage: 'Please select a video.',
+    description: 'Validation error when a problem/time is configured but no video is selected.',
+  },
+  videoAndProblemRequiredError: {
+    id: 'InVideoQuizEditor.videoAndProblemRequiredError',
+    defaultMessage: 'Please select a video and add at least one problem.',
+    description: 'Validation error when saving with nothing configured at all (no video, no problem, no time).',
+  },
+  problemMissingError: {
+    id: 'InVideoQuizEditor.problemMissingError',
+    defaultMessage: 'Please add at least one problem.',
+    description: 'Validation error when a video is selected but no problem has been added.',
+  },
   contentNotFoundTitle: {
     id: 'InVideoQuizEditor.contentNotFoundTitle',
     defaultMessage: 'Content not found',

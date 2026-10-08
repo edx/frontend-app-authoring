@@ -1,5 +1,7 @@
 import React from 'react';
-import { screen, fireEvent, initializeMocks } from '@src/testUtils';
+import {
+  screen, fireEvent, initializeMocks, within,
+} from '@src/testUtils';
 import { editorRender } from '@src/editors/editorTestRender';
 import { thunkActions } from '@src/editors/data/redux';
 import ConnectedInVideoQuizEditor, { hooks } from './index';
@@ -383,6 +385,200 @@ describe('InVideoQuizEditor', () => {
 
       expect(screen.queryByText('Each problem must have a unique timestamp. Please remove duplicate times.')).not.toBeInTheDocument();
       expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).toHaveBeenCalled();
+    });
+  });
+
+  describe('Video validation', () => {
+    const configuredState = {
+      ...baseState,
+      inVideoQuiz: {
+        ...baseState.inVideoQuiz,
+        unitContentLoaded: true,
+        videos: [{ id: 'video-1', display_name: 'Video 1' }],
+        problems: [{ id: 'problem-1', display_name: 'Problem 1' }],
+        quizItems: [
+          {
+            id: 'quiz-1', problemId: 'problem-1', time: '1:30', jumpBack: '',
+          },
+        ],
+      },
+    };
+
+    it('shows inline error and blocks save when a row is configured but no video is selected', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        { initialState: configuredState },
+      );
+
+      expect(screen.getByText('Please select a video.')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.getByText('Error saving in-video quiz')).toBeInTheDocument();
+      expect(screen.getAllByText('Please select a video.')).toHaveLength(2);
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).not.toHaveBeenCalled();
+    });
+
+    it('does not show the video error when no row is fully configured', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...configuredState,
+            inVideoQuiz: {
+              ...configuredState.inVideoQuiz,
+              quizItems: [{
+                id: 'quiz-1', problemId: '', time: '', jumpBack: '',
+              }],
+            },
+          },
+        },
+      );
+
+      expect(screen.queryByText('Please select a video.')).not.toBeInTheDocument();
+    });
+
+    it('clears the video error once a video is selected', () => {
+      const { container } = editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        { initialState: configuredState },
+      );
+
+      expect(screen.getByText('Please select a video.')).toBeInTheDocument();
+
+      fireEvent.change(
+        container.querySelector('.video-select-container select'),
+        { target: { value: 'video-1' } },
+      );
+
+      expect(screen.queryByText('Please select a video.')).not.toBeInTheDocument();
+    });
+
+    it('flags a saved video id that no longer exists in the unit', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...configuredState,
+            inVideoQuiz: { ...configuredState.inVideoQuiz, selectedVideo: 'deleted-video' },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.getAllByText('Please select a video.')).toHaveLength(2);
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).not.toHaveBeenCalled();
+    });
+
+    it('blocks save when nothing is configured', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...configuredState,
+            inVideoQuiz: {
+              ...configuredState.inVideoQuiz,
+              selectedVideo: null,
+              quizItems: [{
+                id: 'quiz-1', problemId: '', time: '', jumpBack: '',
+              }],
+            },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.getByText('Please select a video and add at least one problem.')).toBeInTheDocument();
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).not.toHaveBeenCalled();
+    });
+
+    it('blocks save when a video is selected but no problem has been added', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...configuredState,
+            inVideoQuiz: {
+              ...configuredState.inVideoQuiz,
+              selectedVideo: 'video-1',
+              quizItems: [{
+                id: 'quiz-1', problemId: '', time: '', jumpBack: '',
+              }],
+            },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.getByText('Please add at least one problem.')).toBeInTheDocument();
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).not.toHaveBeenCalled();
+    });
+
+    it('does not block as entirely-empty once a problem or time has been entered', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...configuredState,
+            inVideoQuiz: {
+              ...configuredState.inVideoQuiz,
+              selectedVideo: null,
+              quizItems: [{
+                id: 'quiz-1', problemId: 'problem-1', time: '', jumpBack: '',
+              }],
+            },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      expect(screen.queryByText('Please select a video and add at least one problem.')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Please enter a time for the selected problem.')).toHaveLength(2);
+    });
+
+    it('reports the video error before per-row errors when both are present', () => {
+      editorRender(
+        <ConnectedInVideoQuizEditor onClose={jest.fn()} />,
+        {
+          initialState: {
+            ...baseState,
+            inVideoQuiz: {
+              ...baseState.inVideoQuiz,
+              unitContentLoaded: true,
+              videos: [{ id: 'video-1', display_name: 'Video 1' }],
+              problems: [
+                { id: 'problem-1', display_name: 'Problem 1' },
+                { id: 'problem-2', display_name: 'Problem 2' },
+              ],
+              quizItems: [
+                {
+                  id: 'quiz-1', problemId: 'problem-1', time: '1:30', jumpBack: '',
+                },
+                {
+                  id: 'quiz-2', problemId: 'problem-2', time: '', jumpBack: '',
+                },
+              ],
+            },
+          },
+        },
+      );
+
+      fireEvent.click(screen.getByTestId('save-button'));
+
+      // The per-row inline feedback for quiz-2's missing time is independently
+      // always-live (see 'does not show the video error when no row is fully
+      // configured' etc.), so it may still render alongside the banner. What
+      // this test actually verifies is that the *banner* - which handleSave
+      // only ever shows one message in - reports the video error, not the
+      // per-row one, proving the reorder in handleSave.
+      const banner = screen.getByRole('alert');
+      expect(within(banner).getByText('Please select a video.')).toBeInTheDocument();
+      expect(within(banner).queryByText('Please enter a time for the selected problem.')).not.toBeInTheDocument();
+      expect(thunkActions.inVideoQuiz.saveInVideoQuizSettings).not.toHaveBeenCalled();
     });
   });
 

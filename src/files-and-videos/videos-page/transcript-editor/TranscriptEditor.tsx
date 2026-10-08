@@ -1,7 +1,11 @@
-import React, {
-  useEffect, useMemo, useRef, useState,
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
-import PropTypes from 'prop-types';
+import type { SyntheticEvent } from 'react';
+import { logError } from '@edx/frontend-platform/logging';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
   Alert,
@@ -21,24 +25,44 @@ import {
   PlayArrow,
 } from '@openedx/paragon/icons';
 
-import { fetchTranscriptContent, uploadTranscript } from '../data/api';
+import { fetchTranscriptContent, uploadTranscript } from '@src/files-and-videos/videos-page/data/api';
 import {
   formatTimestamp,
   parseSrt,
   parseTimestamp,
   serializeSrt,
 } from './srtUtils';
+import type { Cue } from './srtUtils';
 import messages from './messages';
 import './TranscriptEditor.scss';
 
-const toVttTimestamp = (timestamp) => timestamp.replace(',', '.');
+type EditorCue = Cue & { id: string; };
+type SaveStatus = 'idle' | 'saving' | 'saved';
+
+interface TranscriptEditorProps {
+  isOpen: boolean;
+  onClose: (submitted: boolean) => void;
+  video: {
+    id: string;
+    displayName: string;
+    downloadLink?: string | null;
+  };
+  language?: string;
+  languages?: Record<string, string>;
+  transcriptSettings: {
+    transcriptDownloadHandlerUrl: string;
+    transcriptUploadHandlerUrl: string;
+  };
+}
+
+const toVttTimestamp = (timestamp: string) => timestamp.replace(',', '.');
 const TIMESTAMP_REGEX = /^\d{2}:\d{2}:\d{2},\d{3}$/;
 const hasInvalidCueText = (text = '') => {
   const lines = text.split(/\r?\n/);
   return text.trim().length === 0 || lines.some((line) => line.trim().length === 0);
 };
 
-const serializeVtt = (cues) => {
+const serializeVtt = (cues: Cue[]) => {
   const body = cues
     .map((cue, index) => `${index + 1}\n${toVttTimestamp(cue.startTime)} --> ${toVttTimestamp(cue.endTime)}\n${cue.text}`)
     .join('\n\n');
@@ -50,34 +74,33 @@ const TranscriptEditor = ({
   isOpen,
   onClose,
   video,
-  language,
-  languages,
+  language = '',
+  languages = {},
   transcriptSettings,
-}) => {
+}: TranscriptEditorProps) => {
   const intl = useIntl();
-  const videoRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const cueIdRef = useRef(0);
-  const cueListRef = useRef(null);
-  const cueWrapperRefs = useRef({});
-  const cueTextRefs = useRef({});
-  const pendingFocusId = useRef(null);
+  const cueListRef = useRef<HTMLDivElement | null>(null);
+  const cueWrapperRefs = useRef<Record<string, HTMLDivElement>>({});
+  const pendingFocusId = useRef<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [cues, setCues] = useState([]);
+  const [cues, setCues] = useState<EditorCue[]>([]);
   const [captionTrackUrl, setCaptionTrackUrl] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
   const [initialCuesSnapshot, setInitialCuesSnapshot] = useState('[]');
   const [isUnsavedModalOpen, setIsUnsavedModalOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('idle');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  const attachCueIds = (nextCues) => nextCues.map((cue) => ({
+  const attachCueIds = (nextCues: (Cue & { id?: string; })[]): EditorCue[] => nextCues.map((cue) => ({
     ...cue,
     id: cue.id ?? `cue-${cueIdRef.current++}`,
   }));
 
-  const serializeComparableCues = (nextCues) => JSON.stringify(nextCues.map((cue) => ({
+  const serializeComparableCues = (nextCues: Cue[]) => JSON.stringify(nextCues.map((cue) => ({
     startTime: cue.startTime,
     endTime: cue.endTime,
     text: cue.text,
@@ -93,7 +116,7 @@ const TranscriptEditor = ({
     [cues],
   );
 
-  const hasInvalidTimestamp = (cue) => (
+  const hasInvalidTimestamp = (cue: Cue) => (
     !TIMESTAMP_REGEX.test(cue.startTime)
     || !TIMESTAMP_REGEX.test(cue.endTime)
     || parseTimestamp(cue.endTime) <= parseTimestamp(cue.startTime)
@@ -117,7 +140,8 @@ const TranscriptEditor = ({
 
   useEffect(() => {
     if (pendingFocusId.current) {
-      const el = cueTextRefs.current[pendingFocusId.current];
+      const wrapper = cueWrapperRefs.current[pendingFocusId.current];
+      const el = wrapper?.querySelector<HTMLTextAreaElement>('textarea');
       if (el) {
         el.focus();
         pendingFocusId.current = null;
@@ -169,7 +193,7 @@ const TranscriptEditor = ({
       language,
       apiUrl: transcriptSettings.transcriptDownloadHandlerUrl,
     })
-      .then((text) => {
+      .then((text: string) => {
         if (!isMounted) {
           return undefined;
         }
@@ -184,7 +208,7 @@ const TranscriptEditor = ({
         }
         setCues([]);
         setInitialCuesSnapshot('[]');
-        setSaveError(intl.formatMessage(messages.saveFailedLabel));
+        setSaveError(intl.formatMessage(messages.loadFailedLabel));
         return undefined;
       })
       .finally(() => {
@@ -204,13 +228,13 @@ const TranscriptEditor = ({
     intl,
   ]);
 
-  const handleCueChange = (index, value) => {
+  const handleCueChange = (index: number, value: string) => {
     setCues(prev => prev.map((cue, cueIndex) => (
       cueIndex === index ? { ...cue, text: value } : cue
     )));
   };
 
-  const handleCueTimeChange = (index, field, value) => {
+  const handleCueTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
     const normalized = value
       .replace(/\./g, ',')
       .replace(/[^\d:,]/g, '')
@@ -221,7 +245,7 @@ const TranscriptEditor = ({
     )));
   };
 
-  const handleCueTimeBlur = (index, field, value) => {
+  const handleCueTimeBlur = (index: number, field: 'startTime' | 'endTime', value: string) => {
     const normalized = value.replace(/\./g, ',').trim();
     if (!TIMESTAMP_REGEX.test(normalized)) {
       return;
@@ -234,11 +258,11 @@ const TranscriptEditor = ({
     )));
   };
 
-  const handleDeleteCue = (index) => {
+  const handleDeleteCue = (index: number) => {
     setCues(prev => prev.filter((_, cueIndex) => cueIndex !== index));
   };
 
-  const handleInsertCueAfter = (index) => {
+  const handleInsertCueAfter = (index: number) => {
     setCues((prev) => {
       // index === -1 means insert as the very first cue (empty list)
       if (index === -1) {
@@ -253,6 +277,7 @@ const TranscriptEditor = ({
       }
 
       const currentCue = prev[index];
+      /* istanbul ignore if -- insert buttons always pass a valid index */
       if (!currentCue) {
         return prev;
       }
@@ -280,15 +305,22 @@ const TranscriptEditor = ({
     });
   };
 
-  const seekTo = (timeCode) => {
+  const seekTo = (timeCode: string) => {
     if (videoRef.current) {
       videoRef.current.currentTime = parseTimestamp(timeCode);
-      videoRef.current.play();
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error: Error) => {
+          if (error.name !== 'AbortError') {
+            logError(error);
+          }
+        });
+      }
       setCurrentTime(parseTimestamp(timeCode));
     }
   };
 
-  const handleVideoTimeUpdate = (event) => {
+  const handleVideoTimeUpdate = (event: SyntheticEvent<HTMLVideoElement>) => {
     setCurrentTime(event.currentTarget.currentTime);
   };
 
@@ -321,6 +353,7 @@ const TranscriptEditor = ({
 
   const handleSave = async () => {
     const hasInvalidCueTextValue = cues.some((cue) => hasInvalidCueText(cue.text));
+    /* istanbul ignore if -- the save button is disabled in this state */
     if (hasInvalidCueTextValue) {
       return;
     }
@@ -344,6 +377,7 @@ const TranscriptEditor = ({
       setInitialCuesSnapshot(serializeComparableCues(cues));
       setSaveStatus('saved');
     } catch (error) {
+      logError(error as Error);
       setSaveStatus('idle');
       setSaveError(intl.formatMessage(messages.saveFailedLabel));
     } finally {
@@ -369,6 +403,7 @@ const TranscriptEditor = ({
       isOpen={isOpen}
       onClose={handleRequestClose}
       hasCloseButton
+      isOverflowVisible={false}
       title={video.displayName}
       size="xl"
       className="transcript-editor-modal"
@@ -382,7 +417,12 @@ const TranscriptEditor = ({
             </div>
             {saveStatus === 'saving' && (
               <div className="d-inline-flex align-items-center text-gray-700 small text-nowrap mt-1">
-                <Spinner animation="border" size="sm" className="mr-2" screenReaderText={intl.formatMessage(messages.saveInProgressLabel)} />
+                <Spinner
+                  animation="border"
+                  size="sm"
+                  className="mr-2"
+                  screenReaderText={intl.formatMessage(messages.saveInProgressLabel)}
+                />
                 <span>{intl.formatMessage(messages.saveInProgressLabel)}</span>
               </div>
             )}
@@ -402,140 +442,153 @@ const TranscriptEditor = ({
             {inlineErrorMessage}
           </Alert>
         )}
-        {loading ? (
-          <div className="d-flex align-items-center justify-content-center py-5 flex-fill">
-            <Spinner animation="border" screenReaderText={intl.formatMessage(messages.loadingLabel)} />
-          </div>
-        ) : (
-          <>
-            {video.downloadLink && (
-              <div className="transcript-editor-modal__video-container bg-black d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden">
-                <video
-                  ref={videoRef}
-                  src={video.downloadLink}
-                  controls
-                  controlsList="nodownload"
-                  disablePictureInPicture
-                  onTimeUpdate={handleVideoTimeUpdate}
-                  onSeeked={handleVideoTimeUpdate}
-                  className="transcript-editor-modal__video"
-                >
-                  <track
-                    key={captionTrackUrl}
-                    kind="captions"
-                    src={captionTrackUrl || ''}
-                    srcLang={language}
-                    label={language.toUpperCase()}
-                    default
-                  />
-                </video>
-              </div>
-            )}
-
-            <div ref={cueListRef} className="transcript-editor-modal__cue-list overflow-auto flex-grow-1 px-4 py-3">
-              {cues.length === 0 && (
-                <div className="d-flex justify-content-center py-4">
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    iconBefore={Add}
-                    onClick={() => handleInsertCueAfter(-1)}
+        {loading
+          ? (
+            <div className="d-flex align-items-center justify-content-center py-5 flex-fill">
+              <Spinner animation="border" screenReaderText={intl.formatMessage(messages.loadingLabel)} />
+            </div>
+          )
+          : (
+            <>
+              {video.downloadLink && (
+                <div className="transcript-editor-modal__video-container bg-black d-flex align-items-center justify-content-center flex-shrink-0 overflow-hidden">
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <video
+                    ref={videoRef}
+                    src={video.downloadLink}
+                    controls
+                    controlsList="nodownload"
+                    disablePictureInPicture
+                    onTimeUpdate={handleVideoTimeUpdate}
+                    onSeeked={handleVideoTimeUpdate}
+                    className="transcript-editor-modal__video"
                   >
-                    {intl.formatMessage(messages.insertCueLabel)}
-                  </Button>
+                    <track
+                      key={captionTrackUrl}
+                      kind="captions"
+                      src={captionTrackUrl || ''}
+                      srcLang={language}
+                      label={language.toUpperCase()}
+                      default
+                    />
+                  </video>
                 </div>
               )}
-              {cues.map((cue, index) => {
-                const isActive = activeCueId === cue.id;
-                const hasCueTextError = hasInvalidCueText(cue.text);
-                return (
-                  <Stack
-                    key={cue.id ?? `cue-${index}`}
-                    ref={(el) => {
-                      if (el) {
-                        cueWrapperRefs.current[cue.id] = el;
-                      } else {
-                        delete cueWrapperRefs.current[cue.id];
-                      }
-                    }}
-                    gap={2}
-                    className={`px-3 py-2 transcript-editor-modal__cue-wrapper${isActive ? ' transcript-editor-modal__cue--active' : ''}`}
-                  >
-                    <Stack direction="horizontal" gap={2} className="transcript-editor-modal__cue-row flex-wrap flex-lg-nowrap align-items-center">
-                      <div className="transcript-editor-modal__cue-text-wrap flex-grow-1">
-                        <Form.Control
-                          type="text"
-                          value={cue.text}
-                          onChange={(e) => handleCueChange(index, e.target.value)}
-                          className="transcript-editor-modal__cue-text"
-                          isInvalid={hasCueTextError}
-                          ref={(el) => {
-                            if (el) { cueTextRefs.current[cue.id] = el; } else { delete cueTextRefs.current[cue.id]; }
-                          }}
-                        />
-                        {hasCueTextError && (
-                          <Form.Control.Feedback type="invalid" hasIcon={false}>
-                            {intl.formatMessage(messages.invalidCueTextLabel)}
-                          </Form.Control.Feedback>
-                        )}
-                      </div>
-                      <div className="transcript-editor-modal__time-wrap">
-                        <Form.Control
-                          size="sm"
-                          type="text"
-                          value={cue.startTime}
-                          className="transcript-editor-modal__time"
-                          onChange={(e) => handleCueTimeChange(index, 'startTime', e.target.value)}
-                          onBlur={(e) => handleCueTimeBlur(index, 'startTime', e.target.value)}
-                        />
-                      </div>
-                      <span className="transcript-editor-modal__time-sep">→</span>
-                      <div className="transcript-editor-modal__time-wrap">
-                        <Form.Control
-                          size="sm"
-                          type="text"
-                          value={cue.endTime}
-                          className="transcript-editor-modal__time"
-                          onChange={(e) => handleCueTimeChange(index, 'endTime', e.target.value)}
-                          onBlur={(e) => handleCueTimeBlur(index, 'endTime', e.target.value)}
-                        />
-                      </div>
-                      <IconButton
-                        iconAs={Icon}
-                        src={PlayArrow}
-                        alt={intl.formatMessage(messages.seekCueLabel)}
-                        onClick={() => seekTo(cue.startTime)}
-                      />
-                      <IconButton
-                        iconAs={Icon}
-                        src={DeleteOutline}
-                        alt={intl.formatMessage(messages.deleteCueLabel)}
-                        onClick={() => handleDeleteCue(index)}
-                      />
-                    </Stack>
-                    {hasInvalidTimestamp(cue) && (
-                      <div className="text-danger small mt-n1">
-                        {intl.formatMessage(messages.invalidTimestampLabel)}
-                      </div>
-                    )}
-                    <div className="transcript-editor-modal__insert-divider">
-                      <hr className="transcript-editor-modal__insert-divider-line" />
-                      <Button
-                        variant="light"
-                        size="sm"
-                        iconBefore={Add}
-                        className="transcript-editor-modal__insert-btn"
-                        onClick={() => handleInsertCueAfter(index)}
+
+              <div ref={cueListRef} className="transcript-editor-modal__cue-list overflow-auto flex-grow-1 px-4 py-3">
+                {cues.length === 0 && (
+                  <div className="d-flex justify-content-center py-4">
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      iconBefore={Add}
+                      onClick={() => handleInsertCueAfter(-1)}
+                    >
+                      {intl.formatMessage(messages.insertCueLabel)}
+                    </Button>
+                  </div>
+                )}
+                {cues.map((cue, index) => {
+                  const isActive = activeCueId === cue.id;
+                  const hasCueTextError = hasInvalidCueText(cue.text);
+                  return (
+                    <Stack
+                      key={cue.id}
+                      ref={(el: HTMLDivElement | null) => {
+                        if (el) {
+                          cueWrapperRefs.current[cue.id] = el;
+                        } else {
+                          delete cueWrapperRefs.current[cue.id];
+                        }
+                      }}
+                      gap={2}
+                      className={`px-3 py-2 transcript-editor-modal__cue-wrapper${
+                        isActive ? ' transcript-editor-modal__cue--active' : ''
+                      }`}
+                    >
+                      <Stack
+                        direction="horizontal"
+                        gap={2}
+                        className="transcript-editor-modal__cue-row flex-wrap flex-lg-nowrap align-items-center"
                       >
-                        {intl.formatMessage(messages.insertCueLabel)}
-                      </Button>
-                    </div>
-                  </Stack>
-                );
-              })}
-            </div>
-          </>
-        )}
+                        <div className="transcript-editor-modal__cue-text-wrap flex-grow-1">
+                          <Form.Control
+                            as="textarea"
+                            autoResize
+                            rows={1}
+                            value={cue.text}
+                            aria-label={intl.formatMessage(messages.cueTextLabel, { index: index + 1 })}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                              handleCueChange(index, e.target.value);
+                            }}
+                            className="transcript-editor-modal__cue-text"
+                            isInvalid={hasCueTextError}
+                          />
+                          {hasCueTextError && (
+                            <Form.Control.Feedback type="invalid" hasIcon={false}>
+                              {intl.formatMessage(messages.invalidCueTextLabel)}
+                            </Form.Control.Feedback>
+                          )}
+                        </div>
+                        <div className="transcript-editor-modal__time-wrap">
+                          <Form.Control
+                            size="sm"
+                            type="text"
+                            value={cue.startTime}
+                            aria-label={intl.formatMessage(messages.cueStartTimeLabel, { index: index + 1 })}
+                            className="transcript-editor-modal__time"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCueTimeChange(index, 'startTime', e.target.value)}
+                            onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleCueTimeBlur(index, 'startTime', e.target.value)}
+                          />
+                        </div>
+                        <span className="transcript-editor-modal__time-sep">→</span>
+                        <div className="transcript-editor-modal__time-wrap">
+                          <Form.Control
+                            size="sm"
+                            type="text"
+                            value={cue.endTime}
+                            aria-label={intl.formatMessage(messages.cueEndTimeLabel, { index: index + 1 })}
+                            className="transcript-editor-modal__time"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCueTimeChange(index, 'endTime', e.target.value)}
+                            onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleCueTimeBlur(index, 'endTime', e.target.value)}
+                          />
+                        </div>
+                        <IconButton
+                          iconAs={Icon}
+                          src={PlayArrow}
+                          alt={intl.formatMessage(messages.seekCueLabel)}
+                          onClick={() => seekTo(cue.startTime)}
+                        />
+                        <IconButton
+                          iconAs={Icon}
+                          src={DeleteOutline}
+                          alt={intl.formatMessage(messages.deleteCueLabel)}
+                          onClick={() => handleDeleteCue(index)}
+                        />
+                      </Stack>
+                      {hasInvalidTimestamp(cue) && (
+                        <div className="text-danger small mt-n1">
+                          {intl.formatMessage(messages.invalidTimestampLabel)}
+                        </div>
+                      )}
+                      <div className="transcript-editor-modal__insert-divider">
+                        <hr className="transcript-editor-modal__insert-divider-line" />
+                        <Button
+                          variant="light"
+                          size="sm"
+                          iconBefore={Add}
+                          className="transcript-editor-modal__insert-btn"
+                          onClick={() => handleInsertCueAfter(index)}
+                        >
+                          {intl.formatMessage(messages.insertCueLabel)}
+                        </Button>
+                      </div>
+                    </Stack>
+                  );
+                })}
+              </div>
+            </>
+          )}
       </ModalDialog.Body>
 
       <ModalDialog.Footer>
@@ -548,9 +601,8 @@ const TranscriptEditor = ({
         </Button>
         <Button
           onClick={handleSave}
-          disabled={
-            saving || loading || !hasUnsavedChanges || hasInvalidCueTextInEditor || hasInvalidTimestampsInEditor
-          }
+          disabled={saving || loading || !hasUnsavedChanges || hasInvalidCueTextInEditor
+            || hasInvalidTimestampsInEditor}
         >
           {saving
             ? intl.formatMessage(messages.saveInProgressLabel)
@@ -561,7 +613,9 @@ const TranscriptEditor = ({
       {isUnsavedModalOpen && (
         <ModalDialog
           isOpen
+          isOverflowVisible={false}
           size="md"
+          title={intl.formatMessage(messages.unsavedModalTitle)}
           onClose={() => setIsUnsavedModalOpen(false)}
         >
           <ModalDialog.Header>
@@ -588,27 +642,6 @@ const TranscriptEditor = ({
       )}
     </ModalDialog>
   );
-};
-
-TranscriptEditor.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  language: PropTypes.string,
-  languages: PropTypes.shape({}),
-  video: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    displayName: PropTypes.string.isRequired,
-    downloadLink: PropTypes.string,
-  }).isRequired,
-  transcriptSettings: PropTypes.shape({
-    transcriptDownloadHandlerUrl: PropTypes.string.isRequired,
-    transcriptUploadHandlerUrl: PropTypes.string.isRequired,
-  }).isRequired,
-};
-
-TranscriptEditor.defaultProps = {
-  language: '',
-  languages: {},
 };
 
 export default TranscriptEditor;
