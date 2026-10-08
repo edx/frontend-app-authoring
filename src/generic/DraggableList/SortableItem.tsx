@@ -74,6 +74,7 @@ const SortableItem = ({
           {actions}
           {!disabled && (
           <IconButtonWithTooltip
+            className="flex-shrink-0"
             tooltipPlacement="top"
             tooltipContent={intl.formatMessage(messages.tooltipContent)}
             src={DragIndicator}
