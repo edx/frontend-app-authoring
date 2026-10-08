@@ -35,7 +35,7 @@ const TitleButton = ({
   const titleTooltipMessage = intl.formatMessage(messages.expandTooltip);
   const ExpandIcon = isExpanded ? ArrowDownIcon : ArrowRightIcon;
   const titleText = (
-    <span className={`${namePrefix}-card-title mb-0 truncate-1-line`}>
+    <span className={`${namePrefix}-card-title mb-0 truncate-1-line text-truncate`}>
       {title}
     </span>
   );
@@ -94,6 +94,7 @@ const TitleButton = ({
         <Stack
           direction="horizontal"
           className="item-card-header__title-btn item-card-header__title-btn--with-link align-items-center position-relative rounded-pill"
+          title={title}
         >
           <Button
             type="button"
