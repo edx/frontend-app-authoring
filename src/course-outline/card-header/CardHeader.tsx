@@ -189,7 +189,7 @@ const CardHeader = ({
           >
             {titleComponent}
             <IconButtonWithTooltip
-              className="item-card-button-icon"
+              className="item-card-button-icon flex-shrink-0"
               data-testid={`${namePrefix}-edit-button`}
               alt={intl.formatMessage(messages.altButtonRename)}
               tooltipContent={<div>{intl.formatMessage(messages.altButtonRename)}</div>}
@@ -200,7 +200,7 @@ const CardHeader = ({
             />
           </Stack>
         )}
-        <div className="ml-auto d-flex">
+        <div className="ml-auto d-flex flex-shrink-0">
           {(isVertical || isSequential) && (
             <CardStatus status={status} showDiscussionsEnabledBadge={showDiscussionsEnabledBadge || false} />
           )}

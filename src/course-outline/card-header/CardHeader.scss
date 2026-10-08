@@ -12,17 +12,6 @@
     background: transparent;
     color: var(--pgn-color-black);
 
-    .truncate-1-line {
-      -webkit-line-clamp: 1;  /* stylelint-disable-line value-no-vendor-prefix */
-      line-clamp: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;  /* stylelint-disable-line value-no-vendor-prefix */
-      min-width: 80%;
-      text-align: left;
-      -webkit-box-orient: vertical;  /* stylelint-disable-line value-no-vendor-prefix */
-    }
-
     &--with-link {
       margin-top: 0.625rem;
 
@@ -51,17 +40,6 @@
 
       > .pgn__icon {
         pointer-events: none;
-      }
-
-      .item-card-header__title-link-content .truncate-1-line {
-        -webkit-line-clamp: 1;  /* stylelint-disable-line value-no-vendor-prefix */
-        line-clamp: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;  /* stylelint-disable-line value-no-vendor-prefix */
-        min-width: 0;
-        text-align: left;
-        -webkit-box-orient: vertical;  /* stylelint-disable-line value-no-vendor-prefix */
       }
 
       .item-card-header__title-link-content:hover .truncate-1-line {
