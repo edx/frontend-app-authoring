@@ -656,6 +656,7 @@ const UnitCard = ({
                                       href={`${getTitleLink(id)}#${component.blockId}`}
                                       className="item-card-header__title-btn"
                                       data-testid="component-name-link"
+                                      title={component.displayName}
                                       onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                                         e.stopPropagation();
                                         if (!e.metaKey && !e.ctrlKey) {
