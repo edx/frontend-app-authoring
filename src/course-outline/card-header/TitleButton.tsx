@@ -63,6 +63,7 @@ const TitleButton = ({
         showLaunchIcon={false}
         onClick={stopTitleLinkPropagation}
         onMouseDown={stopTitleLinkPropagation}
+        title={title}
       >
         {titleText}
       </Hyperlink>
@@ -75,6 +76,7 @@ const TitleButton = ({
         to={titleLink}
         onClick={stopTitleLinkPropagation}
         onMouseDown={stopTitleLinkPropagation}
+        title={title}
       >
         {titleText}
       </Button>
@@ -94,6 +96,7 @@ const TitleButton = ({
         <Stack
           direction="horizontal"
           className="item-card-header__title-btn item-card-header__title-btn--with-link align-items-center position-relative rounded-pill"
+          title={title}
         >
           <Button
             type="button"

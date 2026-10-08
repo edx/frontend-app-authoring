@@ -1,6 +1,22 @@
 .item-card-header {
   display: flex;
   align-items: center;
+  min-width: 0;
+
+  // Title + edit button group. CardHeader.tsx applies the `min-width-0` utility,
+  // but that class doesn't exist in our build, so it can't shrink without this
+  // and long section/subsection/unit titles overflow the row (LP-1318 #1).
+  .component-title-group {
+    min-width: 0;
+  }
+
+  // Right-hand status badges / tag count / sync / menu container
+  // (`ml-auto d-flex` in CardHeader.tsx). Keep it at its natural size so the
+  // title gives up space instead of the badges being squeezed or wrapped.
+  > .ml-auto.d-flex {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 
   .item-card-header__title-btn {
     justify-content: flex-start;
@@ -12,15 +28,17 @@
     background: transparent;
     color: var(--pgn-color-black);
 
+    // Single-line truncation for every level. nowrap + text-overflow puts the
+    // ellipsis exactly at the edge of the box (line-clamp cut at a word
+    // boundary and shifted the edit button, LP-1318 #3).
     .truncate-1-line {
-      -webkit-line-clamp: 1;  /* stylelint-disable-line value-no-vendor-prefix */
-      line-clamp: 1;
+      display: block;
+      flex: 0 1 auto;
+      min-width: 0;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      display: -webkit-box;  /* stylelint-disable-line value-no-vendor-prefix */
-      min-width: 80%;
       text-align: left;
-      -webkit-box-orient: vertical;  /* stylelint-disable-line value-no-vendor-prefix */
     }
 
     &--with-link {
@@ -53,15 +71,11 @@
         pointer-events: none;
       }
 
-      .item-card-header__title-link-content .truncate-1-line {
-        -webkit-line-clamp: 1;  /* stylelint-disable-line value-no-vendor-prefix */
-        line-clamp: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;  /* stylelint-disable-line value-no-vendor-prefix */
+      // TitleButton.tsx applies `min-width-0` here, but that class doesn't
+      // exist in our build, so set it explicitly.
+      .item-card-header__title-link-content {
         min-width: 0;
-        text-align: left;
-        -webkit-box-orient: vertical;  /* stylelint-disable-line value-no-vendor-prefix */
+        flex-shrink: 1;
       }
 
       .item-card-header__title-link-content:hover .truncate-1-line {
@@ -72,7 +86,9 @@
     }
   }
 
+  // Edit (pencil) button: never squeezed or pushed by the title (LP-1318 #3).
   .item-card-button-icon {
+    flex-shrink: 0;
     opacity: 0;
     transition: opacity .3s linear;
     margin-right: .5rem;
