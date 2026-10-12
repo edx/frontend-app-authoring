@@ -8,7 +8,8 @@ export const getStaticUrl = ({ displayName }) => (`/static/${getLocatorSafeName(
 export const getRelativeUrl = ({ courseId, displayName }) => {
   if (displayName) {
     const assetCourseId = courseId.replace('course', 'asset');
-    const assetPathShell = `/${assetCourseId}+type@asset+block@`;
+    // Use "block/" (as the LMS renders /static/ urls) so relative links inside an embedded HTML asset resolve.
+    const assetPathShell = `/${assetCourseId}+type@asset+block/`;
     return `${assetPathShell}${displayName}`;
   }
   return '';

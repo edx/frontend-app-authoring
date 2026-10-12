@@ -193,13 +193,18 @@ describe('TinyMceEditor hooks', () => {
       const learningContextId = 'course-v1:org+test+run';
       const lmsEndpointUrl = getConfig().LMS_BASE_URL;
       it('returns updated src for text editor to update content', () => {
-        const expected = `<img src="/${baseAssetUrl}@soMEImagEURl1.jpeg"/><a href="/${baseAssetUrl}@test.pdf">test</a><img src="/${baseAssetUrl}@correct.png" /><img src="/${baseAssetUrl}@correct.png" />`;
+        const expected = `<img src="/${baseAssetUrl}/soMEImagEURl1.jpeg"/><a href="/assets/v1/${baseAssetUrl}/test.pdf">test</a><img src="/${baseAssetUrl}@correct.png" /><img src="/${baseAssetUrl}/correct.png" />`;
         const actual = module.replaceStaticWithAsset({ initialContent, learningContextId });
         expect(actual).toEqual(expected);
       });
+      it('does not revert a block/ asset url to block@', () => {
+        const content = `<iframe src="/${baseAssetUrl}/sim.html"></iframe>`;
+        const actual = module.replaceStaticWithAsset({ initialContent: content, learningContextId });
+        expect(actual).toBeFalsy();
+      });
       it('returns updated src with absolute url for expandable editor to update content', () => {
         const editorType = 'expandable';
-        const expected = `<img src="${lmsEndpointUrl}/${baseAssetUrl}@soMEImagEURl1.jpeg"/><a href="${lmsEndpointUrl}/${baseAssetUrl}@test.pdf">test</a><img src="${lmsEndpointUrl}/${baseAssetUrl}@correct.png" /><img src="${lmsEndpointUrl}/${baseAssetUrl}@correct.png" />`;
+        const expected = `<img src="${lmsEndpointUrl}/${baseAssetUrl}/soMEImagEURl1.jpeg"/><a href="${lmsEndpointUrl}/assets/v1/${baseAssetUrl}/test.pdf">test</a><img src="${lmsEndpointUrl}/${baseAssetUrl}@correct.png" /><img src="${lmsEndpointUrl}/${baseAssetUrl}/correct.png" />`;
         const actual = module.replaceStaticWithAsset({
           initialContent,
           editorType,
