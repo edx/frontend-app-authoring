@@ -75,7 +75,7 @@ describe('TextEditor', () => {
       const { container } = render(<TextEditor {...updatedProps} />);
       const element = container.querySelector('tinymcewidget');
       expect(element).toBeInTheDocument();
-      expect(element?.getAttribute('editorcontenthtml')).toBe('eDiTablE Text with <img src="/asset+org+run+type@asset+block@img.jpg" />');
+      expect(element?.getAttribute('editorcontenthtml')).toBe('eDiTablE Text with <img src="/asset+org+run+type@asset+block/img.jpg" />');
     });
     test('not yet loaded, Spinner appears', () => {
       const { container } = render(<TextEditor {...props} blockFinished={false} />);
