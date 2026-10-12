@@ -17,7 +17,8 @@ export const getRelativeUrl = ({ courseId, displayName }) => {
 
 export const parseAssetName = (relativeUrl) => {
   let assetName = '';
-  if (relativeUrl.match(/\/asset-v1:\S+[+]\S+[@]\S+[+]\S+\/\w/)?.length >= 1) {
+  // Filenames may start with any character getLocatorSafeName keeps, not only \w (e.g. "-embed.html").
+  if (relativeUrl.match(/\/asset-v1:\S+[+]\S+[@]\S+[+]\S+\/[\w.%-]/)?.length >= 1) {
     const assetBlockName = relativeUrl.substring(0, relativeUrl.search(/("|&quot;)/));
     const dividedSrc = assetBlockName.split(/\/asset-v1:\S+[+]\S+[@]\S+[+]\S+[/@]/);
     [, assetName] = dividedSrc;
