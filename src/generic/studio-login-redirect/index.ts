@@ -1,5 +1,5 @@
 import { getConfig } from '@edx/frontend-platform';
-import { getAuthService, getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { getAuthService, getAuthenticatedHttpClient, getHttpClient } from '@edx/frontend-platform/auth';
 
 /** sessionStorage key holding the time of the last redirect to the Studio login. */
 export const LAST_REDIRECT_KEY = 'studioLoginRedirectAt';
@@ -31,14 +31,11 @@ const STUDIO_SESSION_ERROR = Symbol('studioSessionError');
 const RESENT = 'studioLoginRedirectResent';
 /** The number of background sign-ins done when the request was sent. */
 const SENT_AFTER = 'studioLoginRedirectSentAfter';
-/** A save that has been sent and has not been answered yet. */
-const SAVE_IN_FLIGHT = 'studioLoginRedirectSaveInFlight';
 
 /** A request held back because there is no Studio session. */
 interface HeldRequest {
   /** Held before it was sent, rather than after it failed. */
   queued: boolean;
-  isSave: boolean;
   /** There is a Studio session now: send the request (again). */
   send: () => void;
   /** There is no Studio session: fail the request without sending it. */
@@ -48,11 +45,8 @@ interface HeldRequest {
 let isSigningIn = false;
 let isRedirecting = false;
 let signInCount = 0;
-let savesInFlight = 0;
 let holdRequestsTimer: ReturnType<typeof setTimeout> | undefined;
 let sessionCheck: Promise<boolean | undefined> | null = null;
-let isSignInPromptOpen = false;
-const signInPromptListeners = new Set<() => void>();
 let held: HeldRequest[] = [];
 
 const releaseHeld = (release: (request: HeldRequest) => void) => {
@@ -102,26 +96,30 @@ const failedWithoutResponse = (error: any): boolean => (
   !!error?.config && !error.response && !['ERR_CANCELED', 'ECONNABORTED', 'ETIMEDOUT'].includes(error.code)
 );
 
-/** fetch() that gives up after STUDIO_CHECK_TIMEOUT_MS, so a stalled Studio cannot hold requests back. */
-const fetchWithTimeout = async (url: string, init: RequestInit): Promise<Response> => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), STUDIO_CHECK_TIMEOUT_MS);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-};
+/**
+ * GET a Studio URL with `fetchOptions` that an XHR does not have, through the HTTP client's `fetch`
+ * adapter. Any answer counts. Gives up after STUDIO_CHECK_TIMEOUT_MS, so a stalled Studio cannot hold
+ * requests back.
+ *
+ * It uses the plain client: the authenticated one would hold these requests back while signing in, and
+ * would add the JWT header to a check that is about the Studio session.
+ */
+const getFromStudio = (url: string, fetchOptions: RequestInit) => getHttpClient().get(url, {
+  adapter: 'fetch',
+  fetchOptions: { cache: 'no-store', ...fetchOptions },
+  withCredentials: true,
+  timeout: STUDIO_CHECK_TIMEOUT_MS,
+  validateStatus: () => true,
+});
 
 const checkStudioSession = async (): Promise<boolean | undefined> => {
   try {
-    const response = await fetchWithTimeout(new URL(SESSION_CHECK_PATH, getConfig().STUDIO_BASE_URL).href, {
-      credentials: 'include',
+    const { status } = await getFromStudio(new URL(SESSION_CHECK_PATH, getConfig().STUDIO_BASE_URL).href, {
       redirect: 'manual',
-      cache: 'no-store',
     });
-    // Without a session Studio redirects to its login, or answers 401 once it has the platform change.
-    return response.type !== 'opaqueredirect' && response.status !== 401;
+    // Without a session Studio redirects to its login (status 0, as the redirect is not followed), or
+    // answers 401 once it has the platform change.
+    return status !== 0 && status !== 401;
   } catch {
     return undefined;
   }
@@ -130,8 +128,8 @@ const checkStudioSession = async (): Promise<boolean | undefined> => {
 /**
  * Whether this browser has a Studio session, or undefined if Studio did not answer in time.
  *
- * Without one, Studio redirects a request to its login. `fetch` with `redirect: 'manual'` can see that
- * redirect, which an XHR cannot. Requests made at the same time share one check.
+ * Without one, Studio redirects a request to its login. The `fetch` adapter with `redirect: 'manual'`
+ * can see that redirect, which an XHR cannot. Requests made at the same time share one check.
  */
 export const hasStudioSession = (): Promise<boolean | undefined> => {
   if (!sessionCheck) {
@@ -153,33 +151,11 @@ const signInSilently = async (): Promise<boolean | undefined> => {
   const loginUrl = new URL('/login/', getConfig().STUDIO_BASE_URL);
   loginUrl.searchParams.set('next', SESSION_CHECK_PATH);
   try {
-    await fetchWithTimeout(loginUrl.href, { mode: 'no-cors', credentials: 'include', cache: 'no-store' });
+    await getFromStudio(loginUrl.href, { mode: 'no-cors' });
   } catch {
     return undefined;
   }
   return hasStudioSession();
-};
-
-const setSignInPromptOpen = (isOpen: boolean) => {
-  isSignInPromptOpen = isOpen;
-  signInPromptListeners.forEach((listener) => listener());
-};
-
-/** Subscribe to the sign-in prompt opening or closing (for `useSyncExternalStore`). */
-export const subscribeToSignInPrompt = (listener: () => void) => {
-  signInPromptListeners.add(listener);
-  return () => {
-    signInPromptListeners.delete(listener);
-  };
-};
-
-/** Whether the user is being asked to sign in to Studio again. */
-export const getIsSignInPromptOpen = () => isSignInPromptOpen;
-
-/** The user chose to stay on the page without a Studio session: the held requests fail, unsent. */
-export const closeSignInPrompt = () => {
-  setSignInPromptOpen(false);
-  releaseHeld((request) => request.fail());
 };
 
 const redirectedRecently = (): boolean => {
@@ -189,23 +165,6 @@ const redirectedRecently = (): boolean => {
   } catch {
     return false;
   }
-};
-
-const goToStudioLogin = () => {
-  isRedirecting = true;
-  clearTimeout(holdRequestsTimer);
-  holdRequestsTimer = setTimeout(() => {
-    isRedirecting = false;
-    stopHolding();
-  }, HOLD_REQUESTS_MS);
-  try {
-    window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now()));
-  } catch {
-    // Without sessionStorage there is no loop guard across page loads; still redirect once.
-  }
-  const loginUrl = new URL('/login/', getConfig().STUDIO_BASE_URL);
-  loginUrl.searchParams.set('next', window.location.href);
-  window.location.assign(loginUrl.href);
 };
 
 /**
@@ -222,26 +181,30 @@ export const redirectToStudioLogin = (): boolean => {
   if (!getConfig().STUDIO_BASE_URL || isRedirecting || redirectedRecently()) {
     return false;
   }
-  goToStudioLogin();
-  return true;
-};
-
-/** The user chose to sign in from the prompt, so this goes to the login even right after another one. */
-export const signInToStudio = () => {
-  setSignInPromptOpen(false);
-  if (getConfig().STUDIO_BASE_URL && !isRedirecting) {
-    goToStudioLogin();
+  isRedirecting = true;
+  clearTimeout(holdRequestsTimer);
+  holdRequestsTimer = setTimeout(() => {
+    isRedirecting = false;
+    stopHolding();
+  }, HOLD_REQUESTS_MS);
+  try {
+    window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now()));
+  } catch {
+    // Without sessionStorage there is no loop guard across page loads; still redirect once.
   }
+  const loginUrl = new URL('/login/', getConfig().STUDIO_BASE_URL);
+  loginUrl.searchParams.set('next', window.location.href);
+  window.location.assign(loginUrl.href);
+  return true;
 };
 
 /**
  * Get a Studio session back for the held requests.
  *
  * While the user is signed in to the LMS, this signs in to Studio without leaving the page and sends
- * the requests again, so the page never sees them fail. Otherwise the user has to sign in again, which
- * means leaving the page. A page that was only loading data goes to the login at once. A page with a
- * save in progress asks first, so that the user does not lose the change. So does a page whose last
- * login did not restore the session. If Studio does not answer in time, the requests fail as before.
+ * the requests again, so the page never sees them fail. Otherwise the user has to sign in again: the
+ * page goes to the login and comes back. If the last login did not restore the session, or Studio does
+ * not answer in time, the requests fail as before.
  */
 const restoreStudioSession = async () => {
   isSigningIn = true;
@@ -254,8 +217,9 @@ const restoreStudioSession = async () => {
     releaseHeld((request) => request.send());
   } else if (signedIn === undefined) {
     stopHolding();
-  } else if (savesInFlight > 0 || held.some((request) => request.isSave) || !redirectToStudioLogin()) {
-    setSignInPromptOpen(true);
+  } else if (!redirectToStudioLogin()) {
+    // Going to the login again right after one that did not restore the session would loop.
+    releaseHeld((request) => request.fail());
   }
 };
 
@@ -274,21 +238,9 @@ const restoreStudioSession = async () => {
  */
 export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedHttpClient()) => {
   const markSent = (config: any) => {
-    /* eslint-disable no-param-reassign */
+    // eslint-disable-next-line no-param-reassign
     config[SENT_AFTER] = signInCount;
-    if (isSave(config)) {
-      config[SAVE_IN_FLIGHT] = true;
-      savesInFlight += 1;
-    }
-    /* eslint-enable no-param-reassign */
     return config;
-  };
-  const markAnswered = (config: any) => {
-    if (config?.[SAVE_IN_FLIGHT]) {
-      // eslint-disable-next-line no-param-reassign
-      config[SAVE_IN_FLIGHT] = false;
-      savesInFlight -= 1;
-    }
   };
 
   const requestInterceptor = httpClient.interceptors.request.use((config) => {
@@ -299,7 +251,6 @@ export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedH
       return new Promise<typeof config>((resolve, reject) => {
         held.push({
           queued: true,
-          isSave: isSave(config),
           send: () => resolve(markSent(config)),
           fail: () => reject(Object.assign(
             new Error(`Not sent, as there is no Studio session: ${config.url}`),
@@ -311,12 +262,8 @@ export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedH
     return markSent(config);
   });
 
-  const responseInterceptor = httpClient.interceptors.response.use((response) => {
-    markAnswered(response.config);
-    return response;
-  }, async (error: any) => {
+  const responseInterceptor = httpClient.interceptors.response.use((response) => response, async (error: any) => {
     const config = error?.config;
-    markAnswered(config);
     if (
       !(isStudioUnauthorizedError(error) || failedWithoutResponse(error))
       || !isStudioUrl(config?.url, config?.baseURL)
@@ -340,14 +287,13 @@ export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedH
     const result = new Promise((resolve, reject) => {
       held.push({
         queued: false,
-        isSave: isSave(config),
         send: () => {
           httpClient.request({ ...config, [RESENT]: true }).then(resolve, reject);
         },
         fail: () => reject(error),
       });
     });
-    if (!isSigningIn && !isRedirecting && !isSignInPromptOpen) {
+    if (!isSigningIn && !isRedirecting) {
       restoreStudioSession();
     }
     return result;
@@ -372,14 +318,12 @@ export const shouldRetryQuery = (failureCount: number, error: unknown): boolean 
   !isStudioSessionError(error) && failureCount < DEFAULT_QUERY_RETRIES
 );
 
-/** Only for tests: forget any sign-in, redirect, prompt or held request. */
+/** Only for tests: forget any sign-in, redirect or held request. */
 export const resetStudioLoginRedirect = () => {
   clearTimeout(holdRequestsTimer);
   isSigningIn = false;
   isRedirecting = false;
   signInCount = 0;
-  savesInFlight = 0;
   sessionCheck = null;
-  isSignInPromptOpen = false;
   held = [];
 };

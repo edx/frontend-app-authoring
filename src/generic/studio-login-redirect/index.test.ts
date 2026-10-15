@@ -1,5 +1,5 @@
 import { getConfig } from '@edx/frontend-platform';
-import { getAuthService, getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { getAuthService, getAuthenticatedHttpClient, getHttpClient } from '@edx/frontend-platform/auth';
 import type MockAdapter from 'axios-mock-adapter';
 
 import { initializeMocks, waitFor } from '@src/testUtils';
@@ -9,11 +9,10 @@ import {
   REDIRECT_COOLDOWN_MS,
   STUDIO_CHECK_TIMEOUT_MS,
   addStudioLoginRedirectInterceptor,
-  closeSignInPrompt,
-  getIsSignInPromptOpen,
+  isStudioUnauthorizedError,
+  redirectToStudioLogin,
   resetStudioLoginRedirect,
   shouldRetryQuery,
-  signInToStudio,
 } from '.';
 
 const originalLocation = window.location;
@@ -38,6 +37,9 @@ const stall = (init?: RequestInit) => new Promise((_resolve, reject) => {
   init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
 });
 
+/** A `fetch` response, as far as axios reads it. */
+const fetchResponse = (type: ResponseType, status: number) => ({ type, status, text: async () => '' });
+
 const mockStudioFetch = () => {
   global.fetch = jest.fn(async (_url: string, init?: RequestInit) => {
     if (init?.mode === 'no-cors') {
@@ -47,7 +49,7 @@ const mockStudioFetch = () => {
       }
       await studio.signInDone;
       studio.hasSession = studio.lmsSignedIn;
-      return { type: 'opaque', status: 0 };
+      return fetchResponse('opaque', 0);
     }
     if (studio.checkStalls) {
       return stall(init);
@@ -56,10 +58,12 @@ const mockStudioFetch = () => {
       throw new TypeError('Failed to fetch');
     }
     if (studio.hasSession) {
-      return { type: 'cors', status: 400 };
+      return fetchResponse('cors', 400);
     }
-    return studio.checkAnswers401 ? { type: 'cors', status: 401 } : { type: 'opaqueredirect', status: 0 };
+    return studio.checkAnswers401 ? fetchResponse('cors', 401) : fetchResponse('opaqueredirect', 0);
   }) as unknown as typeof fetch;
+  // axios found no `fetch` when it loaded (jsdom has none): its `fetch` adapter uses this one instead.
+  getHttpClient().defaults.env = { ...getHttpClient().defaults.env, fetch: global.fetch };
 };
 
 const signInRequests = () => (global.fetch as jest.Mock).mock.calls.filter(([, init]) => init?.mode === 'no-cors');
@@ -132,7 +136,23 @@ describe('studio login redirect', () => {
       expect(loginUrl.pathname).toEqual('/login/');
       expect(loginUrl.searchParams.get('next')).toEqual('/xblock/');
       expect(assign).not.toHaveBeenCalled();
-      expect(getIsSignInPromptOpen()).toBe(false);
+    });
+
+    it('checks the session and signs in through the HTTP client', async () => {
+      const clientGet = jest.spyOn(getHttpClient(), 'get');
+      failOnceWithoutSession('onGet', '/xblock/block-1');
+
+      await expect(get('/xblock/block-1')).resolves.toMatchObject({ status: 200 });
+
+      const options = { adapter: 'fetch', withCredentials: true, timeout: STUDIO_CHECK_TIMEOUT_MS };
+      expect(clientGet).toHaveBeenCalledWith(studioUrl('/xblock/'), expect.objectContaining({
+        ...options,
+        fetchOptions: { cache: 'no-store', redirect: 'manual' },
+      }));
+      expect(clientGet).toHaveBeenCalledWith(studioUrl('/login/?next=%2Fxblock%2F'), expect.objectContaining({
+        ...options,
+        fetchOptions: { cache: 'no-store', mode: 'no-cors' },
+      }));
     });
 
     it('does the same for a save that Studio answered with 401', async () => {
@@ -142,7 +162,6 @@ describe('studio login redirect', () => {
 
       expect(signInRequests()).toHaveLength(1);
       expect(assign).not.toHaveBeenCalled();
-      expect(getIsSignInPromptOpen()).toBe(false);
     });
 
     it('forgets the CSRF token that Studio replaced when signing in', async () => {
@@ -235,7 +254,6 @@ describe('studio login redirect', () => {
         expect(queued.settled).toBe(true);
         expect(queued.error).toBeUndefined();
         expect(assign).not.toHaveBeenCalled();
-        expect(getIsSignInPromptOpen()).toBe(false);
       } finally {
         jest.useRealTimers();
       }
@@ -336,92 +354,39 @@ describe('studio login redirect', () => {
       expect(signInRequests()).toHaveLength(1);
     });
 
-    it('asks the user before leaving the page when a save is in progress', async () => {
+    it('goes to the Studio login when a save fails too, without failing the save', async () => {
       axiosMock.onPost(studioUrl('/xblock/')).networkError();
 
       const request = track(post('/xblock/'));
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
+      await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
       await flushPromises();
 
-      expect(assign).not.toHaveBeenCalled();
+      expect(new URL(assign.mock.calls[0][0]).searchParams.get('next')).toEqual(pageUrl);
       expect(request.settled).toBe(false);
     });
 
-    it('fails the save when the user stays on the page', async () => {
-      axiosMock.onPost(studioUrl('/xblock/')).reply(401);
-      const request = post('/xblock/');
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
-
-      closeSignInPrompt();
-
-      await expect(request).rejects.toMatchObject({ response: { status: 401 } });
-      expect(assign).not.toHaveBeenCalled();
-    });
-
-    it('keeps the save pending when the user signs in', async () => {
-      axiosMock.onPost(studioUrl('/xblock/')).reply(401);
-      const request = track(post('/xblock/'));
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
-
-      signInToStudio();
-      await flushPromises();
-
-      expect(assign).toHaveBeenCalledTimes(1);
-      expect(getIsSignInPromptOpen()).toBe(false);
-      expect(request.settled).toBe(false);
-    });
-
-    it('asks the user when a save sent earlier is still in progress', async () => {
-      let answerSave: () => void = () => {};
-      axiosMock.onPost(studioUrl('/xblock/')).reply(() => new Promise((resolve) => {
-        answerSave = () => resolve([200, {}]);
-      }));
-      axiosMock.onGet(studioUrl('/xblock/block-1')).networkError();
-      const save = post('/xblock/');
-      await flushPromises();
-
-      track(get('/xblock/block-1'));
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
-
-      expect(assign).not.toHaveBeenCalled();
-      answerSave();
-      await expect(save).resolves.toMatchObject({ status: 200 });
-    });
-
-    it('fails the requests waiting to be sent when the user stays on the page, without sending them', async () => {
+    it('fails the requests when the last login did not restore the session, without sending the waiting ones', async () => {
+      window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now() - REDIRECT_COOLDOWN_MS / 2));
       let finishSignIn: () => void = () => {};
       studio.signInDone = new Promise((resolve) => { finishSignIn = resolve; });
       axiosMock.onPost(studioUrl('/xblock/')).reply(401);
       axiosMock.onGet(studioUrl('/xblock/block-2')).reply(200, {});
       axiosMock.onPut(studioUrl('/xblock/block-3')).reply(200, {});
-      track(post('/xblock/'));
+      const failed = track(post('/xblock/'));
       await waitFor(() => expect(signInRequests()).toHaveLength(1));
       const queuedRead = track(get('/xblock/block-2'));
       const queuedSave = track(getAuthenticatedHttpClient().put(studioUrl('/xblock/block-3')));
       await flushPromises();
+
       finishSignIn();
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
+      await waitFor(() => expect(failed.settled && queuedRead.settled && queuedSave.settled).toBe(true));
 
-      closeSignInPrompt();
-      await waitFor(() => expect(queuedRead.settled && queuedSave.settled).toBe(true));
-
+      expect(failed.error).toMatchObject({ response: { status: 401 } });
       expect(shouldRetryQuery(0, queuedRead.error)).toBe(false);
       expect(queuedSave.error).toBeDefined();
       const sent = [...axiosMock.history.get, ...axiosMock.history.put].map((request) => request.url);
       expect(sent).not.toContain(studioUrl('/xblock/block-2'));
       expect(sent).not.toContain(studioUrl('/xblock/block-3'));
-      expect(signInRequests()).toHaveLength(1);
-      expect(assign).not.toHaveBeenCalled();
-      expect(getIsSignInPromptOpen()).toBe(false);
-    });
-
-    it('asks the user when the last login did not restore the session', async () => {
-      window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now() - REDIRECT_COOLDOWN_MS / 2));
-      axiosMock.onGet(studioUrl('/xblock/block-1')).reply(401);
-
-      track(get('/xblock/block-1'));
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
-
       expect(assign).not.toHaveBeenCalled();
     });
 
@@ -432,14 +397,6 @@ describe('studio login redirect', () => {
       track(get('/xblock/block-1'));
 
       await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
-    });
-
-    it('goes to the login when the user chooses to, even right after another login', () => {
-      window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now()));
-
-      signInToStudio();
-
-      expect(assign).toHaveBeenCalledTimes(1);
     });
 
     it('holds back Studio requests while going to the login', async () => {
@@ -489,13 +446,11 @@ describe('studio login redirect', () => {
       studio.lmsSignedIn = false;
       window.sessionStorage.setItem(LAST_REDIRECT_KEY, String(Date.now()));
       axiosMock.onGet(studioUrl('/xblock/block-1')).networkError();
-      const request = track(get('/xblock/block-1'));
-      await waitFor(() => expect(getIsSignInPromptOpen()).toBe(true));
 
-      closeSignInPrompt();
-      await waitFor(() => expect(request.settled).toBe(true));
+      const error = await get('/xblock/block-1').catch((e) => e);
 
-      expect(shouldRetryQuery(0, request.error)).toBe(false);
+      expect(error.response).toBeUndefined();
+      expect(shouldRetryQuery(0, error)).toBe(false);
     });
 
     it('retries other failed queries up to the React Query default', async () => {
@@ -505,6 +460,36 @@ describe('studio login redirect', () => {
       expect(shouldRetryQuery(0, error)).toBe(true);
       expect(shouldRetryQuery(2, error)).toBe(true);
       expect(shouldRetryQuery(3, error)).toBe(false);
+    });
+  });
+
+  describe('isStudioUnauthorizedError', () => {
+    it('is false for a 401 without a usable URL', () => {
+      expect(isStudioUnauthorizedError({ response: { status: 401, config: {} } })).toBe(false);
+      expect(isStudioUnauthorizedError({ response: { status: 401, config: { url: 'http://[' } } })).toBe(false);
+    });
+  });
+
+  describe('redirectToStudioLogin', () => {
+    it('starts one navigation for many calls', () => {
+      expect(redirectToStudioLogin()).toBe(true);
+      expect(redirectToStudioLogin()).toBe(false);
+
+      expect(assign).toHaveBeenCalledTimes(1);
+    });
+
+    it('still goes to the login once when sessionStorage is not available', () => {
+      const denied = () => { throw new Error('Access denied'); };
+      const getItem = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(denied);
+      const setItem = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(denied);
+      try {
+        expect(redirectToStudioLogin()).toBe(true);
+
+        expect(assign).toHaveBeenCalledTimes(1);
+      } finally {
+        getItem.mockRestore();
+        setItem.mockRestore();
+      }
     });
   });
 });

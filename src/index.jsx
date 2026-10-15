@@ -38,7 +38,6 @@ import { ContentTagsDrawer } from './content-tags-drawer';
 import AccessibilityPage from './accessibility-page';
 import { ToastProvider } from './generic/toast-context';
 import { addStudioLoginRedirectInterceptor, shouldRetryQuery } from './generic/studio-login-redirect';
-import StudioLoginModal from './generic/studio-login-redirect/StudioLoginModal';
 import { ContentType } from './library-authoring/routes';
 
 import 'react-datepicker/dist/react-datepicker.css';
@@ -139,7 +138,6 @@ const App = () => {
       <ToastProvider>
         <QueryClientProvider client={queryClient}>
           <Head />
-          <StudioLoginModal />
           <RouterProvider router={router} />
         </QueryClientProvider>
       </ToastProvider>
