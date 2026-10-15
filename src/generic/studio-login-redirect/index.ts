@@ -97,6 +97,19 @@ const failedWithoutResponse = (error: any): boolean => (
 );
 
 /**
+ * Whether the URL is one of Studio's older views. Without a session, these redirect to the login before
+ * doing anything, so a request to them that got no response is safe to send again. Studio's REST APIs
+ * (under /api/) answer 401 instead: one of their requests that got no response may have been carried out.
+ */
+const redirectsWithoutSession = (url?: string, baseUrl?: string): boolean => {
+  try {
+    return !new URL(url ?? '', baseUrl ?? window.location.href).pathname.startsWith('/api/');
+  } catch {
+    return false;
+  }
+};
+
+/**
  * GET a Studio URL with `fetchOptions` that an XHR does not have, through the HTTP client's `fetch`
  * adapter. Any answer counts. Gives up after STUDIO_CHECK_TIMEOUT_MS, so a stalled Studio cannot hold
  * requests back.
@@ -226,8 +239,8 @@ const restoreStudioSession = async () => {
 /**
  * Handle requests that Studio refuses because there is no Studio session.
  *
- * Studio refuses them with a 401 when it has the companion openedx-platform change. Until then it
- * redirects them to its login, and the browser blocks that redirect for a cross-origin request, so
+ * Studio refuses them with a 401 when it has the companion openedx-platform change. Until then its older
+ * views redirect them to its login, and the browser blocks that redirect for a cross-origin request, so
  * the request fails with no response. hasStudioSession() tells both apart from other failures.
  *
  * Such requests, and the Studio requests made while the session is being restored, are held back
@@ -264,11 +277,9 @@ export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedH
 
   const responseInterceptor = httpClient.interceptors.response.use((response) => response, async (error: any) => {
     const config = error?.config;
-    if (
-      !(isStudioUnauthorizedError(error) || failedWithoutResponse(error))
-      || !isStudioUrl(config?.url, config?.baseURL)
-      || config[RESENT]
-    ) {
+    const mayLackSession = isStudioUnauthorizedError(error)
+      || (failedWithoutResponse(error) && redirectsWithoutSession(config.url, config.baseURL));
+    if (!mayLackSession || !isStudioUrl(config?.url, config?.baseURL) || config[RESENT]) {
       return Promise.reject(error);
     }
     if (config[SENT_AFTER] < signInCount) {
