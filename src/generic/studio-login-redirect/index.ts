@@ -18,6 +18,12 @@ export const HOLD_REQUESTS_MS = 15_000;
 export const STUDIO_CHECK_TIMEOUT_MS = 10_000;
 
 /**
+ * How long the background sign-in waits for Studio requests that were already sent. Each one that reaches
+ * Studio's login starts a login of its own, which replaces the OAuth state that the sign-in needs.
+ */
+export const WAIT_FOR_SENT_REQUESTS_MS = 5_000;
+
+/**
  * A Studio URL that needs the Studio session and is cheap to call. With a session, a GET to it
  * answers 400 ("Only instance creation is supported without a usage key") without reading anything.
  */
@@ -31,6 +37,8 @@ const STUDIO_SESSION_ERROR = Symbol('studioSessionError');
 const RESENT = 'studioLoginRedirectResent';
 /** The number of background sign-ins done when the request was sent. */
 const SENT_AFTER = 'studioLoginRedirectSentAfter';
+/** Sent to a view that redirects to the login without a session, and not answered yet. */
+const IN_FLIGHT = 'studioLoginRedirectInFlight';
 
 /** A request held back because there is no Studio session. */
 interface HeldRequest {
@@ -45,6 +53,8 @@ interface HeldRequest {
 let isSigningIn = false;
 let isRedirecting = false;
 let signInCount = 0;
+let inFlight = 0;
+let onSentRequestsDone: (() => void) | undefined;
 let holdRequestsTimer: ReturnType<typeof setTimeout> | undefined;
 let sessionCheck: Promise<boolean | undefined> | null = null;
 let held: HeldRequest[] = [];
@@ -212,15 +222,34 @@ export const redirectToStudioLogin = (): boolean => {
 };
 
 /**
+ * Resolves once no request that could reach Studio's login is in flight any more, or after
+ * WAIT_FOR_SENT_REQUESTS_MS.
+ */
+const sentRequestsDone = () => new Promise<void>((resolve) => {
+  if (inFlight === 0) {
+    resolve();
+    return;
+  }
+  const timer = setTimeout(() => onSentRequestsDone?.(), WAIT_FOR_SENT_REQUESTS_MS);
+  onSentRequestsDone = () => {
+    clearTimeout(timer);
+    onSentRequestsDone = undefined;
+    resolve();
+  };
+});
+
+/**
  * Get a Studio session back for the held requests.
  *
  * While the user is signed in to the LMS, this signs in to Studio without leaving the page and sends
- * the requests again, so the page never sees them fail. Otherwise the user has to sign in again: the
- * page goes to the login and comes back. If the last login did not restore the session, or Studio does
- * not answer in time, the requests fail as before.
+ * the requests again, so the page never sees them fail. It first waits for the requests already sent,
+ * so that none of them reaches Studio's login during the sign-in. Otherwise the user has to sign in
+ * again: the page goes to the login and comes back. If the last login did not restore the session, or
+ * Studio does not answer in time, the requests fail as before.
  */
 const restoreStudioSession = async () => {
   isSigningIn = true;
+  await sentRequestsDone();
   const signedIn = await signInSilently();
   isSigningIn = false;
   if (signedIn) {
@@ -246,14 +275,31 @@ const restoreStudioSession = async () => {
  * Such requests, and the Studio requests made while the session is being restored, are held back
  * until restoreStudioSession() is done: the page does not see failures that are about to be fixed.
  * Studio requests made meanwhile would also start logins of their own and break the one in progress.
+ * A request counts as in flight until it is answered, not until the page gets its result, so the
+ * held requests do not keep the sign-in waiting.
  *
  * @returns a function that removes the interceptors.
  */
 export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedHttpClient()) => {
   const markSent = (config: any) => {
-    // eslint-disable-next-line no-param-reassign
+    /* eslint-disable no-param-reassign */
     config[SENT_AFTER] = signInCount;
+    if (redirectsWithoutSession(config.url, config.baseURL)) {
+      config[IN_FLIGHT] = true;
+      inFlight += 1;
+    }
+    /* eslint-enable no-param-reassign */
     return config;
+  };
+  const markAnswered = (config: any) => {
+    if (config?.[IN_FLIGHT]) {
+      // eslint-disable-next-line no-param-reassign
+      config[IN_FLIGHT] = false;
+      inFlight -= 1;
+      if (inFlight === 0) {
+        onSentRequestsDone?.();
+      }
+    }
   };
 
   const requestInterceptor = httpClient.interceptors.request.use((config) => {
@@ -275,8 +321,12 @@ export const addStudioLoginRedirectInterceptor = (httpClient = getAuthenticatedH
     return markSent(config);
   });
 
-  const responseInterceptor = httpClient.interceptors.response.use((response) => response, async (error: any) => {
+  const responseInterceptor = httpClient.interceptors.response.use((response) => {
+    markAnswered(response.config);
+    return response;
+  }, async (error: any) => {
     const config = error?.config;
+    markAnswered(config);
     const mayLackSession = isStudioUnauthorizedError(error)
       || (failedWithoutResponse(error) && redirectsWithoutSession(config.url, config.baseURL));
     if (!mayLackSession || !isStudioUrl(config?.url, config?.baseURL) || config[RESENT]) {
@@ -335,6 +385,8 @@ export const resetStudioLoginRedirect = () => {
   isSigningIn = false;
   isRedirecting = false;
   signInCount = 0;
+  inFlight = 0;
+  onSentRequestsDone = undefined;
   sessionCheck = null;
   held = [];
 };

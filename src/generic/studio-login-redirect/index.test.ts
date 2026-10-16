@@ -8,6 +8,7 @@ import {
   LAST_REDIRECT_KEY,
   REDIRECT_COOLDOWN_MS,
   STUDIO_CHECK_TIMEOUT_MS,
+  WAIT_FOR_SENT_REQUESTS_MS,
   addStudioLoginRedirectInterceptor,
   isStudioUnauthorizedError,
   redirectToStudioLogin,
@@ -100,6 +101,14 @@ describe('studio login redirect', () => {
       handler.replyOnce(failure);
     }
     axiosMock[method](studioUrl(path)).reply(200, { path });
+  };
+  /** A request that gets no response once the returned function is called, e.g. after Studio's redirect. */
+  const failLater = (method: 'onGet' | 'onPost', path: string) => {
+    let failNow: () => void = () => {};
+    axiosMock[method](studioUrl(path)).replyOnce((config) => new Promise((_resolve, reject) => {
+      failNow = () => reject(Object.assign(new Error('Network Error'), { config, code: 'ERR_NETWORK' }));
+    }));
+    return () => failNow();
   };
 
   beforeEach(() => {
@@ -209,30 +218,91 @@ describe('studio login redirect', () => {
       expect(signInRequests()).toHaveLength(1);
     });
 
-    it('sends a read again when its failure arrives after the background sign-in', async () => {
+    it('waits for the Studio requests already sent before signing in', async () => {
       failOnceWithoutSession('onGet', '/xblock/block-1');
-      axiosMock.onGet(studioUrl('/xblock/block-2')).replyOnce(() => new Promise((resolve) => {
+      const failSecond = failLater('onGet', '/xblock/block-2');
+      axiosMock.onGet(studioUrl('/xblock/block-2')).reply(200, {});
+      const first = get('/xblock/block-1');
+      const second = get('/xblock/block-2');
+      await flushPromises();
+      expect(signInRequests()).toHaveLength(0);
+
+      failSecond();
+
+      await expect(Promise.all([first, second])).resolves.toHaveLength(2);
+      expect(signInRequests()).toHaveLength(1);
+    });
+
+    it('stops waiting for a request sent earlier after a while, and does not send that save again', async () => {
+      jest.useFakeTimers();
+      try {
+        failOnceWithoutSession('onGet', '/xblock/block-1');
+        const failSave = failLater('onPost', '/xblock/');
+        const save = track(post('/xblock/'));
+        const read = track(get('/xblock/block-1'));
+        await jest.advanceTimersByTimeAsync(0);
+        expect(signInRequests()).toHaveLength(0);
+
+        await jest.advanceTimersByTimeAsync(WAIT_FOR_SENT_REQUESTS_MS);
+        await jest.advanceTimersByTimeAsync(0);
+        expect(signInRequests()).toHaveLength(1);
+        expect(read).toEqual({ settled: true });
+
+        failSave();
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(save.error).toBeDefined();
+        expect(axiosMock.history.post).toHaveLength(1);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('sends a read again when its 401 arrives after the background sign-in', async () => {
+      const apiPath = '/api/contentstore/v1/xblock/block-2';
+      failOnceWithoutSession('onGet', '/xblock/block-1');
+      axiosMock.onGet(studioUrl(apiPath)).replyOnce(() => new Promise((resolve) => {
         setTimeout(() => resolve([401]), 50);
       }));
-      axiosMock.onGet(studioUrl('/xblock/block-2')).reply(200, {});
+      axiosMock.onGet(studioUrl(apiPath)).reply(200, {});
 
-      const results = await Promise.all([get('/xblock/block-1'), get('/xblock/block-2')]);
+      const results = await Promise.all([get('/xblock/block-1'), get(apiPath)]);
 
       expect(results.map((result) => result.status)).toEqual([200, 200]);
       expect(signInRequests()).toHaveLength(1);
     });
 
-    it('does not send a save again when it got no response before the background sign-in', async () => {
+    it('leaves alone a request that got no response when its URL cannot be read', async () => {
+      axiosMock.onGet('http://[').networkError();
+
+      await expect(getAuthenticatedHttpClient().get('http://[')).rejects.toBeDefined();
+
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('leaves alone a Studio REST API request that got no response', async () => {
+      axiosMock.onPost(studioUrl('/api/contentstore/v1/xblock/')).networkError();
+
+      await expect(post('/api/contentstore/v1/xblock/')).rejects.toBeDefined();
+
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(axiosMock.history.post).toHaveLength(1);
+    });
+
+    it('does not send again a Studio REST API save that got no response during the background sign-in', async () => {
+      let finishSignIn: () => void = () => {};
+      studio.signInDone = new Promise((resolve) => { finishSignIn = resolve; });
       failOnceWithoutSession('onGet', '/xblock/block-1');
-      axiosMock.onPost(studioUrl('/xblock/')).replyOnce((config) => new Promise((_resolve, reject) => {
-        setTimeout(() => reject(Object.assign(new Error('Network Error'), { config, code: 'ERR_NETWORK' })), 50);
-      }));
-      axiosMock.onPost(studioUrl('/xblock/')).reply(200, {});
+      const failSave = failLater('onPost', '/api/contentstore/v1/xblock/');
+      const save = post('/api/contentstore/v1/xblock/');
+      const read = get('/xblock/block-1');
+      await waitFor(() => expect(signInRequests()).toHaveLength(1));
 
-      const [read, save] = await Promise.allSettled([get('/xblock/block-1'), post('/xblock/')]);
+      failSave();
+      await expect(save).rejects.toBeDefined();
+      finishSignIn();
 
-      expect(read.status).toEqual('fulfilled');
-      expect(save.status).toEqual('rejected');
+      await expect(read).resolves.toMatchObject({ status: 200 });
       expect(axiosMock.history.post).toHaveLength(1);
     });
 
