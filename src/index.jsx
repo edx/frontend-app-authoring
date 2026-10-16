@@ -37,6 +37,7 @@ import { TaxonomyLayout, TaxonomyDetailPage, TaxonomyListPage } from './taxonomy
 import { ContentTagsDrawer } from './content-tags-drawer';
 import AccessibilityPage from './accessibility-page';
 import { ToastProvider } from './generic/toast-context';
+import { addStudioLoginRedirectInterceptor, shouldRetryQuery } from './generic/studio-login-redirect';
 import { ContentType } from './library-authoring/routes';
 
 import 'react-datepicker/dist/react-datepicker.css';
@@ -47,6 +48,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 60_000, // If cache is up to one hour old, no need to re-fetch
+      retry: shouldRetryQuery,
     },
   },
 });
@@ -144,6 +146,8 @@ const App = () => {
 };
 
 subscribe(APP_READY, () => {
+  addStudioLoginRedirectInterceptor();
+
   const root = createRoot(document.getElementById('root'));
 
   root.render(
