@@ -502,7 +502,11 @@ export const sourceCodeModalToggle = (editorRef) => {
   };
 };
 
-export const setAssetToStaticUrl = ({ editorValue, lmsEndpointUrl }) => {
+export const setAssetToStaticUrl = ({
+  editorValue,
+  lmsEndpointUrl,
+  learningContextId,
+}: { editorValue: any, lmsEndpointUrl?: string | null, learningContextId?: string | null }) => {
   /* For assets to remain usable across course instances, we convert their url to be course-agnostic.
    * For example, /assets/course/<asset hash>/filename gets converted to /static/filename. This is
    * important for rerunning courses and importing/exporting course as the /static/ part of the url
@@ -518,20 +522,30 @@ export const setAssetToStaticUrl = ({ editorValue, lmsEndpointUrl }) => {
   }
 
   const assetSrcs = typeof content === 'string' ? content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g) : [];
+  // A url's ?query and #fragment must survive unchanged, and must not reach parseAssetName,
+  // which would take a "/" or "@" inside them as the start of the filename.
+  const splitSuffix = (url: string) => url.match(/^([^?#]*)([^]*)$/)!.slice(1);
+  const assetPrefix = learningContextId
+    ? `/${learningContextId.replace('course', 'asset')}+type@asset+block`
+    : null;
   assetSrcs.filter(src => src.startsWith('/asset')).forEach(src => {
-    const nameFromEditorSrc = parseAssetName(src);
-    const portableUrl = getStaticUrl({ displayName: nameFromEditorSrc });
     const currentSrc = src.substring(0, src.search(/("|&quot;)/));
-    const updatedContent = content.replace(currentSrc, portableUrl);
-    content = updatedContent;
+    const [path, suffix] = splitSuffix(currentSrc);
+    // Another course's asset is a deliberate shared reference; /static/ would re-point it to this course.
+    if (!assetPrefix || !path.includes(assetPrefix)) { return; }
+    const portableUrl = getStaticUrl({ displayName: parseAssetName(`${path}"`) }) + suffix;
+    // A function, so "$" in the query string is not read as a replacement pattern.
+    content = content.replace(currentSrc, () => portableUrl);
   });
 
   const updatedStaticUrls: string[] = [];
   assetSrcs.filter(src => src.startsWith('static/')).forEach(src => {
     // Before storing assets we make sure that library static assets points again to
     // `/static/dummy.jpg` instead of using the relative url `static/dummy.jpg`
-    const nameFromEditorSrc = parseAssetName(src);
-    const portableUrl = `/${nameFromEditorSrc}`;
+    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
+    // No closing quote: nothing to convert, and an empty search string would match everywhere.
+    if (!currentSrc) { return; }
+    const portableUrl = `/${currentSrc}`;
     if (updatedStaticUrls.includes(portableUrl)) {
       // If same image is used multiple times in the same src,
       // replace all occurence once and do not process them again.
@@ -539,9 +553,7 @@ export const setAssetToStaticUrl = ({ editorValue, lmsEndpointUrl }) => {
     }
     // track updated urls to process only once.
     updatedStaticUrls.push(portableUrl);
-    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
-    const updatedContent = content.replaceAll(currentSrc, portableUrl);
-    content = updatedContent;
+    content = content.replaceAll(currentSrc, () => portableUrl);
   });
   return content;
 };

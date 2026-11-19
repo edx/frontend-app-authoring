@@ -3,6 +3,7 @@ import { render, screen, initializeMocks } from '@src/testUtils';
 import { actions, selectors } from '../../data/redux';
 import { RequestKeys } from '../../data/constants/requests';
 import { TextEditorInternal as TextEditor, mapStateToProps, mapDispatchToProps } from '.';
+import * as hooks from './hooks';
 
 jest.mock('../../sharedComponents/TinyMceWidget', () => 'TinyMceWidget');
 
@@ -84,6 +85,21 @@ describe('TextEditor', () => {
     test('loaded, raw editor', () => {
       render(<TextEditor {...props} showRawEditor />);
       expect(screen.getByText('You are using the raw html editor.')).toBeInTheDocument();
+    });
+    test('passes the course id to the raw editor and to getContent (LP-1578)', () => {
+      const getContent = jest.spyOn(hooks, 'getContent');
+      const courseId = 'course-v1:org+run+term';
+      render(
+        <TextEditor
+          {...props}
+          showRawEditor
+          learningContextId={courseId}
+          blockValue={{ data: { data: '<img src="/asset-v1:org+run+term+type@asset+block@img.jpeg" />' } }}
+        />,
+      );
+      // Only a current-course url is shortened, so this proves the raw editor received the course id.
+      expect(screen.getByText('"/static/img.jpeg"')).toBeInTheDocument();
+      expect(getContent).toHaveBeenCalledWith(expect.objectContaining({ learningContextId: courseId }));
     });
     test('block failed to load, Toast is shown', () => {
       render(<TextEditor {...props} blockFailed isLibrary />);

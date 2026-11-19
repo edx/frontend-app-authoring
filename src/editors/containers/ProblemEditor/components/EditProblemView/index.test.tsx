@@ -5,7 +5,7 @@ import { ProblemTypeKeys } from '@src/editors/data/constants/problem';
 import EditProblemView from './index';
 
 const { saveBlock } = require('../../../../hooks');
-const { saveWarningModalToggle } = require('./hooks');
+const { saveWarningModalToggle, getContent, parseState } = require('./hooks');
 
 jest.mock('./AnswerWidget', () => function mockAnswerWidget() {
   return <div>AnswerWidget</div>;
@@ -16,11 +16,12 @@ jest.mock('./SettingsWidget', () => function mockSettingsWidget() {
 jest.mock('./QuestionWidget', () => function mmockQuestionWidget() {
   return <div>QuestionWidget</div>;
 });
-jest.mock('../../../EditorContainer', () => function mockEditorContainer({ children }) {
+jest.mock('../../../EditorContainer', () => function mockEditorContainer({ children, getContent: getContentProp }) {
+  getContentProp();
   return <section>{children}</section>;
 });
-jest.mock('../../../../sharedComponents/RawEditor', () => function mockRawEditor({ lang, content }) {
-  return <div>{lang}:{content}</div>;
+jest.mock('../../../../sharedComponents/RawEditor', () => function mockRawEditor({ lang, content, learningContextId }) {
+  return <div data-learning-context-id={learningContextId}>{lang}:{content}</div>;
 });
 jest.mock('./ExplanationWidget', () => function mockExplanationWidget() {
   return <div>ExplanationWidget</div>;
@@ -40,9 +41,11 @@ jest.mock('./hooks', () => ({
 }));
 
 // 🗂️ Initial state based on baseProps
+const learningContextId = 'course-v1:org+test+run';
 const initialState: PartialEditorState = {
   app: {
     lmsEndpointUrl: null,
+    learningContextId,
   },
   problem: {
     problemType: null,
@@ -82,6 +85,22 @@ describe('EditProblemView', () => {
     });
     expect(screen.getByText('xml:<problem></problem>')).toBeInTheDocument();
     expect(screen.getByText('SettingsWidget')).toBeInTheDocument();
+  });
+
+  it('passes the course id to RawEditor and to both save paths (LP-1578)', () => {
+    editorRender(<EditProblemView returnFunction={returnFunction} />, {
+      initialState: {
+        ...initialState,
+        problem: {
+          ...initialState.problem,
+          problemType: ProblemTypeKeys.ADVANCED,
+        },
+      },
+    });
+    expect(screen.getByText('xml:<problem></problem>')).toHaveAttribute('data-learning-context-id', learningContextId);
+    expect(getContent).toHaveBeenCalledWith(expect.objectContaining({ learningContextId }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ok' }));
+    expect(parseState).toHaveBeenCalledWith(expect.objectContaining({ learningContextId }));
   });
 
   it('renders markdown editor with RawEditor', () => {

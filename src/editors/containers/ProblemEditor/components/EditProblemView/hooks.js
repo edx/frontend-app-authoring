@@ -71,6 +71,7 @@ export const parseState = ({
   isMarkdownEditorEnabled,
   ref,
   lmsEndpointUrl,
+  learningContextId,
 }) => () => {
   // Constructs the save payload by parsing the current state of the problem editor.
   // If the Markdown editor is enabled, the editor content is converted to OLX using convertMarkdownToXml.
@@ -83,7 +84,11 @@ export const parseState = ({
   if (!isMarkdownEditorEnabled) {
     const editorObject = fetchEditorContent({ format: '' });
     const reactOLXParser = new ReactStateOLXParser({ problem, editorObject });
-    reactBuiltOlx = setAssetToStaticUrl({ editorValue: reactOLXParser.buildOLX(), lmsEndpointUrl });
+    reactBuiltOlx = setAssetToStaticUrl({
+      editorValue: reactOLXParser.buildOLX(),
+      lmsEndpointUrl,
+      learningContextId,
+    });
   }
   const reactSettingsParser = new ReactStateSettingsParser({ problem, rawOLX });
   const settings = isAdvanced ? reactSettingsParser.parseRawOlxSettings() : reactSettingsParser.getSettings();
@@ -178,6 +183,7 @@ export const getContent = ({
   isMarkdownEditorEnabled,
   editorRef,
   lmsEndpointUrl,
+  learningContextId,
 }) => {
   const problem = problemState;
   const hasNoAnswers = isAdvancedProblemType || isMarkdownEditorEnabled ? false : checkForNoAnswers({
@@ -197,6 +203,7 @@ export const getContent = ({
       isMarkdownEditorEnabled,
       problem,
       lmsEndpointUrl,
+      learningContextId,
     })();
     return data;
   }

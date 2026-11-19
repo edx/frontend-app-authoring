@@ -55,6 +55,7 @@ const TextEditor = ({
         <RawEditor
           editorRef={editorRef}
           content={blockValue}
+          learningContextId={learningContextId}
         />
       );
     }
@@ -79,7 +80,7 @@ const TextEditor = ({
 
   return (
     <EditorContainer
-      getContent={hooks.getContent({ editorRef, showRawEditor })}
+      getContent={hooks.getContent({ editorRef, showRawEditor, learningContextId })}
       isDirty={hooks.isDirty({ editorRef, showRawEditor })}
       onClose={onClose}
       returnFunction={returnFunction}

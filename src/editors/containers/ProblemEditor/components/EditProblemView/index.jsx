@@ -37,6 +37,7 @@ const EditProblemView = ({ returnFunction }) => {
 
   const analytics = useSelector(selectors.app.analytics);
   const lmsEndpointUrl = useSelector(selectors.app.lmsEndpointUrl);
+  const learningContextId = useSelector(selectors.app.learningContextId);
   const returnUrl = useSelector(selectors.app.returnUrl);
   const problemType = useSelector(selectors.problem.problemType);
   const problemState = useSelector(selectors.problem.completeState);
@@ -68,6 +69,7 @@ const EditProblemView = ({ returnFunction }) => {
           isMarkdownEditorEnabled,
           editorRef,
           lmsEndpointUrl,
+          learningContextId,
         })}
         isDirty={checkIfDirty}
         returnFunction={returnFunction}
@@ -91,6 +93,7 @@ const EditProblemView = ({ returnFunction }) => {
                     isMarkdown: isMarkdownEditorEnabled,
                     ref: editorRef,
                     lmsEndpointUrl,
+                    learningContextId,
                   })(),
                   returnFunction,
                   destination: returnUrl,
@@ -124,6 +127,7 @@ const EditProblemView = ({ returnFunction }) => {
                 editorRef={editorRef}
                 lang={isMarkdownEditorEnabled ? 'markdown' : 'xml'}
                 content={isMarkdownEditorEnabled ? problemState.rawMarkdown : problemState.rawOLX}
+                learningContextId={learningContextId}
               />
             </Container>
           ) : (

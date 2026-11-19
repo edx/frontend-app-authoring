@@ -223,49 +223,106 @@ describe('TinyMceEditor hooks', () => {
       it('returns content with updated img links', () => {
         const editorValue = `<img src="/${baseAssetUrl}/soME_ImagE_URl1"/> <a href="/${baseAssetUrl}@soMEImagEURl">testing link</a>`;
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<img src="/static/soME_ImagE_URl1"/> <a href="/static/soMEImagEURl">testing link</a>');
       });
       it('round-trips /static/ links whose filename starts with ".", "-" or "%"', () => {
         const initialContent = '<img src="/static/-image.png" /> <img src="/static/.image.png" /> <img src="/static/%20image.png" />';
         const editorValue = module.replaceStaticWithAsset({ initialContent, learningContextId: 'course-v1:org+test+run' });
-        const content = module.setAssetToStaticUrl({ editorValue });
+        const content = module.setAssetToStaticUrl({ editorValue, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual(initialContent);
       });
       it('returns content with updated static img links', () => {
         const editorValue = '<img src="static/goku.img"/> <a href="static/goku.img">testing link</a>';
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<img src="/static/goku.img"/> <a href="/static/goku.img">testing link</a>');
       });
       it('returns content with updated jsinput html_file links', () => {
         const editorValue = `<jsinput html_file="/${baseAssetUrl}@textlog.html" gradefn="getGrade"/>`;
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<jsinput html_file="/static/textlog.html" gradefn="getGrade"/>');
       });
       it('returns content with updated jsinput html_file links when URL is absolute', () => {
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
         const editorValue = `<jsinput html_file="${lmsEndpointUrl}/${baseAssetUrl}@textlog.html" gradefn="getGrade"/>`;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<jsinput html_file="/static/textlog.html" gradefn="getGrade"/>');
       });
       it('returns content with updated jsinput html_file links using encoded quotes', () => {
         const editorValue = `<jsinput html_file=&quot;/${baseAssetUrl}@textlog.html&quot; gradefn=&quot;getGrade&quot;/>`;
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<jsinput html_file=&quot;/static/textlog.html&quot; gradefn=&quot;getGrade&quot;/>');
       });
       it('does not strip the literal text "undefined" when lmsEndpointUrl is not provided', () => {
         const editorValue = `<p>value may be undefined</p><img src="/${baseAssetUrl}@soME_ImagE_URl1"/>`;
-        const content = module.setAssetToStaticUrl({ editorValue });
+        const content = module.setAssetToStaticUrl({ editorValue, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<p>value may be undefined</p><img src="/static/soME_ImagE_URl1"/>');
       });
       it('returns content with updated href links using encoded quotes', () => {
         const editorValue = `<a href=&quot;/${baseAssetUrl}@soMEImagEURl&quot;>testing link</a>`;
         const lmsEndpointUrl = getConfig().LMS_BASE_URL;
-        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl });
+        const content = module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl, learningContextId: 'course-v1:org+test+run' });
         expect(content).toEqual('<a href=&quot;/static/soMEImagEURl&quot;>testing link</a>');
+      });
+
+      describe('query strings, fragments and other-course assets (LP-1578)', () => {
+        const learningContextId = 'course-v1:org+test+run';
+        const other = '/asset-v1:HarvardX+SESC+3T2024+type@asset+block';
+
+        it.each([
+          ['query string', `html_file="/${baseAssetUrl}/journaling.html?saveslot=6_2_3_Ask_Questions"`, 'html_file="/static/journaling.html?saveslot=6_2_3_Ask_Questions"'],
+          ['fragment', `href="/${baseAssetUrl}@notes.html#part-2"`, 'href="/static/notes.html#part-2"'],
+          ['query + fragment', `src="/${baseAssetUrl}/a.html?x=1#top"`, 'src="/static/a.html?x=1#top"'],
+          ['&amp; in query', `src="/${baseAssetUrl}/a.html?x=1&amp;y=2"`, 'src="/static/a.html?x=1&amp;y=2"'],
+          ['/ in query', `src="/${baseAssetUrl}/a.html?next=/foo/bar"`, 'src="/static/a.html?next=/foo/bar"'],
+          ['/ in query, block@ form', `src="/${baseAssetUrl}@a.html?next=/foo/bar"`, 'src="/static/a.html?next=/foo/bar"'],
+          ['@ in query', `src="/${baseAssetUrl}/a.html?e=me@x.org"`, 'src="/static/a.html?e=me@x.org"'],
+          ['/ in fragment', `src="/${baseAssetUrl}/a.html#/route"`, 'src="/static/a.html#/route"'],
+          ['$ in query', `src="/${baseAssetUrl}/a.html?t=$$&amp;u=$&"`, 'src="/static/a.html?t=$$&amp;u=$&"'],
+          ['&quot; attributes', `html_file=&quot;/${baseAssetUrl}/j.html?saveslot=s&quot;`, 'html_file=&quot;/static/j.html?saveslot=s&quot;'],
+          ['courseware hash form', `src="/assets/courseware/v1/abc123/${baseAssetUrl}/a.html?x=1"`, 'src="/static/a.html?x=1"'],
+          ['unsafe chars in name still stripped', `src="/${baseAssetUrl}/my file(1).png?v=2"`, 'src="/static/myfile1.png?v=2"'],
+          ['library-relative static/ url', 'src="static/a.html?e=me@x.org"', 'src="/static/a.html?e=me@x.org"'],
+          ['library-relative static/ url with @ in the file name', 'src="static/logo@2x.png"', 'src="/static/logo@2x.png"'],
+        ])('keeps %s', (_name, attr, expected) => {
+          const content = module.setAssetToStaticUrl({ editorValue: `<x ${attr}/>`, learningContextId });
+          expect(content).toEqual(`<x ${expected}/>`);
+        });
+
+        it.each([
+          ['another course', `${other}/journaling.html?saveslot=s`],
+          ['another course, block@ form', `${other}@journaling.html`],
+          ['a run sharing this run as prefix', '/asset-v1:org+test+run2+type@asset+block/a.html'],
+        ])('leaves %s untouched', (_name, url) => {
+          const editorValue = `<jsinput html_file="${url}" gradefn="g"/>`;
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId })).toEqual(editorValue);
+        });
+
+        it('rewrites only the current course url when both are present', () => {
+          const editorValue = `<jsinput html_file="${other}/j.html?saveslot=s"/><img src="/${baseAssetUrl}/pic.png"/>`;
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId }))
+            .toEqual(`<jsinput html_file="${other}/j.html?saveslot=s"/><img src="/static/pic.png"/>`);
+        });
+
+        it.each([[undefined], [null], ['lib:org:lib']])('leaves asset urls untouched when learningContextId is %s', (id) => {
+          const editorValue = `<img src="/${baseAssetUrl}/pic.png"/> <img src="static/goku.img"/>`;
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId: id }))
+            .toEqual(`<img src="/${baseAssetUrl}/pic.png"/> <img src="/static/goku.img"/>`);
+        });
+
+        it('leaves the content alone when a static/ url has no closing quote', () => {
+          const editorValue = '<p>text</p><img src="static/photo';
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId })).toEqual(editorValue);
+        });
+
+        it('is a no-op on already-portable and shared urls (unchanged save)', () => {
+          const editorValue = '<jsinput html_file="/static/journaling.html?saveslot=a"/>'
+            + `<jsinput html_file="${other}/journaling.html?saveslot=6_2_3_Ask_Questions"/>`;
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId })).toEqual(editorValue);
+        });
       });
     });
 
