@@ -521,41 +521,30 @@ export const setAssetToStaticUrl = ({
     content = content.replace(RegExp(escapedLmsEndpointUrl, 'g'), '');
   }
 
-  const assetSrcs = typeof content === 'string' ? content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g) : [];
+  if (typeof content !== 'string') { return content; }
   // A url's ?query and #fragment must survive unchanged, and must not reach parseAssetName,
   // which would take a "/" or "@" inside them as the start of the filename.
   const splitSuffix = (url: string) => url.match(/^([^?#]*)([^]*)$/)!.slice(1);
   const assetPrefix = learningContextId
     ? `/${learningContextId.replace('course', 'asset')}+type@asset+block`
     : null;
-  assetSrcs.filter(src => src.startsWith('/asset')).forEach(src => {
-    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
+
+  // The split keeps its delimiters at the odd positions, so each part after one starts with a url.
+  // Rewrite that part only: searching the whole text for the url would also hit a copy of it elsewhere.
+  return content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g).map((part, i) => {
+    if (i === 0 || i % 2) { return part; }
+    const end = part.search(/("|&quot;)/);
+    // No closing quote: not a url we can delimit.
+    if (end < 1) { return part; }
+    const currentSrc = part.substring(0, end);
+    // Library static assets are edited as the relative `static/dummy.jpg`; store them as `/static/dummy.jpg`.
+    if (currentSrc.startsWith('static/')) { return `/${part}`; }
+    if (!currentSrc.startsWith('/asset')) { return part; }
     const [path, suffix] = splitSuffix(currentSrc);
     // Another course's asset is a deliberate shared reference; /static/ would re-point it to this course.
-    if (!assetPrefix || !path.includes(assetPrefix)) { return; }
-    const portableUrl = getStaticUrl({ displayName: parseAssetName(`${path}"`) }) + suffix;
-    // A function, so "$" in the query string is not read as a replacement pattern.
-    content = content.replace(currentSrc, () => portableUrl);
-  });
-
-  const updatedStaticUrls: string[] = [];
-  assetSrcs.filter(src => src.startsWith('static/')).forEach(src => {
-    // Before storing assets we make sure that library static assets points again to
-    // `/static/dummy.jpg` instead of using the relative url `static/dummy.jpg`
-    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
-    // No closing quote: nothing to convert, and an empty search string would match everywhere.
-    if (!currentSrc) { return; }
-    const portableUrl = `/${currentSrc}`;
-    if (updatedStaticUrls.includes(portableUrl)) {
-      // If same image is used multiple times in the same src,
-      // replace all occurence once and do not process them again.
-      return;
-    }
-    // track updated urls to process only once.
-    updatedStaticUrls.push(portableUrl);
-    content = content.replaceAll(currentSrc, () => portableUrl);
-  });
-  return content;
+    if (!assetPrefix || !path.includes(assetPrefix)) { return part; }
+    return getStaticUrl({ displayName: parseAssetName(`${path}"`) }) + suffix + part.substring(end);
+  }).join('');
 };
 
 export const selectedImage = (val) => {

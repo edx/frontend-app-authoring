@@ -318,6 +318,19 @@ describe('TinyMceEditor hooks', () => {
           expect(module.setAssetToStaticUrl({ editorValue, learningContextId })).toEqual(editorValue);
         });
 
+        it('converts the url in the attribute, not an earlier copy of it in the text', () => {
+          const url = `/${baseAssetUrl}/a.png`;
+          const editorValue = `<p>ref ${url}</p><img src="${url}"/>`;
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId }))
+            .toEqual(`<p>ref ${url}</p><img src="/static/a.png"/>`);
+        });
+
+        it('does not double the slash of an existing /static/ url next to a static/ url', () => {
+          const editorValue = '<img src="/static/a.png"/><img src="static/a.png"/><img src="static/a.png"/>';
+          expect(module.setAssetToStaticUrl({ editorValue, learningContextId: 'lib:org:lib' }))
+            .toEqual('<img src="/static/a.png"/><img src="/static/a.png"/><img src="/static/a.png"/>');
+        });
+
         it('is a no-op on already-portable and shared urls (unchanged save)', () => {
           const editorValue = '<jsinput html_file="/static/journaling.html?saveslot=a"/>'
             + `<jsinput html_file="${other}/journaling.html?saveslot=6_2_3_Ask_Questions"/>`;
