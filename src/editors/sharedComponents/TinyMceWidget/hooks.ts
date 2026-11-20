@@ -13,8 +13,10 @@ import { StrictDict } from '../../utils';
 import pluginConfig from './pluginConfig';
 
 import * as tinyMCE from '../../data/constants/tinyMCE';
-import { getRelativeUrl, getStaticUrl, parseAssetName } from './utils';
-import { isLibraryKey } from '../../../generic/key-utils';
+import {
+  getAssetUrlPrefix, getRelativeUrl, getStaticUrl, parseAssetName,
+} from './utils';
+import { isCourseKey, isLibraryKey } from '../../../generic/key-utils';
 
 export const state = StrictDict({
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -533,9 +535,8 @@ export const setAssetToStaticUrl = ({
     const at = url.search(/[?#]/);
     return at === -1 ? [url, ''] : [url.slice(0, at), url.slice(at)];
   };
-  const assetPrefix = learningContextId
-    ? `/${learningContextId.replace('course', 'asset')}+type@asset+block`
-    : null;
+  // Only a course has assets of its own to convert; in a library every asset url is another context's.
+  const assetPrefix = isCourseKey(learningContextId) ? getAssetUrlPrefix(learningContextId) : null;
 
   // The split keeps its delimiters at the odd positions, so each part after one starts with a url.
   // Rewrite that part only: searching the whole text for the url would also hit a copy of it elsewhere.

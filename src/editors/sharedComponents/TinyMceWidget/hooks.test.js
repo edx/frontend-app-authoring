@@ -307,7 +307,7 @@ describe('TinyMceEditor hooks', () => {
             .toEqual(`<jsinput html_file="${other}/j.html?saveslot=s"/><img src="/static/pic.png"/>`);
         });
 
-        it.each([[undefined], [null], ['lib:org:lib']])('leaves asset urls untouched when learningContextId is %s', (id) => {
+        it.each([[undefined], [null], ['lib:org:lib'], ['library-v1:org+lib']])('leaves asset urls untouched when learningContextId is %s', (id) => {
           const editorValue = `<img src="/${baseAssetUrl}/pic.png"/> <img src="static/goku.img"/>`;
           expect(module.setAssetToStaticUrl({ editorValue, learningContextId: id }))
             .toEqual(`<img src="/${baseAssetUrl}/pic.png"/> <img src="/static/goku.img"/>`);

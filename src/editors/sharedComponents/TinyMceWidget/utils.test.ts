@@ -1,4 +1,4 @@
-import { parseAssetName } from './utils';
+import { getAssetUrlPrefix, getRelativeUrl, parseAssetName } from './utils';
 
 const prefix = '/asset-v1:org+test+run+type@asset+block';
 
@@ -14,5 +14,16 @@ describe('parseAssetName', () => {
   it('stops at the closing quote', () => {
     expect(parseAssetName(`${prefix}/a.png" alt="x@y"`)).toEqual('a.png');
     expect(parseAssetName(`${prefix}@a.png&quot; alt=&quot;x&quot;`)).toEqual('a.png');
+  });
+});
+
+describe('getAssetUrlPrefix', () => {
+  it('is what every asset url of the course starts with', () => {
+    expect(getAssetUrlPrefix('course-v1:org+test+run')).toEqual(prefix);
+  });
+
+  it('is what getRelativeUrl builds on', () => {
+    expect(getRelativeUrl({ courseId: 'course-v1:org+test+run', displayName: 'a.png' })).toEqual(`${prefix}/a.png`);
+    expect(getRelativeUrl({ courseId: 'course-v1:org+test+run', displayName: '' })).toEqual('');
   });
 });

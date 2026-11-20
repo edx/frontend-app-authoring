@@ -5,12 +5,13 @@ const getLocatorSafeName = ({ displayName }) => {
 
 export const getStaticUrl = ({ displayName }) => (`/static/${getLocatorSafeName({ displayName })}`);
 
+// What every asset url of a course starts with, before "/name" or "@name".
+export const getAssetUrlPrefix = (courseId) => `/${courseId.replace('course', 'asset')}+type@asset+block`;
+
 export const getRelativeUrl = ({ courseId, displayName }) => {
   if (displayName) {
-    const assetCourseId = courseId.replace('course', 'asset');
     // Use "block/" (as the LMS renders /static/ urls) so relative links inside an embedded HTML asset resolve.
-    const assetPathShell = `/${assetCourseId}+type@asset+block/`;
-    return `${assetPathShell}${displayName}`;
+    return `${getAssetUrlPrefix(courseId)}/${displayName}`;
   }
   return '';
 };
