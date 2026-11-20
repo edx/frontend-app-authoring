@@ -15,9 +15,10 @@ const RawEditor = ({
   editorRef,
   content,
   lang,
+  learningContextId,
 }) => {
   const value = getValue(content) || '';
-  const staticUpdate = setAssetToStaticUrl({ editorValue: value });
+  const staticUpdate = setAssetToStaticUrl({ editorValue: value, learningContextId });
   return (
     <div>
       {['xml', 'markdown'].includes(lang) ? null : (
@@ -41,6 +42,7 @@ RawEditor.defaultProps = {
   editorRef: null,
   content: null,
   lang: 'html',
+  learningContextId: null,
 };
 RawEditor.propTypes = {
   editorRef: PropTypes.oneOfType([
@@ -55,6 +57,7 @@ RawEditor.propTypes = {
     }),
   ]),
   lang: PropTypes.string,
+  learningContextId: PropTypes.string,
 };
 
 export default RawEditor;

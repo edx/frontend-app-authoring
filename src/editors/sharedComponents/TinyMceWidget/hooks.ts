@@ -13,8 +13,10 @@ import { StrictDict } from '../../utils';
 import pluginConfig from './pluginConfig';
 
 import * as tinyMCE from '../../data/constants/tinyMCE';
-import { getRelativeUrl, getStaticUrl, parseAssetName } from './utils';
-import { isLibraryKey } from '../../../generic/key-utils';
+import {
+  getAssetUrlPrefix, getRelativeUrl, getStaticUrl, parseAssetName,
+} from './utils';
+import { isCourseKey, isLibraryKey } from '../../../generic/key-utils';
 
 export const state = StrictDict({
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -502,48 +504,56 @@ export const sourceCodeModalToggle = (editorRef) => {
   };
 };
 
-export const setAssetToStaticUrl = ({ editorValue, lmsEndpointUrl }) => {
+export const setAssetToStaticUrl = ({
+  editorValue,
+  lmsEndpointUrl,
+  learningContextId,
+}: { editorValue: any, lmsEndpointUrl?: string | null, learningContextId: string | null }) => {
   /* For assets to remain usable across course instances, we convert their url to be course-agnostic.
    * For example, /assets/course/<asset hash>/filename gets converted to /static/filename. This is
    * important for rerunning courses and importing/exporting course as the /static/ part of the url
    * allows the asset to be mapped to the new course run.
+   *
+   * Only urls for assets of the course given as learningContextId are converted, and their ?query and
+   * #fragment are kept. Urls for another course's assets are deliberate shared references and are left
+   * alone. learningContextId is required: with null, or a key that is not a course key, no asset url
+   * is converted. Library-relative `static/name` urls are always stored as `/static/name`.
   */
 
   // TODO: should probably move this to when the assets are being looped through in the off chance that
   // some of the text in the editor contains the lmsEndpointUrl
   let content = editorValue;
+  if (typeof content !== 'string') { return content; }
   if (lmsEndpointUrl) {
     const escapedLmsEndpointUrl = lmsEndpointUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     content = content.replace(RegExp(escapedLmsEndpointUrl, 'g'), '');
   }
 
-  const assetSrcs = typeof content === 'string' ? content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g) : [];
-  assetSrcs.filter(src => src.startsWith('/asset')).forEach(src => {
-    const nameFromEditorSrc = parseAssetName(src);
-    const portableUrl = getStaticUrl({ displayName: nameFromEditorSrc });
-    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
-    const updatedContent = content.replace(currentSrc, portableUrl);
-    content = updatedContent;
-  });
+  // A url's ?query and #fragment must survive unchanged, and must not reach parseAssetName,
+  // which would take a "/" or "@" inside them as the start of the filename.
+  const splitSuffix = (url: string) => {
+    const at = url.search(/[?#]/);
+    return at === -1 ? [url, ''] : [url.slice(0, at), url.slice(at)];
+  };
+  // Only a course has assets of its own to convert; in a library every asset url is another context's.
+  const assetPrefix = isCourseKey(learningContextId) ? getAssetUrlPrefix(learningContextId) : null;
 
-  const updatedStaticUrls: string[] = [];
-  assetSrcs.filter(src => src.startsWith('static/')).forEach(src => {
-    // Before storing assets we make sure that library static assets points again to
-    // `/static/dummy.jpg` instead of using the relative url `static/dummy.jpg`
-    const nameFromEditorSrc = parseAssetName(src);
-    const portableUrl = `/${nameFromEditorSrc}`;
-    if (updatedStaticUrls.includes(portableUrl)) {
-      // If same image is used multiple times in the same src,
-      // replace all occurence once and do not process them again.
-      return;
-    }
-    // track updated urls to process only once.
-    updatedStaticUrls.push(portableUrl);
-    const currentSrc = src.substring(0, src.search(/("|&quot;)/));
-    const updatedContent = content.replaceAll(currentSrc, portableUrl);
-    content = updatedContent;
-  });
-  return content;
+  // The split keeps its delimiters at the odd positions, so each part after one starts with a url.
+  // Rewrite that part only: searching the whole text for the url would also hit a copy of it elsewhere.
+  return content.split(/(src="|src=&quot;|href="|href=&quot;|html_file="|html_file=&quot;)/g).map((part, i) => {
+    if (i === 0 || i % 2) { return part; }
+    const end = part.search(/("|&quot;)/);
+    // No closing quote: not a url we can delimit.
+    if (end < 1) { return part; }
+    const currentSrc = part.substring(0, end);
+    // Library static assets are edited as the relative `static/dummy.jpg`; store them as `/static/dummy.jpg`.
+    if (currentSrc.startsWith('static/')) { return `/${part}`; }
+    if (!currentSrc.startsWith('/asset')) { return part; }
+    const [path, suffix] = splitSuffix(currentSrc);
+    // Another course's asset is a deliberate shared reference; /static/ would re-point it to this course.
+    if (!assetPrefix || !path.includes(assetPrefix)) { return part; }
+    return getStaticUrl({ displayName: parseAssetName(path) }) + suffix + part.substring(end);
+  }).join('');
 };
 
 export const selectedImage = (val) => {

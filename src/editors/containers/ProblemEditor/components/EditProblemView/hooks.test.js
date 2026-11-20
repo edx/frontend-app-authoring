@@ -1,3 +1,4 @@
+import * as tinyMceHooks from '@src/editors/sharedComponents/TinyMceWidget/hooks';
 import { ProblemTypeKeys, ShowAnswerTypesKeys } from '../../../../data/constants/problem';
 import * as hooks from './hooks';
 import { MockUseState } from '../../../../testUtils';
@@ -148,6 +149,18 @@ describe('EditProblemView hooks parseState', () => {
         parseRawOlxSettings: () => mockParseRawOlxSettings,
       }))
     ));
+    it('passes learningContextId to setAssetToStaticUrl', () => {
+      const spy = jest.spyOn(tinyMceHooks, 'setAssetToStaticUrl');
+      hooks.parseState({
+        problem: problemState,
+        isAdvanced: false,
+        ref: refMock,
+        lmsEndpointUrl: 'someUrl',
+        learningContextId: 'course-v1:org+test+run',
+      })();
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ learningContextId: 'course-v1:org+test+run' }));
+      spy.mockRestore();
+    });
     it('default problem', () => {
       const res = hooks.parseState({
         problem: problemState,

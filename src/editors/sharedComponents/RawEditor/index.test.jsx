@@ -52,6 +52,7 @@ describe('RawEditor', () => {
   it('updates the assets to static srcs', () => {
     const updatedProps = {
       ...defaultProps,
+      learningContextId: 'course-v1:org+run+term',
       content: 'pick <img src="/asset-v1:org+run+term+type@asset+block@img.jpeg" /> or <img src="/assets/courseware/v1/hash/asset-v1:org+run+term+type@asset+block/img2.jpeg" />',
     };
     renderComponent(updatedProps);
@@ -62,6 +63,25 @@ describe('RawEditor', () => {
     expect(screen.queryByText('"/asset-v1:org+run+term+type@asset+block@img.jpeg"')).toBeNull();
 
     expect(screen.queryByText('"/assets/courseware/v1/hash/asset-v1:org+run+term+type@asset+block/img2.jpeg"')).toBeNull();
+  });
+
+  it('shows another course\'s asset url and its query string unchanged', () => {
+    const url = '"/asset-v1:HarvardX+SESC+3T2024+type@asset+block/journaling.html?saveslot=test_slot"';
+    renderComponent({
+      ...xmlProps,
+      learningContextId: 'course-v1:HarvardX+SFin_00+2T2026',
+      content: `<problem><jsinput html_file=${url} gradefn="g"/></problem>`,
+    });
+    expect(screen.getByText(url)).toBeVisible();
+  });
+
+  it('keeps the query string on a /static/ url', () => {
+    renderComponent({
+      ...xmlProps,
+      learningContextId: 'course-v1:HarvardX+SFin_00+2T2026',
+      content: '<problem><jsinput html_file="/static/journaling.html?saveslot=test_slot"/></problem>',
+    });
+    expect(screen.getByText('"/static/journaling.html?saveslot=test_slot"')).toBeVisible();
   });
 
   it('renders as expected with lang equal to xml', () => {
