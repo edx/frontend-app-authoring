@@ -524,7 +524,10 @@ export const setAssetToStaticUrl = ({
   if (typeof content !== 'string') { return content; }
   // A url's ?query and #fragment must survive unchanged, and must not reach parseAssetName,
   // which would take a "/" or "@" inside them as the start of the filename.
-  const splitSuffix = (url: string) => url.match(/^([^?#]*)([^]*)$/)!.slice(1);
+  const splitSuffix = (url: string) => {
+    const at = url.search(/[?#]/);
+    return at === -1 ? [url, ''] : [url.slice(0, at), url.slice(at)];
+  };
   const assetPrefix = learningContextId
     ? `/${learningContextId.replace('course', 'asset')}+type@asset+block`
     : null;
