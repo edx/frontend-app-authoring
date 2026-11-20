@@ -523,12 +523,12 @@ export const setAssetToStaticUrl = ({
   // TODO: should probably move this to when the assets are being looped through in the off chance that
   // some of the text in the editor contains the lmsEndpointUrl
   let content = editorValue;
+  if (typeof content !== 'string') { return content; }
   if (lmsEndpointUrl) {
     const escapedLmsEndpointUrl = lmsEndpointUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     content = content.replace(RegExp(escapedLmsEndpointUrl, 'g'), '');
   }
 
-  if (typeof content !== 'string') { return content; }
   // A url's ?query and #fragment must survive unchanged, and must not reach parseAssetName,
   // which would take a "/" or "@" inside them as the start of the filename.
   const splitSuffix = (url: string) => {

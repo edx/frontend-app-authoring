@@ -331,6 +331,11 @@ describe('TinyMceEditor hooks', () => {
             .toEqual('<img src="/static/a.png"/><img src="/static/a.png"/><img src="/static/a.png"/>');
         });
 
+        it.each([[undefined], [null]])('returns %s content as it is, also when lmsEndpointUrl is given', (editorValue) => {
+          expect(module.setAssetToStaticUrl({ editorValue, lmsEndpointUrl: 'http://lms', learningContextId }))
+            .toEqual(editorValue);
+        });
+
         it('is a no-op on already-portable and shared urls (unchanged save)', () => {
           const editorValue = '<jsinput html_file="/static/journaling.html?saveslot=a"/>'
             + `<jsinput html_file="${other}/journaling.html?saveslot=6_2_3_Ask_Questions"/>`;
