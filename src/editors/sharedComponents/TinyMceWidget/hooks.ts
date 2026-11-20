@@ -506,11 +506,16 @@ export const setAssetToStaticUrl = ({
   editorValue,
   lmsEndpointUrl,
   learningContextId,
-}: { editorValue: any, lmsEndpointUrl?: string | null, learningContextId?: string | null }) => {
+}: { editorValue: any, lmsEndpointUrl?: string | null, learningContextId: string | null }) => {
   /* For assets to remain usable across course instances, we convert their url to be course-agnostic.
    * For example, /assets/course/<asset hash>/filename gets converted to /static/filename. This is
    * important for rerunning courses and importing/exporting course as the /static/ part of the url
    * allows the asset to be mapped to the new course run.
+   *
+   * Only urls for assets of the course given as learningContextId are converted, and their ?query and
+   * #fragment are kept. Urls for another course's assets are deliberate shared references and are left
+   * alone. learningContextId is required: with null, or a key that is not a course key, no asset url
+   * is converted. Library-relative `static/name` urls are always stored as `/static/name`.
   */
 
   // TODO: should probably move this to when the assets are being looped through in the off chance that
