@@ -546,7 +546,7 @@ export const setAssetToStaticUrl = ({
     const [path, suffix] = splitSuffix(currentSrc);
     // Another course's asset is a deliberate shared reference; /static/ would re-point it to this course.
     if (!assetPrefix || !path.includes(assetPrefix)) { return part; }
-    return getStaticUrl({ displayName: parseAssetName(`${path}"`) }) + suffix + part.substring(end);
+    return getStaticUrl({ displayName: parseAssetName(path) }) + suffix + part.substring(end);
   }).join('');
 };
 
