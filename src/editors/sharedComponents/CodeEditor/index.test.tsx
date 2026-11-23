@@ -3,6 +3,7 @@ import {
   render, screen, initializeMocks, fireEvent,
 } from '@src/testUtils';
 import { waitFor } from '@testing-library/react';
+import { EditorState } from '@codemirror/state';
 import { formatMessage, MockUseState } from '../../testUtils';
 import alphanumericMap from './constants';
 import { CodeEditorInternal as CodeEditor } from './index';
@@ -28,22 +29,6 @@ describe('CodeEditor', () => {
       afterEach(() => { state.restore(); });
     });
 
-    describe('cleanHTML', () => {
-      const dirtyText = `&${Object.keys(alphanumericMap).join('; , &')};`;
-      const cleanText = `${Object.values(alphanumericMap).join(' , ')}`;
-      const dirtyTextWithAlt = '<img src="image.png" alt="Description &le; and &ge; &quot;do not convert these to double quotes&quot; 1" /> and &le; and &ge;';
-      const cleanTextWithAlt = '<img src="image.png" alt="Description ≤ and ≥ &quot;do not convert these to double quotes&quot; 1" /> and ≤ and ≥';
-
-      it('escapes alphanumerics and sets them to be literals', () => {
-        expect(hooks.cleanHTML({ initialText: dirtyText })).toEqual(cleanText);
-      });
-
-      it('replaces alt attributes with placeholders and restores them', () => {
-        const result = hooks.cleanHTML({ initialText: dirtyTextWithAlt });
-        expect(result).toEqual(cleanTextWithAlt);
-      });
-    });
-
     describe('escapeHTMLSpecialChars', () => {
       const cleanText = `${Object.values(alphanumericMap).join(' , ')}`;
 
@@ -64,6 +49,49 @@ describe('CodeEditor', () => {
         hooks.escapeHTMLSpecialChars({ ref, hideBtn: mockHideBtn });
         expect(mockDispatch).toHaveBeenCalled();
         expect(mockHideBtn).toHaveBeenCalled();
+      });
+
+      // Presses the button on `text` and lets real CodeMirror apply the changes it dispatches.
+      const press = (text) => {
+        let editorState = EditorState.create({ doc: text });
+        const editorRef = {
+          current: {
+            get state() { return editorState; },
+            dispatch: (tr) => { editorState = editorState.update(tr).state; },
+          },
+        };
+        hooks.escapeHTMLSpecialChars({ ref: editorRef, hideBtn: jest.fn() });
+        return editorState.doc.toString();
+      };
+
+      it.each([
+        ['attribute quotes', '<img src="a.png" alt="x">'],
+        ['a quote in text', '<p>He said "hi"</p>'],
+        ['an existing &quot;', '<p title="He said &quot;hi&quot;">x</p>'],
+        ['an advanced problem', '<customresponse cfn="check"><textline size="20"/></customresponse>'],
+      ])('leaves %s alone (LP-1583)', (_name, text) => {
+        expect(press(text)).toEqual(text);
+      });
+
+      it('still converts the other special characters', () => {
+        expect(press('<p title="x">© 2026 — done</p>')).toEqual('<p title="x">&copy; 2026 &mdash; done</p>');
+      });
+
+      it.each([
+        ['a later-listed character that comes first in the text', 'a — b © c', 'a &mdash; b &copy; c'],
+        ['the same character on both sides of another', '— © —', '&mdash; &copy; &mdash;'],
+        ['three different characters in reverse map order', '“x” ± ¢', '&ldquo;x&rdquo; &plusmn; &cent;'],
+      ])('converts %s (LP-1583)', (_name, text, expected) => {
+        expect(press(text)).toEqual(expected);
+      });
+
+      it('dispatches no changes and hides the button when there is nothing to convert', () => {
+        const dispatch = jest.fn();
+        const hideBtn = jest.fn();
+        const plainRef = { current: { state: { doc: { toString: () => '<p class="x">plain</p>' } }, dispatch } };
+        hooks.escapeHTMLSpecialChars({ ref: plainRef, hideBtn });
+        expect(dispatch).toHaveBeenCalledWith({ changes: [] });
+        expect(hideBtn).toHaveBeenCalled();
       });
     });
   });
@@ -143,6 +171,44 @@ describe('CodeEditor', () => {
         expect(mockEscapeHTMLSpecialChars).toHaveBeenCalled();
         // Prevent React.useRef mock leakage into subsequent tests
         useRefSpy.mockRestore();
+      });
+    });
+
+    describe('opening the editor', () => {
+      beforeEach(() => {
+        initializeMocks();
+        // Earlier tests leave these two mocked; this one needs the real editor and no leftover state mock.
+        jest.spyOn(hooks, 'createCodeMirrorDomNode').mockRestore();
+        jest.spyOn(hooks, 'prepareShowBtnEscapeHTML').mockReturnValue({ showBtnEscapeHTML: false, hideBtn: jest.fn() });
+      });
+
+      test('starts with the stored text as it is, so Undo has nothing to bring back (LP-1583)', () => {
+        const value = '<p title="He said &quot;hi&quot;">Dash &mdash; copy &copy;</p>';
+        const create = jest.spyOn(EditorState, 'create');
+        const innerRef: { current: any } = { current: null };
+        render(<CodeEditor innerRef={innerRef} value={value} lang="html" />);
+        expect(create).toHaveBeenCalledWith(expect.objectContaining({ doc: value }));
+        expect(innerRef.current.state.doc.toString()).toEqual(value);
+      });
+    });
+
+    describe('escape button', () => {
+      beforeEach(() => {
+        initializeMocks();
+        jest.spyOn(hooks, 'createCodeMirrorDomNode').mockImplementation(() => ({}));
+        jest.spyOn(hooks, 'prepareShowBtnEscapeHTML').mockReturnValue({ showBtnEscapeHTML: true, hideBtn: jest.fn() });
+      });
+
+      // The button writes named codes such as &mdash;. HTML knows them; XML does not, and a problem
+      // holding one cannot be saved (LP-1583).
+      test.each([
+        ['html', true],
+        ['xml', false],
+        ['markdown', false],
+      ])('for lang %s, shown: %s', (lang, shown) => {
+        render(<CodeEditor innerRef={{ current: null }} value="some text" lang={lang} />);
+        const button = screen.queryByRole('button', { name: 'Unescape HTML Literals' });
+        expect(button !== null).toBe(shown);
       });
     });
 

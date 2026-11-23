@@ -31,6 +31,6 @@ const alphanumericMap = {
   ne: '≠',
   le: '≤',
   ge: '≥',
-  quot: '"',
+  // No `quot`: a double quote delimits attributes, and converting it breaks the markup (LP-1583).
 };
 export default alphanumericMap;
