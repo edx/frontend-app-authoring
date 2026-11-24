@@ -42,7 +42,8 @@ const CodeEditor = ({
   return (
     <div>
       <div id="CodeMirror" ref={DOMref} />
-      {showBtnEscapeHTML && lang !== 'markdown' && (
+      {/* HTML only: the named codes the button writes are not valid in XML (problems) or wanted in markdown. */}
+      {showBtnEscapeHTML && lang === 'html' && (
         <Button
           variant="tertiary"
           aria-label={intl.formatMessage(messages.escapeHTMLButtonLabel)}

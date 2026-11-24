@@ -28,44 +28,6 @@ export const prepareShowBtnEscapeHTML = () => {
   return { showBtnEscapeHTML: visibility, hideBtn: hide };
 };
 
-export const cleanHTML = ({ initialText }) => {
-  const altRegex = /(alt="(.*?)")/g;
-  const altTextMap = {};
-  let altTextIndex = 0;
-
-  // Replace alt attributes with ALT_TEXT_0/1/2...
-  const initialTextWithoutAltAttr = initialText.replace(altRegex, (match) => {
-    const altText = `ALT_TEXT_${altTextIndex++}`;
-    altTextMap[altText] = match;
-    return altText;
-  });
-
-  // Replace HTML entities in the rest of the text, excluding altTexts
-  const translateRegex = new RegExp(`&(${Object.keys(alphanumericMap).join('|')});`, 'g');
-  const translator = ($0, $1) => alphanumericMap[$1];
-  const cleanedTextWithoutAltAttr = initialTextWithoutAltAttr.replace(translateRegex, translator);
-
-  // Clean altText matches in altTextMap, ignore &quot;
-  const alphanumericMapForAltText = { ...alphanumericMap };
-  delete alphanumericMapForAltText.quot;
-  Object.keys(altTextMap).forEach((key) => {
-    const altTextValue = altTextMap[key];
-    const cleanedAltTextValue = altTextValue.replace(
-      /&(\w+);/g,
-      ($0, $1) => alphanumericMapForAltText[$1] || $0,
-    );
-    altTextMap[key] = cleanedAltTextValue;
-  });
-
-  // Restore the original alt attributes from altTextMap
-  const finalCleanedText = Object.keys(altTextMap).reduce(
-    (text, altText) => text.replace(altText, altTextMap[altText]),
-    cleanedTextWithoutAltAttr,
-  );
-
-  return finalCleanedText;
-};
-
 export const syntaxChecker = ({ textArr, lang }) => {
   const diagnostics = [];
   if (lang === 'xml' && textArr) {
@@ -101,9 +63,10 @@ export const createCodeMirrorDomNode = ({
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     const languageExtension = CODEMIRROR_LANGUAGES[lang] ? CODEMIRROR_LANGUAGES[lang]() : xml();
-    const cleanText = cleanHTML({ initialText });
+    // Start with the stored text as it is. Starting with a decoded copy and replacing it afterwards
+    // left the decoded copy one Undo away (LP-1583).
     const newState = EditorState.create({
-      doc: cleanText,
+      doc: initialText,
       extensions: [
         basicSetup,
         languageExtension,
@@ -128,10 +91,11 @@ export const createCodeMirrorDomNode = ({
 
 export const escapeHTMLSpecialChars = ({ ref, hideBtn }) => {
   const text = ref.current.state.doc.toString();
-  let pos = 0;
   const changes = [];
   Object.keys(alphanumericMap).forEach(
     (escapedKeyword) => {
+      // Search from the start for every character, or one that comes earlier in the text is missed.
+      let pos = 0;
       // eslint-disable-next-line no-cond-assign
       for (let next; (next = text.indexOf(alphanumericMap[escapedKeyword], pos)) > -1;) {
         changes.push({ from: next, to: next + 1, insert: `&${escapedKeyword};` });
